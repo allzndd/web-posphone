@@ -1,20 +1,18 @@
 <!-- Sidebar Component - 100% Horizon Template -->
-<div id="sidebar" class="sm:none duration-175 linear fixed !z-50 flex min-h-full flex-col bg-white pb-10 shadow-2xl shadow-white/5 transition-all dark:!bg-navy-800 dark:text-white md:!z-50 lg:!z-50 xl:!z-0" style="width: 260px;" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-96 xl:translate-x-0'">
+<div id="sidebar" class="sm:none duration-175 linear fixed !z-50 flex min-h-full flex-col bg-white pb-10 shadow-2xl shadow-white/5 transition-all dark:!bg-navy-800 dark:text-white md:!z-50 lg:!z-50 xl:!z-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-96 xl:translate-x-0'">
     
-    <!-- Close button for mobile/tablet -->
     <span class="absolute top-4 right-4 block cursor-pointer xl:hidden" @click="sidebarOpen = false">
-        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-white" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 20 20" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
     </span>
 
-    <!-- Logo Brand -->
-    <div class="mx-[56px] mt-[35px] flex items-center">
+    <div class="mx-[56px] mt-[50px] flex items-center">
         <div class="mt-1 ml-1 h-2.5 font-poppins text-[26px] font-bold uppercase text-navy-700 dark:text-white">
-            <a href="{{ route('home') }}">MIPHONE <span class="font-medium">GROUP</span></a>
+            PosPhone <span class="font-medium">POS</span>
         </div>
     </div>
-    
-    <!-- Divider -->
-    <div class="mt-[35px] mb-7 h-px bg-gray-300 dark:bg-white/30"></div>
+    <div class="mt-[58px] mb-7 h-px bg-gray-300 dark:bg-white/30"></div>
     
     <!-- Nav Menu -->
     <ul class="mb-auto pt-1">
@@ -30,10 +28,10 @@
                         Dashboard
                     </p>
                 </div>
-                @if(Request::is('home'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </a>
+            @if(Request::is('home'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
         </li>
 
         @if(auth()->user()->isOwner())
@@ -48,10 +46,10 @@
                         Chat Analisis
                     </p>
                 </div>
-                @if(Request::is('chat-analisis'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </a>
+            @if(Request::is('chat-analisis'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
         </li>
 
         <!-- Users -->
@@ -65,10 +63,10 @@
                         Users
                     </p>
                 </div>
-                @if(Request::is('user*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </a>
+            @if(Request::is('user*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
         </li>
 
         <!-- Products Dropdown with Accordion -->
@@ -87,17 +85,17 @@
                         </span>
                     </div>
                 </div>
-                @if(Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </div>
+            @if(Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse>
+            <div x-show="open" x-collapse x-cloak>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('product.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product') && !Request::is('product/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('product') && !Request::is('product/create') && !Request::is('product/*/edit') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
                                     All Products
                                 </p>
                             </div>
@@ -154,10 +152,10 @@
                         Categories
                     </p>
                 </div>
-                @if(Request::is('category*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </a>
+            @if(Request::is('category*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
         </li>
 
         <!-- Trade In -->
@@ -171,10 +169,10 @@
                         Trade In
                     </p>
                 </div>
-                @if(Request::is('tradein*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </a>
+            @if(Request::is('tradein*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
         </li>
         @endif
 
@@ -194,12 +192,12 @@
                         </span>
                     </div>
                 </div>
-                @if(Request::is('transaction*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </div>
+            @if(Request::is('transaction*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse>
+            <div x-show="open" x-collapse x-cloak>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('transaction.index') }}" class="w-full">
@@ -240,17 +238,17 @@
                         </span>
                     </div>
                 </div>
-                @if(Request::is('product*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </div>
+            @if(Request::is('product*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse>
+            <div x-show="open" x-collapse x-cloak>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('product.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product') && !Request::is('product/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('product') && !Request::is('product/create') && !Request::is('product/*/edit') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
                                     All Products
                                 </p>
                             </div>
@@ -286,12 +284,12 @@
                         </span>
                     </div>
                 </div>
-                @if(Request::is('customer*'))
-                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
-                @endif
             </div>
+            @if(Request::is('customer*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse>
+            <div x-show="open" x-collapse x-cloak>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('customer.index') }}" class="w-full">
