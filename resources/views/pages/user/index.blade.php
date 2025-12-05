@@ -71,7 +71,7 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $user)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" onclick="window.location='{{ route('user.edit', $user->id) }}'">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('user.edit', $user->id) }}">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $user->name }}</p>
                         </td>
@@ -220,5 +220,14 @@
 @endsection
 
 @push('scripts')
-<!-- Page-specific scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make table rows clickable
+    document.querySelectorAll('tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function() {
+            window.location.href = this.dataset.href;
+        });
+    });
+});
+</script>
 @endpush
