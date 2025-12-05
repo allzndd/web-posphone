@@ -41,7 +41,7 @@
             </p>
             
             <!-- Notification Dropdown -->
-            <div x-show="open" @click.away="open = false" x-transition
+            <div x-show="open" @click.away="open = false" x-cloak x-transition
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 transform scale-95"
                  x-transition:enter-end="opacity-100 transform scale-100"
@@ -77,7 +77,7 @@
             </p>
             
             <!-- Info Dropdown -->
-            <div x-show="open" @click.away="open = false" x-transition
+            <div x-show="open" @click.away="open = false" x-cloak x-transition
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 transform scale-95"
                  x-transition:enter-end="opacity-100 transform scale-100"
@@ -110,7 +110,7 @@
             <img @click="open = !open" class="h-10 w-10 rounded-full cursor-pointer" src="{{ asset('img/avatar/avatar-1.png') }}" alt="{{ auth()->user()->name }}">
             
             <!-- Profile Dropdown Menu -->
-            <div x-show="open" @click.away="open = false" x-transition
+            <div x-show="open" @click.away="open = false" x-cloak x-transition
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 transform scale-95"
                  x-transition:enter-end="opacity-100 transform scale-100"
