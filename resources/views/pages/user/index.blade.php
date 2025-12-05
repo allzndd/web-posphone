@@ -7,15 +7,7 @@
 @endpush
 
 @section('main')
-<div class="p-4 md:p-6">
-    <!-- Page Header -->
-    <div class="mb-5">
-        <h3 class="text-2xl font-bold text-navy-700 dark:text-white mb-2">Users Management</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-            Manage all users, including creating, editing, and deleting user accounts.
-        </p>
-    </div>
-
+<div class="mt-3 px-[11px] pr-[10px]">
     <!-- Users Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -81,14 +73,7 @@
                     @forelse ($users as $user)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <td class="py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-lightPrimary dark:bg-navy-700">
-                                    <span class="text-sm font-bold text-brand-500 dark:text-white">
-                                        {{ strtoupper(substr($user->name, 0, 2)) }}
-                                    </span>
-                                </div>
-                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $user->name }}</p>
-                            </div>
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $user->name }}</p>
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $user->email }}</p>
@@ -161,16 +146,75 @@
         </div>
 
         <!-- Pagination -->
-        @if($users->hasPages())
-        <div class="flex items-center justify-between border-t border-gray-200 dark:border-white/10 px-6 py-4">
-            <div class="text-sm text-gray-600 dark:text-gray-400">
-                Showing {{ $users->firstItem() }} to {{ $users->lastItem() }} of {{ $users->total() }} results
+        <div class="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 dark:border-white/10 px-6 py-4 gap-4">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
+                <form method="GET" action="{{ route('user.index') }}" id="perPageForm" class="inline-block">
+                    <input type="hidden" name="name" value="{{ request('name') }}">
+                    <select name="per_page" onchange="this.form.submit()" 
+                            class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
+                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page', 10) == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                </form>
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                    Showing {{ $users->firstItem() ?? 0 }} to {{ $users->lastItem() ?? 0 }} of {{ $users->total() }} results
+                </span>
             </div>
-            <div class="flex gap-2">
-                {{ $users->withQueryString()->links() }}
+            <div class="flex items-center gap-1">
+                {{-- Previous Button --}}
+                @if ($users->onFirstPage())
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
+                        </svg>
+                    </span>
+                @else
+                    <a href="{{ $users->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
+                        </svg>
+                    </a>
+                @endif
+
+                {{-- Page Numbers --}}
+                @foreach ($users->getUrlRange(max(1, $users->currentPage() - 2), min($users->lastPage(), $users->currentPage() + 2)) as $page => $url)
+                    @if ($page == $users->currentPage())
+                        <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
+                            {{ $page }}
+                        </span>
+                    @else
+                        <a href="{{ $url }}&per_page={{ request('per_page', 10) }}" 
+                           class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                            {{ $page }}
+                        </a>
+                    @endif
+                @endforeach
+
+                {{-- Next Button --}}
+                @if ($users->hasMorePages())
+                    <a href="{{ $users->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
+                        </svg>
+                    </a>
+                @else
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
+                        </svg>
+                    </span>
+                @endif
             </div>
         </div>
-        @endif
     </div>
 </div>
 @endsection
