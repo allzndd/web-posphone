@@ -103,6 +103,20 @@
             letter-spacing: -0.5px;
         }
         
+        /* Remove underline from all links - Horizon style */
+        a {
+            text-decoration: none !important;
+        }
+        
+        a:hover {
+            text-decoration: none !important;
+        }
+        
+        /* Alpine.js cloak - prevent flash before JS loads */
+        [x-cloak] {
+            display: none !important;
+        }
+        
         /* Prevent scrolling when sidebar is open on mobile */
         @media (max-width: 1279px) {
             body:has([x-data*="sidebarOpen: true"]) {
@@ -153,7 +167,7 @@
 <body class="bg-white">
     <div id="app" class="flex h-full w-full" x-data="{ sidebarOpen: false }">
         <!-- Overlay untuk mobile/tablet -->
-        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 xl:hidden" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" x-cloak class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 xl:hidden" x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"></div>
         
         <!-- Sidebar -->
         @include('components.sidebar')
@@ -161,14 +175,14 @@
         <!-- Navbar & Main Content -->
         <div class="h-full w-full bg-lightPrimary dark:!bg-navy-900">
             <!-- Main Content -->
-            <main class="mx-[12px] h-full flex-none transition-all md:pr-2 xl:ml-[280px]">
+            <main class="mx-[12px] h-full flex-none transition-all xl:ml-[325px] xl:mr-[12px]">
                 <!-- Routes / Content -->
                 <div class="h-full">
                     <!-- Navbar -->
                     @include('components.header')
                     
                     <!-- Page Content -->
-                    <div class="pt-5s mx-auto mb-auto h-full min-h-[84vh] p-2 md:pr-2">
+                    <div class="pt-5s mx-auto mb-auto h-full min-h-[84vh] p-2">
                         @yield('main')
                     </div>
                     
