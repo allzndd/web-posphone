@@ -133,25 +133,21 @@ class ThemeCustomizer {
     }
 
     init() {
-        console.log('🎨 Theme Customizer initializing...');
         this.loadSavedTheme();
         this.createCustomizerUI();
         this.attachEventListeners();
         this.updateCurrentMode();
         this.observeDarkModeChanges();
-        console.log('✅ Theme Customizer ready!');
     }
 
     loadSavedTheme() {
         const savedTheme = localStorage.getItem('customTheme');
         if (savedTheme) {
             const theme = JSON.parse(savedTheme);
-            // Ensure both modes exist
             if (!theme.light) theme.light = this.themes.light.default;
             if (!theme.dark) theme.dark = this.themes.dark.default;
             this.applyTheme(theme);
         } else {
-            // Apply default theme for both modes
             this.applyTheme({
                 light: this.themes.light.default,
                 dark: this.themes.dark.default
@@ -160,20 +156,13 @@ class ThemeCustomizer {
     }
 
     createCustomizerUI() {
-        console.log('Creating customizer UI...');
-        
         const customizerHTML = `
-            <!-- Theme Customizer Trigger -->
             <div class="theme-customizer-trigger" id="themeCustomizerTrigger" style="position:fixed;right:20px;bottom:20px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#4318FF 0%,#868CFF 100%);box-shadow:0 4px 12px rgba(67,24,255,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:999;">
                 <svg class="w-6 h-6 text-white" style="width:24px;height:24px;color:white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
                 </svg>
             </div>
-
-            <!-- Overlay -->
             <div class="theme-customizer-overlay" id="themeCustomizerOverlay"></div>
-
-            <!-- Customizer Modal -->
             <div class="theme-customizer-modal" id="themeCustomizerModal">
                 <div class="theme-customizer-header">
                     <div class="flex items-center justify-between">
@@ -185,9 +174,7 @@ class ThemeCustomizer {
                         </button>
                     </div>
                 </div>
-
                 <div class="theme-customizer-content">
-                    <!-- Mode Toggle -->
                     <div class="mode-toggle">
                         <button class="mode-toggle-btn active" data-mode="light">
                             <svg class="w-5 h-5 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -202,18 +189,12 @@ class ThemeCustomizer {
                             Dark
                         </button>
                     </div>
-
-                    <!-- Preset Themes -->
                     <div class="mb-6">
                         <h4 class="text-sm font-bold text-navy-700 dark:text-white mb-3">Preset Themes</h4>
                         <div class="preset-themes" id="presetThemes"></div>
                     </div>
-
                     <div class="section-divider"></div>
-
-                    <!-- Custom Colors -->
                     <h4 class="text-sm font-bold text-navy-700 dark:text-white mb-3">Custom Colors</h4>
-                    
                     <div class="color-picker-group">
                         <label class="color-picker-label">Primary Color</label>
                         <div class="color-picker-wrapper">
@@ -221,7 +202,6 @@ class ThemeCustomizer {
                             <input type="text" class="color-hex-input" id="primaryColorHex" value="#4318FF" maxlength="7">
                         </div>
                     </div>
-
                     <div class="color-picker-group">
                         <label class="color-picker-label">Secondary Color</label>
                         <div class="color-picker-wrapper">
@@ -229,7 +209,6 @@ class ThemeCustomizer {
                             <input type="text" class="color-hex-input" id="secondaryColorHex" value="#868CFF" maxlength="7">
                         </div>
                     </div>
-
                     <div class="color-picker-group">
                         <label class="color-picker-label">Sidebar Background</label>
                         <div class="color-picker-wrapper">
@@ -237,7 +216,6 @@ class ThemeCustomizer {
                             <input type="text" class="color-hex-input" id="sidebarColorHex" value="#FFFFFF" maxlength="7">
                         </div>
                     </div>
-
                     <div class="color-picker-group">
                         <label class="color-picker-label">Background Color</label>
                         <div class="color-picker-wrapper">
@@ -245,7 +223,6 @@ class ThemeCustomizer {
                             <input type="text" class="color-hex-input" id="backgroundColorHex" value="#F4F7FE" maxlength="7">
                         </div>
                     </div>
-
                     <div class="color-picker-group">
                         <label class="color-picker-label">Text Gray Color</label>
                         <div class="color-picker-wrapper">
@@ -253,8 +230,6 @@ class ThemeCustomizer {
                             <input type="text" class="color-hex-input" id="grayColorHex" value="#343b4f" maxlength="7">
                         </div>
                     </div>
-
-                    <!-- Actions -->
                     <div class="theme-actions">
                         <button class="theme-btn theme-btn-secondary" id="resetTheme">Reset Default</button>
                         <button class="theme-btn theme-btn-primary" id="applyTheme">Apply Theme</button>
@@ -264,12 +239,6 @@ class ThemeCustomizer {
         `;
 
         document.body.insertAdjacentHTML('beforeend', customizerHTML);
-        console.log('✓ Customizer HTML inserted');
-        
-        // Verify trigger button exists
-        const trigger = document.getElementById('themeCustomizerTrigger');
-        console.log('✓ Trigger button:', trigger ? 'Found' : 'NOT FOUND!');
-        
         this.renderPresetThemes();
     }
 
@@ -293,33 +262,27 @@ class ThemeCustomizer {
     }
 
     attachEventListeners() {
-        // Toggle customizer
         document.getElementById('themeCustomizerTrigger').addEventListener('click', () => this.toggleCustomizer());
         document.getElementById('themeCustomizerOverlay').addEventListener('click', () => this.toggleCustomizer());
         document.getElementById('closeCustomizer').addEventListener('click', () => this.toggleCustomizer());
 
-        // Mode toggle
         document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.switchMode(e.target.closest('.mode-toggle-btn').dataset.mode));
         });
 
-        // Preset themes
         document.getElementById('presetThemes').addEventListener('click', (e) => {
             const card = e.target.closest('.preset-theme-card');
             if (card) {
-                const themeKey = card.dataset.theme;
-                this.loadPresetTheme(themeKey);
+                this.loadPresetTheme(card.dataset.theme);
             }
         });
 
-        // Color pickers sync
         this.syncColorInputs('primary');
         this.syncColorInputs('secondary');
         this.syncColorInputs('sidebar');
         this.syncColorInputs('background');
         this.syncColorInputs('gray');
 
-        // Apply and reset
         document.getElementById('applyTheme').addEventListener('click', () => this.saveAndApplyCustomTheme());
         document.getElementById('resetTheme').addEventListener('click', () => this.resetToDefault());
     }
@@ -366,14 +329,13 @@ class ThemeCustomizer {
         document.getElementById('sidebarColorHex').value = theme.sidebar;
         document.getElementById('backgroundColor').value = theme.background;
         document.getElementById('backgroundColorHex').value = theme.background;
-            document.getElementById('grayColor').value = theme.gray;
-            document.getElementById('grayColorHex').value = theme.gray;
-            
-            // Highlight selected preset
-            document.querySelectorAll('.preset-theme-card').forEach(card => {
-                card.classList.toggle('active', card.dataset.theme === themeKey);
-            });
-        }
+        document.getElementById('grayColor').value = theme.gray;
+        document.getElementById('grayColorHex').value = theme.gray;
+        
+        document.querySelectorAll('.preset-theme-card').forEach(card => {
+            card.classList.toggle('active', card.dataset.theme === themeKey);
+        });
+    }
 
     loadCurrentColors() {
         const savedTheme = localStorage.getItem('customTheme');
@@ -397,35 +359,24 @@ class ThemeCustomizer {
     }
 
     saveAndApplyCustomTheme() {
-        // Get existing saved theme or use defaults
         const existingTheme = localStorage.getItem('customTheme');
         const savedTheme = existingTheme ? JSON.parse(existingTheme) : {
             light: this.themes.light.default,
             dark: this.themes.dark.default
         };
 
-        // Update only the mode being edited
         const customTheme = {
             light: this.currentMode === 'light' ? this.getCurrentColors() : (savedTheme.light || this.themes.light.default),
             dark: this.currentMode === 'dark' ? this.getCurrentColors() : (savedTheme.dark || this.themes.dark.default)
         };
-
-        console.log('Saving theme:', customTheme);
         
         try {
             localStorage.setItem('customTheme', JSON.stringify(customTheme));
-            console.log('✓ Saved to localStorage');
-            
-            // Verify save
-            const verify = localStorage.getItem('customTheme');
-            console.log('✓ Verification:', verify ? 'Success' : 'FAILED!');
         } catch (e) {
-            console.error('❌ LocalStorage save failed:', e);
+            console.error('LocalStorage save failed:', e);
         }
         
-        // Apply theme
         this.applyTheme(customTheme);
-        
         this.toggleCustomizer();
     }
 
@@ -440,71 +391,40 @@ class ThemeCustomizer {
     }
 
     applyTheme(theme) {
-        console.log('Applying theme:', theme);
-        
         const isDark = document.documentElement.classList.contains('dark');
         const currentTheme = isDark ? theme.dark : theme.light;
 
-        // Apply CSS variables to root
         const root = document.documentElement;
-        
-        // Brand colors
         root.style.setProperty('--color-brand-primary', currentTheme.primary);
         root.style.setProperty('--color-brand-secondary', currentTheme.secondary);
         root.style.setProperty('--color-sidebar-bg', currentTheme.sidebar);
         root.style.setProperty('--color-page-bg', currentTheme.background);
         root.style.setProperty('--color-gray-600', currentTheme.gray);
-        
-        // Generate color variations
         root.style.setProperty('--color-brand-400', this.lightenColor(currentTheme.primary, 10));
         root.style.setProperty('--color-brand-500', currentTheme.primary);
         root.style.setProperty('--color-brand-600', this.darkenColor(currentTheme.primary, 10));
         
-        // Apply to elements directly with !important - pass the full theme object
         this.applyStylesToElements(theme);
-        
-        console.log('✓ Theme applied for mode:', isDark ? 'dark' : 'light');
-    }
-
-    resetToDefault() {
-        localStorage.removeItem('customTheme');
-        this.loadPresetTheme('default');
-        this.showNotification('Reset to default theme');
-        setTimeout(() => window.location.reload(), 500);
-    }
-
-    updateCurrentMode() {
-        const isDark = document.documentElement.classList.contains('dark');
-        this.currentMode = isDark ? 'dark' : 'light';
     }
 
     applyStylesToElements(theme) {
-        // Create or update dynamic style tag
         let styleTag = document.getElementById('dynamic-theme-styles');
         if (!styleTag) {
             styleTag = document.createElement('style');
             styleTag.id = 'dynamic-theme-styles';
             document.head.appendChild(styleTag);
-            console.log('✓ Created dynamic style tag');
         }
 
-        // Use the passed theme object which contains both light and dark
         const lightTheme = theme.light || this.themes.light.default;
         const darkTheme = theme.dark || this.themes.dark.default;
         
-        console.log('Applying styles for Light:', lightTheme.primary);
-        console.log('Applying styles for Dark:', darkTheme.primary);
-        
         styleTag.textContent = `
-            /* Light Mode */
             html:not(.dark) .text-brand-500 { color: ${lightTheme.primary} !important; }
             html:not(.dark) .bg-brand-500 { background-color: ${lightTheme.primary} !important; }
             html:not(.dark) #sidebar { background-color: ${lightTheme.sidebar} !important; }
             html:not(.dark) body { background-color: ${lightTheme.background} !important; }
             html:not(.dark) .text-gray-600:not(.dark\\:text-gray-400) { color: ${lightTheme.gray} !important; }
             html:not(.dark) .theme-customizer-trigger { background: linear-gradient(135deg, ${lightTheme.primary}, ${lightTheme.secondary}) !important; }
-            
-            /* Dark Mode */
             html.dark .text-brand-500 { color: ${darkTheme.primary} !important; }
             html.dark .bg-brand-500 { background-color: ${darkTheme.primary} !important; }
             html.dark #sidebar { background-color: ${darkTheme.sidebar} !important; }
@@ -512,21 +432,16 @@ class ThemeCustomizer {
             html.dark .text-gray-400, html.dark .dark\\:text-gray-400 { color: ${darkTheme.gray} !important; }
             html.dark .theme-customizer-trigger { background: linear-gradient(135deg, ${darkTheme.primary}, ${darkTheme.secondary}) !important; }
         `;
-        
-        console.log('✓ Styles injected');
     }
 
     resetToDefault() {
-        console.log('Resetting to default theme...');
         localStorage.removeItem('customTheme');
         
-        // Remove dynamic styles
         const styleTag = document.getElementById('dynamic-theme-styles');
         if (styleTag) {
             styleTag.remove();
         }
         
-        // Apply default theme immediately
         const defaultTheme = {
             light: this.themes.light.default,
             dark: this.themes.dark.default
@@ -534,11 +449,7 @@ class ThemeCustomizer {
         
         localStorage.setItem('customTheme', JSON.stringify(defaultTheme));
         this.applyTheme(defaultTheme);
-        
-        // Reload the color picker values
         this.loadPresetTheme('default');
-        
-        console.log('Reset complete');
     }
 
     updateCurrentMode() {
@@ -547,7 +458,6 @@ class ThemeCustomizer {
     }
 
     observeDarkModeChanges() {
-        // Watch for dark mode toggle
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.attributeName === 'class') {
@@ -556,7 +466,6 @@ class ThemeCustomizer {
                     
                     if (newMode !== this.currentMode) {
                         this.currentMode = newMode;
-                        // Re-apply theme when mode changes to ensure correct colors
                         const savedTheme = localStorage.getItem('customTheme');
                         if (savedTheme) {
                             const theme = JSON.parse(savedTheme);
@@ -564,7 +473,6 @@ class ThemeCustomizer {
                             if (!theme.dark) theme.dark = this.themes.dark.default;
                             this.applyTheme(theme);
                         } else {
-                            // Apply default if no saved theme
                             this.applyTheme({
                                 light: this.themes.light.default,
                                 dark: this.themes.dark.default
@@ -618,12 +526,10 @@ class ThemeCustomizer {
     }
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         new ThemeCustomizer();
     });
 } else {
-    // DOM already loaded
     new ThemeCustomizer();
 }
