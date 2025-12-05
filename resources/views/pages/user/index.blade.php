@@ -71,7 +71,7 @@
                 </thead>
                 <tbody>
                     @forelse ($users as $user)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" onclick="window.location='{{ route('user.edit', $user->id) }}'">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $user->name }}</p>
                         </td>
@@ -99,7 +99,7 @@
                                 {{ $user->created_at ? \Carbon\Carbon::parse($user->created_at)->format('d M Y') : '-' }}
                             </p>
                         </td>
-                        <td class="py-4">
+                        <td class="py-4" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-2">
                                 <!-- Edit Button -->
                                 <a href="{{ route('user.edit', $user->id) }}" 
