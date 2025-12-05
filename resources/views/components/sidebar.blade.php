@@ -90,7 +90,7 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse x-cloak>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('product*') && !Request::is('storages*') && !Request::is('colors*') && !Request::is('product-name*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('product.index') }}" class="w-full">
@@ -197,7 +197,7 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse x-cloak>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('transaction*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('transaction.index') }}" class="w-full">
@@ -243,7 +243,7 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse x-cloak>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('product*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('product.index') }}" class="w-full">
@@ -289,7 +289,7 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-collapse x-cloak>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('customer*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('customer.index') }}" class="w-full">
