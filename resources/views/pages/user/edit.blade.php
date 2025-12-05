@@ -7,23 +7,7 @@
 @endpush
 
 @section('main')
-<div class="p-4 md:p-6">
-    <!-- Back Button & Header -->
-    <div class="mb-5">
-        <a href="{{ route('user.index') }}" 
-           class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors mb-4">
-            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                <path fill="none" d="M0 0h24v24H0z"></path>
-                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
-            </svg>
-            Back to Users
-        </a>
-        <h3 class="text-2xl font-bold text-navy-700 dark:text-white mb-2">Edit User</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-            Update the information for {{ $user->name }}'s account.
-        </p>
-    </div>
-
+<div class="mt-3 px-[11px] pr-[10px]">
     <!-- Form Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
         <form action="{{ route('user.update', $user) }}" method="POST">
@@ -185,7 +169,7 @@
                                 </div>
                             </div>
                             <input type="radio" name="roles" value="OWNER" {{ old('roles', $user->roles) == 'OWNER' ? 'checked' : '' }} 
-                                   class="h-5 w-5 text-brand-500 focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400">
+                                   class="h-5 w-5 text-brand-500 focus:ring-0">
                         </label>
 
                         <!-- Admin Option -->
@@ -203,7 +187,7 @@
                                 </div>
                             </div>
                             <input type="radio" name="roles" value="ADMIN" {{ old('roles', $user->roles) == 'ADMIN' ? 'checked' : '' }} 
-                                   class="h-5 w-5 text-brand-500 focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400">
+                                   class="h-5 w-5 text-brand-500 focus:ring-0">
                         </label>
                     </div>
                     @error('roles')
