@@ -47,6 +47,25 @@
         body {
             font-family: 'DM Sans', sans-serif;
         }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(66, 42, 251, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(66, 42, 251, 0.6); }
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .animate-float-delay {
+            animation: float 8s ease-in-out infinite;
+            animation-delay: 1s;
+        }
     </style>
 
     @stack('style')
@@ -63,10 +82,41 @@
                         @yield('main')
                     </div>
                     
-                    <!-- Right Side Image -->
+                    <!-- Right Side Background -->
                     <div class="absolute right-0 hidden h-full min-h-screen md:block lg:w-[49vw] 2xl:w-[44vw]">
-                        <div class="absolute flex h-full w-full items-center justify-center bg-brand-500 bg-cover bg-center lg:rounded-bl-[120px] xl:rounded-bl-[200px]"
-                             style="background-image: url('{{ asset('img/logo-miphone-2.png') }}'); background-size: contain; background-repeat: no-repeat; background-position: center;">
+                        <div class="absolute flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-400 via-brand-500 to-brand-700 lg:rounded-bl-[120px] xl:rounded-bl-[200px] overflow-hidden">
+                            <!-- Decorative Elements -->
+                            <div class="absolute top-20 right-20 w-32 h-32 bg-white/10 rounded-full blur-xl animate-float"></div>
+                            <div class="absolute bottom-32 left-16 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-float-delay"></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+                            
+                            <!-- Central Content -->
+                            <div class="relative z-10 text-center px-12">
+                                <div class="mb-8">
+                                    <div class="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-3xl mb-6 animate-pulse">
+                                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <h2 class="text-4xl font-bold text-white mb-4">Welcome to PosPhone</h2>
+                                <p class="text-white/80 text-lg max-w-md mx-auto leading-relaxed">
+                                    Enterprise-grade Point of Sales solution designed for smartphone retail businesses. Streamline operations with powerful tools and analytics.
+                                </p>
+                                
+                                <!-- Feature Pills -->
+                                <div class="mt-8 flex flex-wrap gap-3 justify-center">
+                                    <div class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                                        Modern Interface
+                                    </div>
+                                    <div class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                                        Enterprise Security
+                                    </div>
+                                    <div class="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                                        Advanced Analytics
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
