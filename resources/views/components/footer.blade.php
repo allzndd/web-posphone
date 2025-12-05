@@ -1,10 +1,5 @@
-<footer class="bg-white border-t border-gray-200 px-6 py-4">
-    <div class="flex items-center justify-between text-sm text-gray-600">
-        <div>
-            <span>© {{ date('Y') }} MIPHONE GROUP. All rights reserved.</span>
-        </div>
-        <div>
-            <span>Design By <a href="https://nauval.in/" class="text-brand-500 hover:text-brand-600 font-medium">Nur Rahmat Ramdhan</a></span>
-        </div>
+<footer class="bg-lightPrimary dark:bg-navy-900 px-6 py-4">
+    <div class="flex items-center justify-center text-sm text-gray-600 dark:text-gray-400">
+        <span>© {{ date('Y') }} CodeoWorks. All rights reserved.</span>
     </div>
 </footer>
