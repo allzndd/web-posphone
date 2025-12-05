@@ -26,6 +26,9 @@
     <!-- Bootstrap for legacy compatibility -->
     <link rel="stylesheet" href="{{ asset('library/bootstrap/dist/css/bootstrap.min.css') }}">
 
+    <!-- Theme Customizer CSS -->
+    <link rel="stylesheet" href="{{ asset('css/theme-customizer.css') }}">
+
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -43,7 +46,7 @@
                             300: '#cbd5e0',
                             400: '#a0aec0',
                             500: '#adb5bd',
-                            600: '#343b4fff',
+                            600: '#343b4f',
                             700: '#707eae',
                             800: '#252f40',
                             900: '#1b2559',
@@ -91,6 +94,9 @@
                 }
             }
         }
+        
+        // Suppress Tailwind CDN warning in development
+        tailwind.disableColorSchemeWarnings = true;
     </script>
 
     <!-- Alpine.js for dropdowns and interactions -->
@@ -241,6 +247,9 @@
             });
         });
     </script>
+
+    <!-- Theme Customizer Script -->
+    <script src="{{ asset('js/theme-customizer.js') }}"></script>
 </body>
 
 </html>
