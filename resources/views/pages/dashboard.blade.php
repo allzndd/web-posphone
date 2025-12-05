@@ -3,15 +3,7 @@
 @section('title', 'Dashboard')
 
 @push('style')
-<style>
-    .stat-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
 @endpush
 
 @section('main')
@@ -88,13 +80,38 @@
                         @endif
                     </p>
                 </div>
-                <form method="GET" action="{{ route('home') }}" class="flex items-center">
-                    <select name="period" class="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-700 px-4 py-2 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500" onchange="this.form.submit()">
-                        <option value="week" {{ $period === 'week' ? 'selected' : '' }}>Mingguan</option>
-                        <option value="monthly" {{ $period === 'monthly' ? 'selected' : '' }}>Bulanan</option>
-                        <option value="yearly" {{ $period === 'yearly' ? 'selected' : '' }}>Tahunan</option>
-                    </select>
-                </form>
+                
+                <!-- Custom Dropdown with Alpine.js -->
+                <div x-data="{ open: false, selected: '{{ $period }}' }" class="relative">
+                    <button @click="open = !open" type="button" class="flex items-center justify-between rounded-xl border border-gray-200 dark:!border-white/10 !bg-white dark:!bg-navy-700 px-4 py-2 text-sm font-medium !text-navy-700 dark:!text-white outline-none focus:border-brand-500 min-w-[120px]">
+                        <span x-text="selected === 'week' ? 'Mingguan' : (selected === 'monthly' ? 'Bulanan' : 'Tahunan')"></span>
+                        <svg class="ml-2 h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <div x-show="open" @click.away="open = false" x-cloak
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-[120px] rounded-xl !bg-white dark:!bg-navy-700 shadow-xl shadow-shadow-500 dark:shadow-none border border-gray-200 dark:border-white/10 py-1 z-10">
+                        <a href="{{ route('home', ['period' => 'week']) }}" 
+                           class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'week' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
+                            Mingguan
+                        </a>
+                        <a href="{{ route('home', ['period' => 'monthly']) }}" 
+                           class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'monthly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
+                            Bulanan
+                        </a>
+                        <a href="{{ route('home', ['period' => 'yearly']) }}" 
+                           class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'yearly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
+                            Tahunan
+                        </a>
+                    </div>
+                </div>
             </div>
             <div class="relative" style="height: 300px;">
                 <canvas id="profitChart"></canvas>

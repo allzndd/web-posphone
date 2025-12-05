@@ -1,0 +1,27 @@
+/* Dashboard Styles */
+.stat-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode select options - Force styling */
+html.dark select,
+.dark select {
+    color-scheme: dark;
+}
+
+html.dark select option,
+.dark select option {
+    background-color: #111c44 !important;
+    color: white !important;
+}
+
+/* Untuk browser yang tidak support color-scheme */
+html.dark select::-webkit-scrollbar,
+.dark select::-webkit-scrollbar {
+    background-color: #111c44;
+}
