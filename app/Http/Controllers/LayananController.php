@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 class LayananController extends Controller
 {
     private $dummy = [
-        ['id' => 1, 'nama' => 'Service HP', 'deskripsi' => 'Perbaikan kerusakan hardware dan software', 'harga' => 100000, 'status' => 'aktif'],
-        ['id' => 2, 'nama' => 'Ganti LCD', 'deskripsi' => 'Penggantian LCD rusak atau pecah', 'harga' => 500000, 'status' => 'aktif'],
-        ['id' => 3, 'nama' => 'Upgrade RAM', 'deskripsi' => 'Peningkatan kapasitas RAM', 'harga' => 300000, 'status' => 'nonaktif'],
+        ['id' => 1, 'nama' => 'Setup Akun Owner', 'deskripsi' => 'Pembuatan akun owner baru untuk sistem POS', 'harga' => 0, 'status' => 'aktif'],
+        ['id' => 2, 'nama' => 'Migrasi Data', 'deskripsi' => 'Layanan migrasi data dari sistem lama ke sistem baru', 'harga' => 2000000, 'status' => 'aktif'],
+        ['id' => 3, 'nama' => 'Training & Support', 'deskripsi' => 'Pelatihan penggunaan sistem untuk tim owner', 'harga' => 1500000, 'status' => 'aktif'],
+        ['id' => 4, 'nama' => 'Custom Development', 'deskripsi' => 'Pengembangan fitur khusus sesuai kebutuhan owner', 'harga' => 5000000, 'status' => 'aktif'],
+        ['id' => 5, 'nama' => 'Maintenance Premium', 'deskripsi' => 'Layanan maintenance dan support prioritas 24/7', 'harga' => 3000000, 'status' => 'nonaktif'],
     ];
 
     /**

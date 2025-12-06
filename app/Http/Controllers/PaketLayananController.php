@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 class PaketLayananController extends Controller
 {
     private $dummy = [
-        ['id' => 1, 'nama' => 'Paket Basic', 'deskripsi' => 'Service + Cleaning', 'harga' => 150000, 'durasi' => '1 hari', 'status' => 'aktif'],
-        ['id' => 2, 'nama' => 'Paket Premium', 'deskripsi' => 'Service + Ganti Spare Part', 'harga' => 500000, 'durasi' => '2 hari', 'status' => 'aktif'],
-        ['id' => 3, 'nama' => 'Paket Ultimate', 'deskripsi' => 'Service Lengkap + Garansi 6 Bulan', 'harga' => 1000000, 'durasi' => '3 hari', 'status' => 'nonaktif'],
+        ['id' => 1, 'nama' => 'Paket Starter', 'deskripsi' => 'Sistem POS Web + Mobile (1 Outlet)', 'harga' => 500000, 'durasi' => '1 Bulan', 'status' => 'aktif'],
+        ['id' => 2, 'nama' => 'Paket Basic', 'deskripsi' => 'Sistem POS Web + Mobile (3 Outlet) + Support', 'harga' => 1200000, 'durasi' => '3 Bulan', 'status' => 'aktif'],
+        ['id' => 3, 'nama' => 'Paket Professional', 'deskripsi' => 'Sistem POS Web + Mobile (5 Outlet) + Priority Support', 'harga' => 2500000, 'durasi' => '6 Bulan', 'status' => 'aktif'],
+        ['id' => 4, 'nama' => 'Paket Premium', 'deskripsi' => 'Sistem POS Web + Mobile (10 Outlet) + Custom Feature', 'harga' => 5000000, 'durasi' => '1 Tahun', 'status' => 'aktif'],
+        ['id' => 5, 'nama' => 'Paket Enterprise', 'deskripsi' => 'Sistem POS Web + Mobile (Unlimited Outlet) + Dedicated Support', 'harga' => 10000000, 'durasi' => '1 Tahun', 'status' => 'nonaktif'],
     ];
 
     /**

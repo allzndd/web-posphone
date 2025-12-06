@@ -22,9 +22,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard-general-dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
 
+    // Owner & Admin Routes - User Management
+    Route::middleware(['role:OWNER,ADMIN'])->group(function () {
+        Route::resource('user', UserController::class);
+    });
+
     // Owner Only Routes
     Route::middleware(['role:OWNER'])->group(function () {
-        Route::resource('user', UserController::class);
         Route::resource('tradein', \App\Http\Controllers\TradeInController::class);
         Route::resource('category', \App\Http\Controllers\CategoryController::class);
         Route::resource('storages', \App\Http\Controllers\StorageController::class);
@@ -45,5 +49,22 @@ Route::middleware(['auth'])->group(function () {
     // Admin & Owner access to Product management
     Route::middleware(['role:OWNER,ADMIN'])->group(function () {
         Route::resource('product', \App\Http\Controllers\ProductController::class);
+    });
+
+    // Superadmin Only - Dashboard Superadmin
+    Route::middleware(['role:SUPERADMIN'])->group(function () {
+        Route::get('dashboard-superadmin', [\App\Http\Controllers\DashboardSuperadminController::class, 'index'])->name('dashboard-superadmin');
+        
+        // Menu Baru - Kelola Owner
+        Route::resource('kelola-owner', \App\Http\Controllers\KelolaOwnerController::class);
+        
+        // Menu Baru - Layanan
+        Route::resource('layanan', \App\Http\Controllers\LayananController::class);
+        
+        // Menu Baru - Paket Layanan
+        Route::resource('paket-layanan', \App\Http\Controllers\PaketLayananController::class);
+        
+        // Menu Baru - Pembayaran
+        Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
     });
 });

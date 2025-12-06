@@ -15,6 +15,11 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Redirect superadmin to their own dashboard
+        if(auth()->user()->isSuperadmin()) {
+            return redirect()->route('dashboard-superadmin');
+        }
+
         // Get filter period (default: week)
         $period = $request->get('period', 'week');
 

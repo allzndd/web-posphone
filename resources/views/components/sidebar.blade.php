@@ -17,6 +17,7 @@
     <!-- Nav Menu -->
     <ul class="mb-auto pt-1">
         
+        @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
         <!-- Dashboard -->
         <li class="relative mb-3 flex hover:cursor-pointer">
             <a href="{{ route('home') }}" class="w-full">
@@ -33,9 +34,46 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
+        @endif
 
-        @if(auth()->user()->isOwner())
+        @if(auth()->user()->isSuperadmin())
+        <!-- Dashboard Superadmin -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('dashboard-superadmin') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('dashboard-superadmin') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('dashboard-superadmin') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        Dashboard Superadmin
+                    </p>
+                </div>
+            </a>
+            @if(Request::is('dashboard-superadmin'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+        </li>
+
+        <!-- Kelola Owner -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('kelola-owner.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('kelola-owner*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M16.5 12c1.38 0 2.49-1.12 2.49-2.5S17.88 7 16.5 7C15.12 7 14 8.12 14 9.5s1.12 2.5 2.5 2.5zM9 11c1.66 0 2.99-1.34 2.99-3S10.66 5 9 5C7.34 5 6 6.34 6 8s1.34 3 3 3zm7.5 3c-1.83 0-5.5.92-5.5 2.75V19h11v-2.25c0-1.83-3.67-2.75-5.5-2.75zM9 13c-2.33 0-7 1.17-7 3.5V19h7v-2.25c0-.85.33-2.34 2.37-3.47C10.5 13.1 9.66 13 9 13z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('kelola-owner*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        Kelola Owner
+                    </p>
+                </div>
+            </a>
+            @if(Request::is('kelola-owner*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+        </li>
+        @endif
+
         <!-- Chat Analisis -->
+        @if(auth()->user()->isOwner())
         <li class="relative mb-3 flex hover:cursor-pointer">
             <a href="{{ route('chat.index') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
@@ -51,7 +89,9 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
+        @endif
 
+        @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
         <!-- Users -->
         <li class="relative mb-3 flex hover:cursor-pointer">
             <a href="{{ route('user.index') }}" class="w-full">
@@ -68,7 +108,9 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
+        @endif
 
+        @if(auth()->user()->isOwner())
         <!-- Products Dropdown with Accordion -->
         <li class="relative mb-3" x-data="{ open: {{ Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
@@ -176,6 +218,7 @@
         </li>
         @endif
 
+        @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
         <!-- Transactions Dropdown with Accordion -->
         <li class="relative mb-3" x-data="{ open: {{ Request::is('transaction*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
@@ -220,6 +263,7 @@
                 </ul>
             </div>
         </li>
+        @endif
 
         @if(auth()->user()->isAdmin())
         <!-- Products Dropdown for Admin with Accordion -->
@@ -268,6 +312,7 @@
         </li>
         @endif
 
+        @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
         <!-- Customers Dropdown with Accordion -->
         <li class="relative mb-3" x-data="{ open: {{ Request::is('customer*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
@@ -312,6 +357,60 @@
                 </ul>
             </div>
         </li>
+        @endif
+
+        @if(auth()->user()->isSuperadmin())
+        <!-- Layanan -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('layanan.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('layanan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('layanan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                        Layanan
+                    </p>
+                </div>
+                @if(Request::is('layanan*'))
+                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+                @endif
+            </a>
+        </li>
+
+        <!-- Paket Layanan -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('paket-layanan.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('paket-layanan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('paket-layanan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                        Paket Layanan
+                    </p>
+                </div>
+                @if(Request::is('paket-layanan*'))
+                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+                @endif
+            </a>
+        </li>
+
+        <!-- Pembayaran -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('pembayaran.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('pembayaran*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('pembayaran*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                        Pembayaran
+                    </p>
+                </div>
+                @if(Request::is('pembayaran*'))
+                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+                @endif
+            </a>
+        </li>
+        @endif
 
     </ul>
     
