@@ -3,21 +3,20 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Pembayaran;
+use App\Models\User;
 
 class PembayaranController extends Controller
 {
-    private $dummy = [
-        ['id' => 1, 'tanggal' => '2025-12-01', 'owner' => 'PT Maju Jaya', 'email' => 'majujaya@gmail.com', 'paket' => 'Paket Premium', 'periode' => '1 Bulan', 'total' => 500000, 'status' => 'Lunas'],
-        ['id' => 2, 'tanggal' => '2025-12-05', 'owner' => 'CV Berkah Store', 'email' => 'berkah@yahoo.com', 'paket' => 'Paket Basic', 'periode' => '3 Bulan', 'total' => 1200000, 'status' => 'Pending'],
-        ['id' => 3, 'tanggal' => '2025-11-28', 'owner' => 'Toko Elektronik Jaya', 'email' => 'elektronik@gmail.com', 'paket' => 'Paket Enterprise', 'periode' => '1 Tahun', 'total' => 5000000, 'status' => 'Lunas'],
-    ];
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $pembayaran = $this->dummy;
+        $pembayaran = Pembayaran::with('owner')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+        
         return view('pembayaran.index', compact('pembayaran'));
     }
 
@@ -26,7 +25,10 @@ class PembayaranController extends Controller
      */
     public function create()
     {
-        return view('pembayaran.create');
+        // Get all owners (users with role OWNER)
+        $owners = User::where('roles', 'OWNER')->get();
+        
+        return view('pembayaran.create', compact('owners'));
     }
 
     /**
@@ -34,7 +36,26 @@ class PembayaranController extends Controller
      */
     public function store(Request $request)
     {
-        return redirect()->route('pembayaran.index')->with('success', 'Pembayaran berhasil ditambahkan');
+        $validated = $request->validate([
+            'tanggal' => 'required|date',
+            'owner_id' => 'required|exists:users,id',
+            'paket' => 'required|string|max:255',
+            'periode' => 'required|string|max:255',
+            'total' => 'required|numeric|min:0',
+            'status' => 'required|in:Paid,Pending,Failed',
+            'notes' => 'nullable|string',
+        ]);
+
+        // Get owner details
+        $owner = User::findOrFail($validated['owner_id']);
+        
+        $validated['owner_name'] = $owner->name;
+        $validated['email'] = $owner->email;
+
+        Pembayaran::create($validated);
+
+        return redirect()->route('pembayaran.index')
+            ->with('success', 'Payment successfully added');
     }
 
     /**
@@ -42,7 +63,8 @@ class PembayaranController extends Controller
      */
     public function show(string $id)
     {
-        $item = collect($this->dummy)->firstWhere('id', (int)$id);
+        $item = Pembayaran::with('owner')->findOrFail($id);
+        
         return view('pembayaran.show', compact('item'));
     }
 
@@ -51,8 +73,10 @@ class PembayaranController extends Controller
      */
     public function edit(string $id)
     {
-        $item = collect($this->dummy)->firstWhere('id', (int)$id);
-        return view('pembayaran.edit', compact('item'));
+        $item = Pembayaran::findOrFail($id);
+        $owners = User::where('roles', 'OWNER')->get();
+        
+        return view('pembayaran.edit', compact('item', 'owners'));
     }
 
     /**
@@ -60,7 +84,28 @@ class PembayaranController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        return redirect()->route('pembayaran.index')->with('success', 'Pembayaran berhasil diupdate');
+        $pembayaran = Pembayaran::findOrFail($id);
+
+        $validated = $request->validate([
+            'tanggal' => 'required|date',
+            'owner_id' => 'required|exists:users,id',
+            'paket' => 'required|string|max:255',
+            'periode' => 'required|string|max:255',
+            'total' => 'required|numeric|min:0',
+            'status' => 'required|in:Paid,Pending,Failed',
+            'notes' => 'nullable|string',
+        ]);
+
+        // Get owner details
+        $owner = User::findOrFail($validated['owner_id']);
+        
+        $validated['owner_name'] = $owner->name;
+        $validated['email'] = $owner->email;
+
+        $pembayaran->update($validated);
+
+        return redirect()->route('pembayaran.index')
+            ->with('success', 'Payment successfully updated');
     }
 
     /**
@@ -68,6 +113,10 @@ class PembayaranController extends Controller
      */
     public function destroy(string $id)
     {
-        return redirect()->route('pembayaran.index')->with('success', 'Pembayaran berhasil dihapus');
+        $pembayaran = Pembayaran::findOrFail($id);
+        $pembayaran->delete();
+
+        return redirect()->route('pembayaran.index')
+            ->with('success', 'Payment successfully deleted');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Pembayaran;
 use Illuminate\Support\Facades\DB;
 
 class DashboardSuperadminController extends Controller
@@ -19,21 +20,29 @@ class DashboardSuperadminController extends Controller
             ->where('updated_at', '>=', now()->subDays(30))
             ->count();
         
-        // Total revenue dari pembayaran (jika tabel pembayaran sudah ada)
-        // Untuk sementara menggunakan dummy karena tabel mungkin belum ada data
-        $totalRevenue = 45500000; // Nanti bisa diganti dengan: DB::table('pembayarans')->sum('total')
+        // Total revenue dari pembayaran yang sudah paid
+        $totalRevenue = Pembayaran::where('status', 'Paid')->sum('total');
         
         // Pembayaran pending (status pending)
-        // $pendingPayments = DB::table('pembayarans')->where('status', 'pending')->count();
-        $pendingPayments = 3; // Dummy untuk sementara
+        $pendingPayments = Pembayaran::where('status', 'Pending')->count();
         
-        // Recent payments - ambil data dari tabel pembayaran jika sudah ada
-        // Untuk sementara masih dummy, nanti bisa diganti dengan query real
-        $recentPayments = [
-            ['id' => 1, 'tanggal' => '2025-12-01', 'owner' => 'PT Maju Jaya', 'email' => 'majujaya@gmail.com', 'paket' => 'Paket Premium', 'periode' => '1 Bulan', 'total' => 500000, 'status' => 'Lunas'],
-            ['id' => 2, 'tanggal' => '2025-12-02', 'owner' => 'CV Berkah Store', 'email' => 'berkahstore@gmail.com', 'paket' => 'Paket Basic', 'periode' => '3 Bulan', 'total' => 1200000, 'status' => 'Pending'],
-            ['id' => 3, 'tanggal' => '2025-12-03', 'owner' => 'Toko Elektronik Jaya', 'email' => 'elektronikjaya@gmail.com', 'paket' => 'Paket Enterprise', 'periode' => '1 Tahun', 'total' => 5000000, 'status' => 'Lunas'],
-        ];
+        // Recent payments - ambil 5 pembayaran terbaru dari database
+        $recentPayments = Pembayaran::orderBy('tanggal', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function($payment) {
+                return [
+                    'id' => $payment->id,
+                    'tanggal' => $payment->tanggal->format('Y-m-d'),
+                    'owner' => $payment->owner_name,
+                    'email' => $payment->email,
+                    'paket' => $payment->paket,
+                    'periode' => $payment->periode,
+                    'total' => $payment->total,
+                    'status' => $payment->status,
+                ];
+            })
+            ->toArray();
         
         // Statistik owner berdasarkan bulan registrasi (untuk chart)
         $ownersByMonth = User::where('roles', 'OWNER')
@@ -55,12 +64,21 @@ class DashboardSuperadminController extends Controller
             ];
         }
         
-        // Popular packages (dummy untuk sementara)
-        $popularPackages = [
-            ['nama' => 'Paket Premium', 'total_owner' => 5, 'revenue' => 15000000],
-            ['nama' => 'Paket Basic', 'total_owner' => 4, 'revenue' => 8000000],
-            ['nama' => 'Paket Enterprise', 'total_owner' => 3, 'revenue' => 22500000],
-        ];
+        // Popular packages - ambil dari data pembayaran yang paid
+        $popularPackages = Pembayaran::where('status', 'Paid')
+            ->select('paket', DB::raw('COUNT(DISTINCT owner_id) as total_owner'), DB::raw('SUM(total) as revenue'))
+            ->groupBy('paket')
+            ->orderBy('revenue', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function($package) {
+                return [
+                    'nama' => $package->paket,
+                    'total_owner' => $package->total_owner,
+                    'revenue' => $package->revenue,
+                ];
+            })
+            ->toArray();
         
         // Daftar owner terbaru (5 terbaru)
         $recentOwners = User::where('roles', 'OWNER')

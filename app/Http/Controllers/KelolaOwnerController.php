@@ -2,79 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KelolaOwner;
 use Illuminate\Http\Request;
 
 class KelolaOwnerController extends Controller
 {
-    private $dummy = [
-        [
-            'id' => 1,
-            'nama_perusahaan' => 'PT Maju Jaya',
-            'nama_pemilik' => 'Budi Santoso',
-            'email' => 'majujaya@gmail.com',
-            'telepon' => '08123456789',
-            'paket' => 'Paket Premium',
-            'tanggal_daftar' => '2025-01-15',
-            'tanggal_expired' => '2026-01-15',
-            'jumlah_outlet' => 10,
-            'status' => 'Aktif'
-        ],
-        [
-            'id' => 2,
-            'nama_perusahaan' => 'CV Berkah Store',
-            'nama_pemilik' => 'Siti Aminah',
-            'email' => 'berkahstore@gmail.com',
-            'telepon' => '08198765432',
-            'paket' => 'Paket Basic',
-            'tanggal_daftar' => '2025-03-20',
-            'tanggal_expired' => '2025-12-20',
-            'jumlah_outlet' => 3,
-            'status' => 'Aktif'
-        ],
-        [
-            'id' => 3,
-            'nama_perusahaan' => 'Toko Elektronik Jaya',
-            'nama_pemilik' => 'Ahmad Dahlan',
-            'email' => 'elektronikjaya@gmail.com',
-            'telepon' => '08567891234',
-            'paket' => 'Paket Enterprise',
-            'tanggal_daftar' => '2024-06-10',
-            'tanggal_expired' => '2025-12-10',
-            'jumlah_outlet' => 25,
-            'status' => 'Aktif'
-        ],
-        [
-            'id' => 4,
-            'nama_perusahaan' => 'Warung Kopi Nusantara',
-            'nama_pemilik' => 'Dewi Lestari',
-            'email' => 'kopinusantara@gmail.com',
-            'telepon' => '08234567890',
-            'paket' => 'Paket Starter',
-            'tanggal_daftar' => '2025-10-01',
-            'tanggal_expired' => '2025-11-01',
-            'jumlah_outlet' => 1,
-            'status' => 'Expired'
-        ],
-        [
-            'id' => 5,
-            'nama_perusahaan' => 'Minimarket Sejahtera',
-            'nama_pemilik' => 'Eko Prasetyo',
-            'email' => 'minimarketsejahtera@gmail.com',
-            'telepon' => '08345678901',
-            'paket' => 'Paket Professional',
-            'tanggal_daftar' => '2025-05-12',
-            'tanggal_expired' => '2025-11-12',
-            'jumlah_outlet' => 5,
-            'status' => 'Expired'
-        ],
-    ];
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $owners = $this->dummy;
+        $owners = KelolaOwner::latest()->get();
         return view('kelola-owner.index', compact('owners'));
     }
 
@@ -91,7 +29,23 @@ class KelolaOwnerController extends Controller
      */
     public function store(Request $request)
     {
-        return redirect()->route('kelola-owner.index')->with('success', 'Data owner berhasil ditambahkan');
+        $validated = $request->validate([
+            'nama_perusahaan' => 'required|string|max:255',
+            'nama_pemilik' => 'required|string|max:255',
+            'email' => 'required|email|unique:kelola_owner,email',
+            'telepon' => 'required|string|max:20',
+            'paket' => 'required|string',
+            'jumlah_outlet' => 'required|integer|min:1',
+            'tanggal_daftar' => 'required|date',
+            'tanggal_expired' => 'required|date|after:tanggal_daftar',
+        ]);
+
+        // Auto-set status based on expiration date
+        $validated['status'] = now() > $validated['tanggal_expired'] ? 'Expired' : 'Active';
+
+        KelolaOwner::create($validated);
+
+        return redirect()->route('kelola-owner.index')->with('success', 'Owner successfully created');
     }
 
     /**
@@ -99,7 +53,7 @@ class KelolaOwnerController extends Controller
      */
     public function show(string $id)
     {
-        $owner = collect($this->dummy)->firstWhere('id', (int)$id);
+        $owner = KelolaOwner::findOrFail($id);
         return view('kelola-owner.show', compact('owner'));
     }
 
@@ -108,7 +62,7 @@ class KelolaOwnerController extends Controller
      */
     public function edit(string $id)
     {
-        $owner = collect($this->dummy)->firstWhere('id', (int)$id);
+        $owner = KelolaOwner::findOrFail($id);
         return view('kelola-owner.edit', compact('owner'));
     }
 
@@ -117,7 +71,23 @@ class KelolaOwnerController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        return redirect()->route('kelola-owner.index')->with('success', 'Data owner berhasil diupdate');
+        $owner = KelolaOwner::findOrFail($id);
+        
+        $validated = $request->validate([
+            'nama_perusahaan' => 'required|string|max:255',
+            'nama_pemilik' => 'required|string|max:255',
+            'email' => 'required|email|unique:kelola_owner,email,' . $id,
+            'telepon' => 'required|string|max:20',
+            'paket' => 'required|string',
+            'jumlah_outlet' => 'required|integer|min:1',
+            'tanggal_daftar' => 'required|date',
+            'tanggal_expired' => 'required|date|after:tanggal_daftar',
+            'status' => 'required|in:Active,Expired',
+        ]);
+
+        $owner->update($validated);
+
+        return redirect()->route('kelola-owner.index')->with('success', 'Owner successfully updated');
     }
 
     /**
@@ -125,6 +95,9 @@ class KelolaOwnerController extends Controller
      */
     public function destroy(string $id)
     {
-        return redirect()->route('kelola-owner.index')->with('success', 'Data owner berhasil dihapus');
+        $owner = KelolaOwner::findOrFail($id);
+        $owner->delete();
+
+        return redirect()->route('kelola-owner.index')->with('success', 'Owner successfully deleted');
     }
 }

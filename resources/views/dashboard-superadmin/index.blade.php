@@ -126,9 +126,9 @@
         <!-- Recent Payments -->
         <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
             <div class="flex items-center justify-between p-6 pb-4">
-                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Pembayaran Terbaru</h4>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Recent Payments</h4>
                 <a href="{{ route('pembayaran.index') }}" class="text-sm font-medium text-brand-500 hover:text-brand-600">
-                    Lihat Semua →
+                    View All →
                 </a>
             </div>
 
@@ -140,7 +140,7 @@
                                 <p class="text-xs font-bold text-gray-600 dark:text-white uppercase">Owner</p>
                             </th>
                             <th class="py-3 text-left">
-                                <p class="text-xs font-bold text-gray-600 dark:text-white uppercase">Paket</p>
+                                <p class="text-xs font-bold text-gray-600 dark:text-white uppercase">Package</p>
                             </th>
                             <th class="py-3 text-left">
                                 <p class="text-xs font-bold text-gray-600 dark:text-white uppercase">Total</p>
@@ -164,9 +164,9 @@
                                 <p class="text-sm font-semibold text-navy-700 dark:text-white">Rp {{ number_format($payment['total'], 0, ',', '.') }}</p>
                             </td>
                             <td class="py-3">
-                                @if($payment['status'] === 'Lunas')
+                                @if($payment['status'] === 'Paid')
                                     <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-800 dark:text-green-300">
-                                        Lunas
+                                        Paid
                                     </span>
                                 @else
                                     <span class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300">

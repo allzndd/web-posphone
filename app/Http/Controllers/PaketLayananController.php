@@ -2,24 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaketLayanan;
 use Illuminate\Http\Request;
 
 class PaketLayananController extends Controller
 {
-    private $dummy = [
-        ['id' => 1, 'nama' => 'Paket Starter', 'deskripsi' => 'Sistem POS Web + Mobile (1 Outlet)', 'harga' => 500000, 'durasi' => '1 Bulan', 'status' => 'aktif'],
-        ['id' => 2, 'nama' => 'Paket Basic', 'deskripsi' => 'Sistem POS Web + Mobile (3 Outlet) + Support', 'harga' => 1200000, 'durasi' => '3 Bulan', 'status' => 'aktif'],
-        ['id' => 3, 'nama' => 'Paket Professional', 'deskripsi' => 'Sistem POS Web + Mobile (5 Outlet) + Priority Support', 'harga' => 2500000, 'durasi' => '6 Bulan', 'status' => 'aktif'],
-        ['id' => 4, 'nama' => 'Paket Premium', 'deskripsi' => 'Sistem POS Web + Mobile (10 Outlet) + Custom Feature', 'harga' => 5000000, 'durasi' => '1 Tahun', 'status' => 'aktif'],
-        ['id' => 5, 'nama' => 'Paket Enterprise', 'deskripsi' => 'Sistem POS Web + Mobile (Unlimited Outlet) + Dedicated Support', 'harga' => 10000000, 'durasi' => '1 Tahun', 'status' => 'nonaktif'],
-    ];
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $paket = $this->dummy;
+        $paket = PaketLayanan::latest()->get();
         return view('paket-layanan.index', compact('paket'));
     }
 
@@ -36,24 +29,34 @@ class PaketLayananController extends Controller
      */
     public function store(Request $request)
     {
-        return redirect()->route('paket-layanan.index')->with('success', 'Data paket layanan berhasil ditambahkan');
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'durasi' => 'required|string|max:100',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        PaketLayanan::create($validated);
+
+        return redirect()->route('paket-layanan.index')->with('success', 'Service package successfully created');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        $paket = collect($this->dummy)->firstWhere('id', (int)$id);
+        $paket = PaketLayanan::findOrFail($id);
         return view('paket-layanan.show', compact('paket'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        $paket = collect($this->dummy)->firstWhere('id', (int)$id);
+        $paket = PaketLayanan::findOrFail($id);
         return view('paket-layanan.edit', compact('paket'));
     }
 
@@ -62,14 +65,28 @@ class PaketLayananController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        return redirect()->route('paket-layanan.index')->with('success', 'Data paket layanan berhasil diupdate');
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'durasi' => 'required|string|max:100',
+            'status' => 'required|in:Active,Inactive'
+        ]);
+
+        $paket = PaketLayanan::findOrFail($id);
+        $paket->update($validated);
+
+        return redirect()->route('paket-layanan.index')->with('success', 'Service package successfully updated');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        return redirect()->route('paket-layanan.index')->with('success', 'Data paket layanan berhasil dihapus');
+        $paket = PaketLayanan::findOrFail($id);
+        $paket->delete();
+
+        return redirect()->route('paket-layanan.index')->with('success', 'Service package successfully deleted');
     }
 }

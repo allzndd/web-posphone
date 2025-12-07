@@ -1,52 +1,97 @@
 @extends('layouts.app')
 
-@section('title', 'Detail Pemberitahuan')
+@section('title', 'Payment Details')
 
 @section('main')
-<div class="container-fluid">
-    <div class="card">
-        <div class="card-header">
-            <h4><i class="fas fa-info-circle"></i> Detail Pemberitahuan</h4>
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered">
-                <tr>
-                    <th width="200">ID</th>
-                    <td>{{ $item['id'] }}</td>
-                </tr>
-                <tr>
-                    <th>Judul</th>
-                    <td>{{ $item['judul'] }}</td>
-                </tr>
-                <tr>
-                    <th>Pesan</th>
-                    <td>{{ $item['pesan'] }}</td>
-                </tr>
-                <tr>
-                    <th>Tujuan</th>
-                    <td>{{ $item['tujuan'] }}</td>
-                </tr>
-                <tr>
-                    <th>Tanggal</th>
-                    <td>{{ date('d/m/Y', strtotime($item['tanggal'])) }}</td>
-                </tr>
-                <tr>
-                    <th>Status</th>
-                    <td>
-                        <span class="badge bg-{{ $item['status'] == 'terkirim' ? 'success' : 'warning' }}">
-                            {{ ucfirst($item['status']) }}
-                        </span>
-                    </td>
-                </tr>
-            </table>
-
-            <div class="d-flex gap-2 mt-3">
-                <a href="{{ route('pemberitahuan.edit', $item['id']) }}" class="btn btn-warning">
-                    <i class="fas fa-edit"></i> Edit
+<div class="mt-3 px-[11px] pr-[10px]">
+    <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h4 class="text-xl font-bold text-navy-700 dark:text-white">Payment Details</h4>
+            <div class="flex gap-3">
+                <a href="{{ route('pembayaran.edit', $item->id) }}"
+                   class="linear rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700">
+                    Edit
                 </a>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ route('pemberitahuan.index') }}'">
-                    <i class="fas fa-arrow-left"></i> Kembali
-                </button>
+                <a href="{{ route('pembayaran.index') }}"
+                   class="linear rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20">
+                    Back
+                </a>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Payment ID</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">#{{ str_pad($item->id, 5, '0', STR_PAD_LEFT) }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Date</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->tanggal->format('d F Y') }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Owner Name</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->owner_name }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Email</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->email }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Package</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->paket }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Period</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->periode }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Amount</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">Rp {{ number_format($item->total, 0, ',', '.') }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Status</p>
+                <div class="mt-1">
+                    @if($item->status === 'Paid')
+                        <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-300">
+                            <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                            Paid
+                        </span>
+                    @elseif($item->status === 'Pending')
+                        <span class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 text-sm font-medium text-yellow-800 dark:text-yellow-300">
+                            <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                            Pending
+                        </span>
+                    @else
+                        <span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-sm font-medium text-red-800 dark:text-red-300">
+                            <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                            Failed
+                        </span>
+                    @endif
+                </div>
+            </div>
+            
+            @if($item->notes)
+            <div class="md:col-span-2">
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Notes</p>
+                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $item->notes }}</p>
+            </div>
+            @endif
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Created At</p>
+                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $item->created_at->format('d F Y H:i') }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Last Updated</p>
+                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $item->updated_at->format('d F Y H:i') }}</p>
             </div>
         </div>
     </div>

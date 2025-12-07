@@ -2,24 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Layanan;
 use Illuminate\Http\Request;
 
 class LayananController extends Controller
 {
-    private $dummy = [
-        ['id' => 1, 'nama' => 'Setup Akun Owner', 'deskripsi' => 'Pembuatan akun owner baru untuk sistem POS', 'harga' => 0, 'status' => 'aktif'],
-        ['id' => 2, 'nama' => 'Migrasi Data', 'deskripsi' => 'Layanan migrasi data dari sistem lama ke sistem baru', 'harga' => 2000000, 'status' => 'aktif'],
-        ['id' => 3, 'nama' => 'Training & Support', 'deskripsi' => 'Pelatihan penggunaan sistem untuk tim owner', 'harga' => 1500000, 'status' => 'aktif'],
-        ['id' => 4, 'nama' => 'Custom Development', 'deskripsi' => 'Pengembangan fitur khusus sesuai kebutuhan owner', 'harga' => 5000000, 'status' => 'aktif'],
-        ['id' => 5, 'nama' => 'Maintenance Premium', 'deskripsi' => 'Layanan maintenance dan support prioritas 24/7', 'harga' => 3000000, 'status' => 'nonaktif'],
-    ];
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $layanan = $this->dummy;
+        $layanan = Layanan::latest()->get();
         return view('layanan.index', compact('layanan'));
     }
 
@@ -36,7 +29,16 @@ class LayananController extends Controller
      */
     public function store(Request $request)
     {
-        return redirect()->route('layanan.index')->with('success', 'Data layanan berhasil ditambahkan');
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        Layanan::create($validated);
+
+        return redirect()->route('layanan.index')->with('success', 'Service successfully created');
     }
 
     /**
@@ -44,7 +46,7 @@ class LayananController extends Controller
      */
     public function show(string $id)
     {
-        $item = collect($this->dummy)->firstWhere('id', (int)$id);
+        $item = Layanan::findOrFail($id);
         return view('layanan.show', compact('item'));
     }
 
@@ -53,7 +55,7 @@ class LayananController extends Controller
      */
     public function edit(string $id)
     {
-        $item = collect($this->dummy)->firstWhere('id', (int)$id);
+        $item = Layanan::findOrFail($id);
         return view('layanan.edit', compact('item'));
     }
 
@@ -62,7 +64,17 @@ class LayananController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        return redirect()->route('layanan.index')->with('success', 'Data layanan berhasil diupdate');
+        $validated = $request->validate([
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|numeric|min:0',
+            'status' => 'required|in:Active,Inactive',
+        ]);
+
+        $item = Layanan::findOrFail($id);
+        $item->update($validated);
+
+        return redirect()->route('layanan.index')->with('success', 'Service successfully updated');
     }
 
     /**
@@ -70,6 +82,9 @@ class LayananController extends Controller
      */
     public function destroy(string $id)
     {
-        return redirect()->route('layanan.index')->with('success', 'Data layanan berhasil dihapus');
+        $item = Layanan::findOrFail($id);
+        $item->delete();
+
+        return redirect()->route('layanan.index')->with('success', 'Service successfully deleted');
     }
 }
