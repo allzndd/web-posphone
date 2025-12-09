@@ -34,22 +34,13 @@
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Company</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Name</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Owner</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Email</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Contact</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Package</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Outlets</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Expires</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Registered</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
@@ -60,38 +51,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($owners as $owner)
+                    @forelse($owners as $owner)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <td class="py-4">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $owner->nama_perusahaan }}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">Since {{ $owner->tanggal_daftar->format('d/m/Y') }}</p>
-                        </td>
-                        <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->nama_pemilik }}</p>
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $owner->nama }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">ID: {{ $owner->id }}</p>
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->email }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-500">{{ $owner->telepon }}</p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm font-medium text-navy-700 dark:text-white">{{ $owner->paket }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->created_at->format('d M Y') }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-500">{{ $owner->created_at->diffForHumans() }}</p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->jumlah_outlet }} outlet{{ $owner->jumlah_outlet > 1 ? 's' : '' }}</p>
-                        </td>
-                        <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->tanggal_expired->format('d/m/Y') }}</p>
-                        </td>
-                        <td class="py-4">
-                            @if($owner->status === 'Active')
+                            @if($owner->email_is_verified)
                                 <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-800 dark:text-green-300">
                                     <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                    Active
+                                    Verified
                                 </span>
                             @else
-                                <span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300">
+                                <span class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300">
                                     <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                    Expired
+                                    Unverified
                                 </span>
                             @endif
                         </td>
@@ -123,7 +105,21 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="5" class="py-8 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <p class="text-gray-500 dark:text-gray-400 text-sm">Belum ada owner terdaftar</p>
+                                <a href="{{ route('kelola-owner.create') }}" class="mt-4 text-brand-500 hover:text-brand-600 font-medium">
+                                    + Tambah Owner Baru
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
