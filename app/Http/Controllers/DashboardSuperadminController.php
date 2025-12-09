@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Owner;
 use App\Models\Pembayaran;
 use Illuminate\Support\Facades\DB;
 
@@ -11,41 +12,25 @@ class DashboardSuperadminController extends Controller
 {
     public function index()
     {
-        // Total owner yang terdaftar dengan role OWNER
-        $totalOwners = User::where('roles', 'OWNER')->count();
+        // Total owner yang terdaftar dengan role_id = 2 (Owner)
+        $totalOwners = User::where('role_id', 2)->count();
         
-        // Owner dengan status aktif (bisa dikustomisasi sesuai kebutuhan)
-        // Misalnya owner yang login dalam 30 hari terakhir atau yang memiliki subscription aktif
-        $activeOwners = User::where('roles', 'OWNER')
+        // Owner dengan status aktif (login dalam 30 hari terakhir)
+        $activeOwners = User::where('role_id', 2)
             ->where('updated_at', '>=', now()->subDays(30))
             ->count();
         
-        // Total revenue dari pembayaran yang sudah paid
-        $totalRevenue = Pembayaran::where('status', 'Paid')->sum('total');
+        // Total revenue - Temporary disabled (tabel pembayaran belum ada data)
+        $totalRevenue = 0; // Pembayaran::where('status', 'Paid')->sum('nominal');
         
-        // Pembayaran pending (status pending)
-        $pendingPayments = Pembayaran::where('status', 'Pending')->count();
+        // Pembayaran pending - Temporary disabled
+        $pendingPayments = 0; // Pembayaran::where('status', 'Pending')->count();
         
-        // Recent payments - ambil 5 pembayaran terbaru dari database
-        $recentPayments = Pembayaran::orderBy('tanggal', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function($payment) {
-                return [
-                    'id' => $payment->id,
-                    'tanggal' => $payment->tanggal->format('Y-m-d'),
-                    'owner' => $payment->owner_name,
-                    'email' => $payment->email,
-                    'paket' => $payment->paket,
-                    'periode' => $payment->periode,
-                    'total' => $payment->total,
-                    'status' => $payment->status,
-                ];
-            })
-            ->toArray();
+        // Recent payments - Temporary empty
+        $recentPayments = [];
         
         // Statistik owner berdasarkan bulan registrasi (untuk chart)
-        $ownersByMonth = User::where('roles', 'OWNER')
+        $ownersByMonth = User::where('role_id', 2)
             ->select(DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as total'))
             ->whereYear('created_at', date('Y'))
             ->groupBy('month')
@@ -64,24 +49,11 @@ class DashboardSuperadminController extends Controller
             ];
         }
         
-        // Popular packages - ambil dari data pembayaran yang paid
-        $popularPackages = Pembayaran::where('status', 'Paid')
-            ->select('paket', DB::raw('COUNT(DISTINCT owner_id) as total_owner'), DB::raw('SUM(total) as revenue'))
-            ->groupBy('paket')
-            ->orderBy('revenue', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function($package) {
-                return [
-                    'nama' => $package->paket,
-                    'total_owner' => $package->total_owner,
-                    'revenue' => $package->revenue,
-                ];
-            })
-            ->toArray();
+        // Popular packages - Temporary empty
+        $popularPackages = [];
         
         // Daftar owner terbaru (5 terbaru)
-        $recentOwners = User::where('roles', 'OWNER')
+        $recentOwners = User::where('role_id', 2)
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
