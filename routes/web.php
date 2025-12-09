@@ -48,7 +48,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin & Owner access to Product management
     Route::middleware(['role:OWNER,ADMIN'])->group(function () {
-        Route::resource('product', \App\Http\Controllers\ProductController::class);
+        Route::resource('product', \App\Http\Controllers\ProductController::class)->except(['show']);
     });
 
     // Superadmin Only - Dashboard Superadmin
