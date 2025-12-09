@@ -15,16 +15,13 @@ return new class extends Migration
     {
         Schema::create('pembayaran', function (Blueprint $table) {
             $table->id();
-            $table->date('tanggal');
-            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
-            $table->string('owner_name');
-            $table->string('email');
-            $table->string('paket');
-            $table->string('periode');
-            $table->decimal('total', 15, 2);
-            $table->enum('status', ['Paid', 'Pending', 'Failed'])->default('Pending');
-            $table->text('notes')->nullable();
-            $table->timestamps();
+            $table->integer('owner_id')->nullable();
+            $table->integer('langganan_id')->nullable();
+            $table->decimal('nominal', 15, 2)->nullable();
+            $table->string('metode_pembayaran', 100)->nullable();
+            $table->string('status', 45)->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->timestamp('created_at')->nullable()->useCurrent();
         });
     }
 

@@ -13,13 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('paket_layanan', function (Blueprint $table) {
+        Schema::create('langganan', function (Blueprint $table) {
             $table->id();
-            $table->string('nama');
-            $table->text('deskripsi');
-            $table->decimal('harga', 15, 2);
-            $table->string('durasi');
-            $table->enum('status', ['Active', 'Inactive'])->default('Active');
+            $table->integer('owner_id')->nullable();
+            $table->integer('tipe_layanan_id')->nullable();
+            $table->integer('is_active')->nullable();
+            $table->integer('is_trial')->nullable();
+            $table->date('started_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('paket_layanan');
+        Schema::dropIfExists('langganan');
     }
 };

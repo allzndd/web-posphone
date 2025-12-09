@@ -13,10 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('storages', function (Blueprint $table) {
+        Schema::create('pos_pelanggan', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('slug')->unique();
+            $table->string('nama')->nullable();
+            $table->string('slug')->nullable();
+            $table->string('nomor_hp', 45)->nullable();
+            $table->string('email')->nullable();
+            $table->string('alamat')->nullable();
+            $table->date('tanggal_bergabung')->nullable();
             $table->timestamps();
         });
     }
@@ -28,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('storages');
+        Schema::dropIfExists('pos_pelanggan');
     }
 };

@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('trade_ins', function (Blueprint $table) {
-            $table->string('old_imei')->nullable()->after('old_phone');
+        Schema::create('tipe_layanan', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama')->nullable();
+            $table->string('slug')->nullable();
+            $table->decimal('harga', 15, 2)->nullable();
+            $table->integer('durasi')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -25,8 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('trade_ins', function (Blueprint $table) {
-            $table->dropColumn('old_imei');
-        });
+        Schema::dropIfExists('tipe_layanan');
     }
 };

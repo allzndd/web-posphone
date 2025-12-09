@@ -13,8 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->json('costs')->nullable()->after('additional_cost')->comment('Array of cost items: description + amount');
+        Schema::create('pos_produk_merk', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama')->nullable();
+            $table->string('slug')->nullable();
         });
     }
 
@@ -25,8 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('products', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('pos_produk_merk');
     }
 };

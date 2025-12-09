@@ -13,8 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('services', function (Blueprint $table) {
-            // Migration already applied through other migrations
+        Schema::create('pos_produk_foto', function (Blueprint $table) {
+            $table->id();
+            $table->integer('pos_produk_id')->nullable();
+            $table->string('foto_produk')->nullable();
         });
     }
 
@@ -25,8 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('services', function (Blueprint $table) {
-            // Migration already applied through other migrations
-        });
+        Schema::dropIfExists('pos_produk_foto');
     }
 };
