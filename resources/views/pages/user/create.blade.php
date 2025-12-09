@@ -27,7 +27,7 @@
                         name="name" 
                         value="{{ old('name') }}"
                         placeholder="Enter full name"
-                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 @error('name') !border-red-500 @enderror"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('name') !border-red-500 @enderror"
                     >
                     @error('name')
                         <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
@@ -51,8 +51,8 @@
                             id="email"
                             name="email" 
                             value="{{ old('email') }}"
-                            placeholder="user@example.com"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 @error('email') !border-red-500 @enderror"
+                            placeholder="Enter email address"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('email') !border-red-500 @enderror"
                         >
                     </div>
                     @error('email')
@@ -73,12 +73,12 @@
                             </svg>
                         </div>
                         <input 
-                            type="tel" 
+                            type="text" 
                             id="phone"
                             name="phone" 
                             value="{{ old('phone') }}"
-                            placeholder="0812-3456-7890"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                            placeholder="Enter phone number"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
                         >
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                             id="password"
                             name="password"
                             placeholder="Enter password"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 @error('password') !border-red-500 @enderror"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('password') !border-red-500 @enderror"
                         >
                     </div>
                     @error('password')
@@ -126,7 +126,7 @@
                             id="password_confirmation"
                             name="password_confirmation"
                             placeholder="Re-enter password"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
                         >
                     </div>
                 </div>
@@ -138,7 +138,7 @@
                     </label>
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Owner Option -->
-                        <label class="relative flex cursor-pointer items-center justify-between rounded-xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 p-4 transition-all hover:border-brand-500 dark:hover:border-brand-400 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:border-brand-400 dark:has-[:checked]:bg-navy-700">
+                        <label class="relative flex cursor-pointer items-center justify-between rounded-xl border-2 border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 p-4 transition-all hover:border-brand-500 dark:hover:border-brand-400 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:border-brand-400 dark:has-[:checked]:bg-navy-700/100">
                             <div class="flex items-center gap-3">
                                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500 dark:bg-brand-400">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +156,7 @@
                         </label>
 
                         <!-- Admin Option -->
-                        <label class="relative flex cursor-pointer items-center justify-between rounded-xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 p-4 transition-all hover:border-brand-500 dark:hover:border-brand-400 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:border-brand-400 dark:has-[:checked]:bg-navy-700">
+                        <label class="relative flex cursor-pointer items-center justify-between rounded-xl border-2 border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 p-4 transition-all hover:border-brand-500 dark:hover:border-brand-400 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:border-brand-400 dark:has-[:checked]:bg-navy-700/100">
                             <div class="flex items-center gap-3">
                                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500 dark:bg-blue-400">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg">
@@ -183,7 +183,7 @@
             <!-- Form Actions -->
             <div class="mt-8 flex items-center justify-end gap-3 border-t border-gray-200 dark:border-white/10 pt-6">
                 <a href="{{ route('user.index') }}" 
-                   class="rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-navy-900 px-6 py-3 text-sm font-bold text-navy-700 dark:text-white transition duration-200 hover:bg-gray-50 dark:hover:bg-navy-800">
+                   class="rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:!bg-navy-800 px-6 py-3 text-sm font-bold text-navy-700 dark:text-white transition duration-200 hover:bg-gray-50 dark:hover:!bg-navy-700">
                     Cancel
                 </a>
                 <button type="submit" 
