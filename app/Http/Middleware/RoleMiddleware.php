@@ -21,12 +21,24 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        $userRole = auth()->user()->roles;
+        $user = auth()->user();
+        
+        // Map role names to methods
+        $roleChecks = [
+            'SUPERADMIN' => 'isSuperadmin',
+            'OWNER' => 'isOwner',
+            'ADMIN' => 'isAdmin',
+        ];
 
-        if (!in_array($userRole, $roles)) {
-            abort(403, 'Unauthorized action.');
+        // Check if user has any of the required roles
+        foreach ($roles as $role) {
+            if (isset($roleChecks[$role]) && method_exists($user, $roleChecks[$role])) {
+                if ($user->{$roleChecks[$role]}()) {
+                    return $next($request);
+                }
+            }
         }
 
-        return $next($request);
+        abort(403, 'Unauthorized action.');
     }
 }
