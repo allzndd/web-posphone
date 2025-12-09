@@ -91,35 +91,88 @@
         </li>
         @endif
 
-        @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
-        <!-- Users -->
+        @if(auth()->user()->isOwner())
+        <!-- POS Users (pos_pengguna) -->
         <li class="relative mb-3 flex hover:cursor-pointer">
-            <a href="{{ route('user.index') }}" class="w-full">
+            <a href="{{ route('pos-pengguna.index') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
-                    <span class="{{ Request::is('user*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                    <span class="{{ Request::is('pos-pengguna*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
                     </span>
-                    <p class="leading-1 ml-4 flex {{ Request::is('user*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                    <p class="leading-1 ml-4 flex {{ Request::is('pos-pengguna*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        POS Users
+                    </p>
+                </div>
+            </a>
+            @if(Request::is('pos-pengguna*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+        </li>
+
+        <!-- POS Roles (pos_role) -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('pos-role.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('pos-role*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('pos-role*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        User Roles
+                    </p>
+                </div>
+            </a>
+            @if(Request::is('pos-role*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+        </li>
+        @endif
+
+        @if(auth()->user()->isAdmin())
+        <!-- POS Users for Admin (pos_pengguna) -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('pos-pengguna.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('pos-pengguna*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('pos-pengguna*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                         Users
                     </p>
                 </div>
             </a>
-            @if(Request::is('user*'))
+            @if(Request::is('pos-pengguna*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
         @endif
 
         @if(auth()->user()->isOwner())
-        <!-- Products Dropdown with Accordion -->
-        <li class="relative mb-3" x-data="{ open: {{ Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*') ? 'true' : 'false' }} }">
+        <!-- Stores (pos_toko) -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('toko.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('toko*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('toko*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        Stores
+                    </p>
+                </div>
+            </a>
+            @if(Request::is('toko*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+        </li>
+
+        <!-- Products (pos_produk) Dropdown -->
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('produk*') || Request::is('produk-merk*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
                 <div class="w-full">
                     <div class="my-[3px] flex cursor-pointer items-center px-8">
-                        <span class="{{ Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <span class="{{ Request::is('produk*') || Request::is('produk-merk*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"></path></svg>
                         </span>
-                        <p class="leading-1 ml-4 flex {{ Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <p class="leading-1 ml-4 flex {{ Request::is('produk*') || Request::is('produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             Products
                         </p>
                         <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
@@ -128,53 +181,53 @@
                     </div>
                 </div>
             </div>
-            @if(Request::is('product*') || Request::is('storages*') || Request::is('colors*') || Request::is('product-name*'))
+            @if(Request::is('produk*') || Request::is('produk-merk*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('product*') && !Request::is('storages*') && !Request::is('colors*') && !Request::is('product-name*')) style="display: none;" @endif>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('produk*') && !Request::is('produk-merk*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('product.index') }}" class="w-full">
+                        <a href="{{ route('produk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product') && !Request::is('product/create') && !Request::is('product/*/edit') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('produk') && !Request::is('produk/create') && !Request::is('produk/*/edit') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     All Products
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('product.create') }}" class="w-full">
+                        <a href="{{ route('produk.create') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('produk/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     New Product
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('product-name.index') }}" class="w-full">
+                        <a href="{{ route('produk-merk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product-name*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    Nama Produk
+                                <p class="leading-1 flex text-sm {{ Request::is('produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Product Brands
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('storages.index') }}" class="w-full">
+                        <a href="{{ route('produk-stok.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('storages*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    Storage
+                                <p class="leading-1 flex text-sm {{ Request::is('produk-stok*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Stock Management
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('colors.index') }}" class="w-full">
+                        <a href="{{ route('log-stok.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('colors*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    Colors
+                                <p class="leading-1 flex text-sm {{ Request::is('log-stok*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Stock History
                                 </p>
                             </div>
                         </a>
@@ -183,51 +236,51 @@
             </div>
         </li>
 
-        <!-- Categories -->
+        <!-- Suppliers (pos_supplier) -->
         <li class="relative mb-3 flex hover:cursor-pointer">
-            <a href="{{ route('category.index') }}" class="w-full">
+            <a href="{{ route('supplier.index') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
-                    <span class="{{ Request::is('category*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"></path></svg>
+                    <span class="{{ Request::is('supplier*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path></svg>
                     </span>
-                    <p class="leading-1 ml-4 flex {{ Request::is('category*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                        Categories
+                    <p class="leading-1 ml-4 flex {{ Request::is('supplier*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        Suppliers
                     </p>
                 </div>
             </a>
-            @if(Request::is('category*'))
+            @if(Request::is('supplier*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
 
-        <!-- Trade In -->
+        <!-- Services (pos_service) -->
         <li class="relative mb-3 flex hover:cursor-pointer">
-            <a href="{{ route('tradein.index') }}" class="w-full">
+            <a href="{{ route('service.index') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
-                    <span class="{{ Request::is('tradein*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"></path></svg>
+                    <span class="{{ Request::is('service*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"></path></svg>
                     </span>
-                    <p class="leading-1 ml-4 flex {{ Request::is('tradein*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                        Trade In
+                    <p class="leading-1 ml-4 flex {{ Request::is('service*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        Services
                     </p>
                 </div>
             </a>
-            @if(Request::is('tradein*'))
+            @if(Request::is('service*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
         @endif
 
         @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
-        <!-- Transactions Dropdown with Accordion -->
-        <li class="relative mb-3" x-data="{ open: {{ Request::is('transaction*') ? 'true' : 'false' }} }">
+        <!-- Transactions Dropdown (pos_transaksi) -->
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('transaksi*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
                 <div class="w-full">
                     <div class="my-[3px] flex cursor-pointer items-center px-8">
-                        <span class="{{ Request::is('transaction*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <span class="{{ Request::is('transaksi*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
                         </span>
-                        <p class="leading-1 ml-4 flex {{ Request::is('transaction*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <p class="leading-1 ml-4 flex {{ Request::is('transaksi*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             Transactions
                         </p>
                         <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
@@ -236,26 +289,44 @@
                     </div>
                 </div>
             </div>
-            @if(Request::is('transaction*'))
+            @if(Request::is('transaksi*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('transaction*')) style="display: none;" @endif>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('transaksi*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('transaction.index') }}" class="w-full">
+                        <a href="{{ route('transaksi.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('transaction') && !Request::is('transaction/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('transaksi') && !Request::is('transaksi/create*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     All Transactions
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('transaction.create') }}" class="w-full">
+                        <a href="{{ route('transaksi.create', ['type' => 'sale']) }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('transaction/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    New Transaction
+                                <p class="leading-1 flex text-sm {{ Request::is('transaksi/create') && request('type') == 'sale' ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    New Sale
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('transaksi.create', ['type' => 'purchase']) }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('transaksi/create') && request('type') == 'purchase' ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    New Purchase
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('retur.index') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('retur*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Returns
                                 </p>
                             </div>
                         </a>
@@ -266,15 +337,15 @@
         @endif
 
         @if(auth()->user()->isAdmin())
-        <!-- Products Dropdown for Admin with Accordion -->
-        <li class="relative mb-3" x-data="{ open: {{ Request::is('product*') ? 'true' : 'false' }} }">
+        <!-- Products Dropdown for Admin -->
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('produk*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
                 <div class="w-full">
                     <div class="my-[3px] flex cursor-pointer items-center px-8">
-                        <span class="{{ Request::is('product*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <span class="{{ Request::is('produk*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"></path></svg>
                         </span>
-                        <p class="leading-1 ml-4 flex {{ Request::is('product*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <p class="leading-1 ml-4 flex {{ Request::is('produk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             Products
                         </p>
                         <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
@@ -283,25 +354,25 @@
                     </div>
                 </div>
             </div>
-            @if(Request::is('product*'))
+            @if(Request::is('produk*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('product*')) style="display: none;" @endif>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('produk*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('product.index') }}" class="w-full">
+                        <a href="{{ route('produk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product') && !Request::is('product/create') && !Request::is('product/*/edit') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('produk') && !Request::is('produk/create') && !Request::is('produk/*/edit') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     All Products
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('product.create') }}" class="w-full">
+                        <a href="{{ route('produk.create') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('product/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('produk/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     New Product
                                 </p>
                             </div>
@@ -313,15 +384,15 @@
         @endif
 
         @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
-        <!-- Customers Dropdown with Accordion -->
-        <li class="relative mb-3" x-data="{ open: {{ Request::is('customer*') ? 'true' : 'false' }} }">
+        <!-- Customers Dropdown (pos_pelanggan) -->
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('pelanggan*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
                 <div class="w-full">
                     <div class="my-[3px] flex cursor-pointer items-center px-8">
-                        <span class="{{ Request::is('customer*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <span class="{{ Request::is('pelanggan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path></svg>
                         </span>
-                        <p class="leading-1 ml-4 flex {{ Request::is('customer*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <p class="leading-1 ml-4 flex {{ Request::is('pelanggan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             Customers
                         </p>
                         <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
@@ -330,25 +401,25 @@
                     </div>
                 </div>
             </div>
-            @if(Request::is('customer*'))
+            @if(Request::is('pelanggan*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('customer*')) style="display: none;" @endif>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('pelanggan*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('customer.index') }}" class="w-full">
+                        <a href="{{ route('pelanggan.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('customer') && !Request::is('customer/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('pelanggan') && !Request::is('pelanggan/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     All Customers
                                 </p>
                             </div>
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('customer.create') }}" class="w-full">
+                        <a href="{{ route('pelanggan.create') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('customer/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('pelanggan/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     New Customer
                                 </p>
                             </div>
