@@ -11,14 +11,19 @@ class ProductNameController extends Controller
     public function index(Request $request)
     {
         $query = ProductName::query();
-        if ($search = $request->get('q')) {
+        
+        if ($request->filled('name')) {
+            $search = $request->input('name');
             $query->where('name', 'like', "%{$search}%");
         }
-        $names = $query->orderBy('name')->paginate(15)->withQueryString();
+        
+        $names = $query->orderBy('name')->paginate($request->input('per_page', 10))->withQueryString();
+        
         // Compute remaining stock per name (sum of product stock)
         $stocks = Product::selectRaw('name, COALESCE(SUM(stock),0) as total_stock')
             ->groupBy('name')
             ->pluck('total_stock', 'name');
+            
         return view('pages.product-names.index', compact('names', 'stocks'));
     }
 
