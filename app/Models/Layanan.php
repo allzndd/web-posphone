@@ -9,25 +9,36 @@ class Layanan extends Model
 {
     use HasFactory;
 
-    protected $table = 'layanan';
+    protected $table = 'pos_service';
 
     protected $fillable = [
+        'owner_id',
+        'pos_toko_id',
+        'pos_pelanggan_id',
         'nama',
-        'deskripsi',
+        'keterangan',
         'harga',
-        'status',
+        'durasi',
     ];
 
     protected $casts = [
         'harga' => 'decimal:2',
     ];
 
-    /**
-     * Scope untuk layanan aktif
-     */
-    public function scopeActive($query)
+    // Relationships
+    public function owner()
     {
-        return $query->where('status', 'Active');
+        return $this->belongsTo(Owner::class, 'owner_id');
+    }
+
+    public function toko()
+    {
+        return $this->belongsTo(PosToko::class, 'pos_toko_id');
+    }
+
+    public function pelanggan()
+    {
+        return $this->belongsTo(PosPelanggan::class, 'pos_pelanggan_id');
     }
 
     /**
