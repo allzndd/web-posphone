@@ -152,7 +152,7 @@
                 <form method="GET" action="{{ route('user.index') }}" id="perPageForm" class="inline-block">
                     <input type="hidden" name="name" value="{{ request('name') }}">
                     <select name="per_page" onchange="this.form.submit()" 
-                            class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
+                            class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 [&>option]:!bg-white [&>option]:dark:!bg-navy-800 [&>option]:!text-navy-700 [&>option]:dark:!text-white">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
                         <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
