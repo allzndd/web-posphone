@@ -13,16 +13,24 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'pengguna';
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'nama',
         'email',
         'password',
-        'phone',
-        'roles',
+        'slug',
+        'role_id',
+        'email_is_verified',
     ];
 
     /**
@@ -72,7 +80,7 @@ class User extends Authenticatable
      */
     public function isOwner()
     {
-        return $this->roles === 'OWNER';
+        return $this->role_id === 2; // Owner role_id
     }
 
     /**
@@ -82,7 +90,7 @@ class User extends Authenticatable
      */
     public function isAdmin()
     {
-        return $this->roles === 'ADMIN';
+        return $this->role_id === 3; // Admin role_id
     }
 
     /**
@@ -92,17 +100,33 @@ class User extends Authenticatable
      */
     public function isSuperadmin()
     {
-        return $this->roles === 'SUPERADMIN';
+        return $this->role_id === 1; // Superadmin role_id
     }
 
     /**
      * Check if user has specific role
      *
-     * @param string $role
+     * @param int $roleId
      * @return bool
      */
-    public function hasRole($role)
+    public function hasRole($roleId)
     {
-        return $this->roles === $role;
+        return $this->role_id === $roleId;
+    }
+
+    /**
+     * Get the role that the user belongs to.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    /**
+     * Get the owner record if user is owner.
+     */
+    public function owner()
+    {
+        return $this->hasOne(Owner::class, 'pengguna_id');
     }
 }
