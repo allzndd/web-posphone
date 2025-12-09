@@ -33,7 +33,7 @@ class ProductController extends Controller
         }
 
         // Jangan hapus produk yang stoknya 0, hanya sembunyikan
-        $products = $query->where('stock', '>', 0)->orderByDesc('created_at')->paginate(10)->withQueryString();
+        $products = $query->where('stock', '>', 0)->orderByDesc('created_at')->paginate($request->input('per_page', 10))->withQueryString();
         $categories = \App\Models\Category::orderBy('name')->get();
 
         return view('pages.product.index', compact('products', 'categories'));
