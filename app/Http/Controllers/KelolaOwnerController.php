@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\KelolaOwner;
+use App\Models\User;
+use App\Models\Owner;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class KelolaOwnerController extends Controller
 {
@@ -12,7 +15,11 @@ class KelolaOwnerController extends Controller
      */
     public function index()
     {
-        $owners = KelolaOwner::latest()->get();
+        // Get all users with role_id = 2 (Owner)
+        $owners = User::where('role_id', 2)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
         return view('kelola-owner.index', compact('owners'));
     }
 
@@ -30,22 +37,27 @@ class KelolaOwnerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_perusahaan' => 'required|string|max:255',
-            'nama_pemilik' => 'required|string|max:255',
-            'email' => 'required|email|unique:kelola_owner,email',
-            'telepon' => 'required|string|max:20',
-            'paket' => 'required|string',
-            'jumlah_outlet' => 'required|integer|min:1',
-            'tanggal_daftar' => 'required|date',
-            'tanggal_expired' => 'required|date|after:tanggal_daftar',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:pengguna,email',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Auto-set status based on expiration date
-        $validated['status'] = now() > $validated['tanggal_expired'] ? 'Expired' : 'Active';
+        // Create user with owner role
+        $user = User::create([
+            'nama' => $validated['nama'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'slug' => Str::slug($validated['nama']),
+            'role_id' => 2, // Owner role
+            'email_is_verified' => 1,
+        ]);
 
-        KelolaOwner::create($validated);
+        // Create owner entry
+        Owner::create([
+            'pengguna_id' => $user->id,
+        ]);
 
-        return redirect()->route('kelola-owner.index')->with('success', 'Owner successfully created');
+        return redirect()->route('kelola-owner.index')->with('success', 'Owner berhasil ditambahkan');
     }
 
     /**
@@ -53,7 +65,7 @@ class KelolaOwnerController extends Controller
      */
     public function show(string $id)
     {
-        $owner = KelolaOwner::findOrFail($id);
+        $owner = User::where('role_id', 2)->findOrFail($id);
         return view('kelola-owner.show', compact('owner'));
     }
 
@@ -62,7 +74,7 @@ class KelolaOwnerController extends Controller
      */
     public function edit(string $id)
     {
-        $owner = KelolaOwner::findOrFail($id);
+        $owner = User::where('role_id', 2)->findOrFail($id);
         return view('kelola-owner.edit', compact('owner'));
     }
 
@@ -71,23 +83,28 @@ class KelolaOwnerController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $owner = KelolaOwner::findOrFail($id);
+        $owner = User::where('role_id', 2)->findOrFail($id);
         
         $validated = $request->validate([
-            'nama_perusahaan' => 'required|string|max:255',
-            'nama_pemilik' => 'required|string|max:255',
-            'email' => 'required|email|unique:kelola_owner,email,' . $id,
-            'telepon' => 'required|string|max:20',
-            'paket' => 'required|string',
-            'jumlah_outlet' => 'required|integer|min:1',
-            'tanggal_daftar' => 'required|date',
-            'tanggal_expired' => 'required|date|after:tanggal_daftar',
-            'status' => 'required|in:Active,Expired',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:pengguna,email,' . $id,
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        $owner->update($validated);
+        $updateData = [
+            'nama' => $validated['nama'],
+            'email' => $validated['email'],
+            'slug' => Str::slug($validated['nama']),
+        ];
 
-        return redirect()->route('kelola-owner.index')->with('success', 'Owner successfully updated');
+        // Only update password if provided
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $owner->update($updateData);
+
+        return redirect()->route('kelola-owner.index')->with('success', 'Owner berhasil diupdate');
     }
 
     /**
@@ -95,9 +112,14 @@ class KelolaOwnerController extends Controller
      */
     public function destroy(string $id)
     {
-        $owner = KelolaOwner::findOrFail($id);
+        $owner = User::where('role_id', 2)->findOrFail($id);
+        
+        // Delete owner entry first
+        Owner::where('pengguna_id', $id)->delete();
+        
+        // Then delete user
         $owner->delete();
 
-        return redirect()->route('kelola-owner.index')->with('success', 'Owner successfully deleted');
+        return redirect()->route('kelola-owner.index')->with('success', 'Owner berhasil dihapus');
     }
 }
