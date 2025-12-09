@@ -275,7 +275,7 @@
         <div class="lg:col-span-2 !z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
             <div class="flex items-center justify-between mb-4">
                 <h4 class="text-xl font-bold text-navy-700 dark:text-white">Transaksi Terbaru</h4>
-                <a href="{{ route('transaction.index') }}" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-medium hover:bg-brand-600 transition-colors">
+                <a href="{{ route('transaksi.index') }}" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-medium hover:bg-brand-600 transition-colors">
                     Lihat Semua
                 </a>
             </div>
@@ -294,7 +294,7 @@
                         @forelse($recentTransactions as $transaction)
                         <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                             <td class="py-3 px-2">
-                                <a href="{{ route('transaction.show', $transaction->id) }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium text-sm">
+                                <a href="{{ route('transaksi.show', $transaction->id) }}" class="text-brand-500 hover:text-brand-600 dark:text-brand-400 font-medium text-sm">
                                     {{ $transaction->invoice_number }}
                                 </a>
                             </td>
@@ -337,7 +337,7 @@
                             @endif
                         </div>
                     </div>
-                    <a href="{{ route('product.edit', $product->id) }}" class="w-full flex items-center justify-center px-3 py-2 bg-brand-500 text-white rounded-lg text-xs font-medium hover:bg-brand-600 transition-colors">
+                    <a href="{{ route('produk.edit', $product->id) }}" class="w-full flex items-center justify-center px-3 py-2 bg-brand-500 text-white rounded-lg text-xs font-medium hover:bg-brand-600 transition-colors">
                         <i class="fas fa-plus mr-2"></i> Tambah Stok
                     </a>
                 </div>
