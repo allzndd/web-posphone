@@ -22,34 +22,57 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard-general-dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
 
-    // Owner & Admin Routes - User Management
+    // Admin & Owner Routes - POS Transactions & Customers
     Route::middleware(['role:OWNER,ADMIN'])->group(function () {
-        Route::resource('user', UserController::class);
+        // POS Users (pos_pengguna) - Karyawan toko
+        Route::resource('pos-pengguna', \App\Http\Controllers\PosPenggunaController::class);
+        
+        // Transactions (pos_transaksi)
+        Route::resource('transaksi', \App\Http\Controllers\TransaksiController::class);
+        Route::get('transaksi/{transaksi}/print', [\App\Http\Controllers\TransaksiController::class, 'print'])->name('transaksi.print');
+        Route::get('transaksi/{transaksi}/invoice', [\App\Http\Controllers\TransaksiController::class, 'invoice'])->name('transaksi.invoice');
+        
+        // Returns (pos_retur)
+        Route::resource('retur', \App\Http\Controllers\ReturController::class);
+        
+        // Customers (pos_pelanggan)
+        Route::resource('pelanggan', \App\Http\Controllers\PelangganController::class);
     });
 
-    // Owner Only Routes
+    // Owner Only Routes - POS Management
     Route::middleware(['role:OWNER'])->group(function () {
-        Route::resource('tradein', \App\Http\Controllers\TradeInController::class);
-        Route::resource('category', \App\Http\Controllers\CategoryController::class);
-        Route::resource('storages', \App\Http\Controllers\StorageController::class);
-        Route::resource('colors', \App\Http\Controllers\ColorController::class);
-        // Product Names master with dedicated table
-        Route::resource('product-name', \App\Http\Controllers\ProductNameController::class);
+        // POS Roles (pos_role)
+        Route::resource('pos-role', \App\Http\Controllers\PosRoleController::class);
+        
+        // Stores (pos_toko)
+        Route::resource('toko', \App\Http\Controllers\TokoController::class);
+        
+        // Products (pos_produk)
+        Route::resource('produk', \App\Http\Controllers\ProdukController::class);
+        
+        // Product Brands (pos_produk_merk)
+        Route::resource('produk-merk', \App\Http\Controllers\ProdukMerkController::class);
+        
+        // Stock Management (pos_produk_stok)
+        Route::resource('produk-stok', \App\Http\Controllers\ProdukStokController::class);
+        
+        // Stock History (pos_log_stok)
+        Route::get('log-stok', [\App\Http\Controllers\LogStokController::class, 'index'])->name('log-stok.index');
+        
+        // Suppliers (pos_supplier)
+        Route::resource('supplier', \App\Http\Controllers\SupplierController::class);
+        
+        // Services (pos_service)
+        Route::resource('service', \App\Http\Controllers\ServiceController::class);
+        
+        // Chat Analisis
         Route::get('chat-analisis', [\App\Http\Controllers\ChatAnalysisController::class, 'index'])->name('chat.index');
         Route::post('chat-analisis/ask', [\App\Http\Controllers\ChatAnalysisController::class, 'ask'])->name('chat.ask');
     });
 
-    // Admin & Owner Routes (shared access)
+    // API Routes for AJAX
     Route::get('api/products/search', [\App\Http\Controllers\Api\ProductController::class, 'search'])->name('products.search');
-    Route::resource('transaction', \App\Http\Controllers\TransactionController::class);
-    Route::get('transaction/{transaction}/print', [\App\Http\Controllers\TransactionController::class, 'print'])->name('transaction.print');
-    Route::get('transaction/{transaction}/invoice', [\App\Http\Controllers\TransactionController::class, 'invoice'])->name('transaction.invoice');
-    Route::resource('customer', \App\Http\Controllers\CustomerController::class);
-
-    // Admin & Owner access to Product management
-    Route::middleware(['role:OWNER,ADMIN'])->group(function () {
-        Route::resource('product', \App\Http\Controllers\ProductController::class)->except(['show']);
-    });
+    Route::get('api/produk/search', [\App\Http\Controllers\Api\ProdukController::class, 'search'])->name('produk.search');
 
     // Superadmin Only - Dashboard Superadmin
     Route::middleware(['role:SUPERADMIN'])->group(function () {
