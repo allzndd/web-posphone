@@ -4,15 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Layanan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LayananController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $layanan = Layanan::latest()->get();
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $layanan = Layanan::where('owner_id', $ownerId)
+            ->when($request->input('nama'), function ($query, $nama) {
+                return $query->where('nama', 'like', '%' . $nama . '%');
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->input('per_page', 10));
+
         return view('layanan.index', compact('layanan'));
     }
 
@@ -29,14 +39,27 @@ class LayananController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $request->validate([
+            'nama' => 'required|string|max:45',
+            'keterangan' => 'nullable|string|max:45',
             'harga' => 'required|numeric|min:0',
-            'status' => 'required|in:Active,Inactive',
+            'durasi' => 'nullable|integer',
+            'pos_toko_id' => 'nullable|exists:pos_toko,id',
+            'pos_pelanggan_id' => 'nullable|exists:pos_pelanggan,id',
         ]);
 
-        Layanan::create($validated);
+        Layanan::create([
+            'owner_id' => $ownerId,
+            'pos_toko_id' => $request->pos_toko_id,
+            'pos_pelanggan_id' => $request->pos_pelanggan_id,
+            'nama' => $request->nama,
+            'keterangan' => $request->keterangan,
+            'harga' => $request->harga,
+            'durasi' => $request->durasi,
+        ]);
 
         return redirect()->route('layanan.index')->with('success', 'Service successfully created');
     }
@@ -46,7 +69,13 @@ class LayananController extends Controller
      */
     public function show(string $id)
     {
-        $item = Layanan::findOrFail($id);
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $item = Layanan::where('owner_id', $ownerId)
+            ->where('id', $id)
+            ->firstOrFail();
+
         return view('layanan.show', compact('item'));
     }
 
@@ -55,7 +84,13 @@ class LayananController extends Controller
      */
     public function edit(string $id)
     {
-        $item = Layanan::findOrFail($id);
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $item = Layanan::where('owner_id', $ownerId)
+            ->where('id', $id)
+            ->firstOrFail();
+
         return view('layanan.edit', compact('item'));
     }
 
@@ -64,15 +99,30 @@ class LayananController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $item = Layanan::where('owner_id', $ownerId)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $request->validate([
+            'nama' => 'required|string|max:45',
+            'keterangan' => 'nullable|string|max:45',
             'harga' => 'required|numeric|min:0',
-            'status' => 'required|in:Active,Inactive',
+            'durasi' => 'nullable|integer',
+            'pos_toko_id' => 'nullable|exists:pos_toko,id',
+            'pos_pelanggan_id' => 'nullable|exists:pos_pelanggan,id',
         ]);
 
-        $item = Layanan::findOrFail($id);
-        $item->update($validated);
+        $item->update([
+            'pos_toko_id' => $request->pos_toko_id,
+            'pos_pelanggan_id' => $request->pos_pelanggan_id,
+            'nama' => $request->nama,
+            'keterangan' => $request->keterangan,
+            'harga' => $request->harga,
+            'durasi' => $request->durasi,
+        ]);
 
         return redirect()->route('layanan.index')->with('success', 'Service successfully updated');
     }
@@ -82,7 +132,13 @@ class LayananController extends Controller
      */
     public function destroy(string $id)
     {
-        $item = Layanan::findOrFail($id);
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $item = Layanan::where('owner_id', $ownerId)
+            ->where('id', $id)
+            ->firstOrFail();
+
         $item->delete();
 
         return redirect()->route('layanan.index')->with('success', 'Service successfully deleted');
