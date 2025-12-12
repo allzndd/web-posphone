@@ -1,5 +1,5 @@
 <!-- Sidebar Component - 100% Horizon Template -->
-<div id="sidebar" class="sm:none duration-175 linear fixed !z-50 flex min-h-full flex-col bg-white pb-10 shadow-2xl shadow-white/5 transition-all dark:!bg-navy-800 dark:text-white md:!z-50 lg:!z-50 xl:!z-0" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-96 xl:translate-x-0'">
+<div id="sidebar" class="sidebar-custom-scroll sm:none duration-175 linear fixed !z-50 flex min-h-full max-h-screen flex-col bg-white pb-10 shadow-2xl shadow-white/5 transition-all dark:!bg-navy-800 dark:text-white md:!z-50 lg:!z-50 xl:!z-0 overflow-y-auto" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-96 xl:translate-x-0'">
     
     <span class="absolute top-4 right-4 block cursor-pointer xl:hidden" @click="sidebarOpen = false">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 20 20" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
@@ -165,14 +165,14 @@
         </li>
 
         <!-- Products (pos_produk) Dropdown -->
-        <li class="relative mb-3" x-data="{ open: {{ Request::is('produk*') || Request::is('produk-merk*') ? 'true' : 'false' }} }">
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('produk*') || Request::is('pos-produk-merk*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
                 <div class="w-full">
                     <div class="my-[3px] flex cursor-pointer items-center px-8">
-                        <span class="{{ Request::is('produk*') || Request::is('produk-merk*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <span class="{{ Request::is('produk*') || Request::is('pos-produk-merk*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z"></path></svg>
                         </span>
-                        <p class="leading-1 ml-4 flex {{ Request::is('produk*') || Request::is('produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <p class="leading-1 ml-4 flex {{ Request::is('produk*') || Request::is('pos-produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             Products
                         </p>
                         <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
@@ -181,11 +181,11 @@
                     </div>
                 </div>
             </div>
-            @if(Request::is('produk*') || Request::is('produk-merk*'))
+            @if(Request::is('produk*') || Request::is('pos-produk-merk*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('produk*') && !Request::is('produk-merk*')) style="display: none;" @endif>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('produk*') && !Request::is('pos-produk-merk*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('produk.index') }}" class="w-full">
@@ -206,9 +206,9 @@
                         </a>
                     </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('produk-merk.index') }}" class="w-full">
+                        <a href="{{ route('pos-produk-merk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                <p class="leading-1 flex text-sm {{ Request::is('pos-produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     Product Brands
                                 </p>
                             </div>
