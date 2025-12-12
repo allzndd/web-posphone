@@ -51,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('produk', \App\Http\Controllers\ProdukController::class);
         
         // Product Brands (pos_produk_merk)
-        Route::resource('produk-merk', \App\Http\Controllers\ProdukMerkController::class);
+        Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
         
         // Stock Management (pos_produk_stok)
         Route::resource('produk-stok', \App\Http\Controllers\ProdukStokController::class);
