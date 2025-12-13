@@ -27,10 +27,26 @@ Route::middleware(['auth'])->group(function () {
         // POS Users (pos_pengguna) - Karyawan toko
         Route::resource('pos-pengguna', \App\Http\Controllers\PosPenggunaController::class);
         
-        // Transactions (pos_transaksi)
+        // Incoming Transactions (Sales) - Must come before resource route
+        Route::prefix('transaksi/masuk')->name('transaksi.masuk.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\TransaksiController::class, 'indexMasuk'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\TransaksiController::class, 'createMasuk'])->name('create');
+            Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeMasuk'])->name('store');
+            Route::get('/{id}/edit', [\App\Http\Controllers\TransaksiController::class, 'editMasuk'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateMasuk'])->name('update');
+        });
+        
+        // Outgoing Transactions (Purchases) - Must come before resource route
+        Route::prefix('transaksi/keluar')->name('transaksi.keluar.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\TransaksiController::class, 'indexKeluar'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\TransaksiController::class, 'createKeluar'])->name('create');
+            Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeKeluar'])->name('store');
+            Route::get('/{id}/edit', [\App\Http\Controllers\TransaksiController::class, 'editKeluar'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateKeluar'])->name('update');
+        });
+        
+        // Transactions (pos_transaksi) - General resource route
         Route::resource('transaksi', \App\Http\Controllers\TransaksiController::class);
-        Route::get('transaksi/{transaksi}/print', [\App\Http\Controllers\TransaksiController::class, 'print'])->name('transaksi.print');
-        Route::get('transaksi/{transaksi}/invoice', [\App\Http\Controllers\TransaksiController::class, 'invoice'])->name('transaksi.invoice');
         
         // Returns (pos_retur)
         Route::resource('retur', \App\Http\Controllers\ReturController::class);
@@ -54,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
         
         // Stock Management (pos_produk_stok)
+        Route::patch('produk-stok/{produkStok}/update-inline', [\App\Http\Controllers\ProdukStokController::class, 'updateInline'])->name('produk-stok.update-inline');
         Route::resource('produk-stok', \App\Http\Controllers\ProdukStokController::class);
         
         // Stock History (pos_log_stok)
