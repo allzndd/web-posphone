@@ -118,6 +118,33 @@
             text-decoration: none !important;
         }
         
+        /* Custom scrollbar styling for sidebar */
+        .sidebar-custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-custom-scroll::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+
+        .sidebar-custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        /* Dark mode scrollbar */
+        .dark .sidebar-custom-scroll::-webkit-scrollbar-thumb {
+            background: #1e3a5f;
+        }
+
+        .dark .sidebar-custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #2d5a8f;
+        }
+        
         /* Alpine.js cloak - prevent flash before JS loads */
         [x-cloak] {
             display: none !important;
