@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
+use App\Models\Langganan;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,3 +22,22 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Product Search API (with web middleware for session auth)
 Route::middleware('web')->get('/products/search', [ProductController::class, 'search'])->name('api.products.search');
+
+// Get langganan by owner
+Route::middleware('web')->get('/langganan/owner/{ownerId}', function ($ownerId) {
+    return Langganan::with('tipeLayanan')
+        ->where('owner_id', $ownerId)
+        ->get()
+        ->map(function($langganan) {
+            return [
+                'id' => $langganan->id,
+                'started_date' => $langganan->started_date->format('d/m/Y'),
+                'end_date' => $langganan->end_date->format('d/m/Y'),
+                'tipe_layanan' => [
+                    'nama' => $langganan->tipeLayanan->nama,
+                    'harga' => $langganan->tipeLayanan->harga,
+                ],
+            ];
+        });
+});
+

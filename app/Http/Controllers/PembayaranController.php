@@ -13,44 +13,35 @@ class PembayaranController extends Controller
      */
     public function index()
     {
-        $pembayaran = Pembayaran::with('owner')
-            ->orderBy('tanggal', 'desc')
+        $pembayaran = Pembayaran::with(['owner.pengguna', 'langganan.tipeLayanan'])
+            ->orderBy('created_at', 'desc')
             ->get();
-        
-        return view('pembayaran.index', compact('pembayaran'));
-    }
 
-    /**
+        return view('pembayaran.index', compact('pembayaran'));
+    }    /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        // Get all owners (users with role OWNER)
-        $owners = User::where('roles', 'OWNER')->get();
-        
-        return view('pembayaran.create', compact('owners'));
-    }
+        // Get all owners
+        $owners = \App\Models\Owner::with('pengguna')->get();
 
-    /**
+        return view('pembayaran.create', compact('owners'));
+    }    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tanggal' => 'required|date',
-            'owner_id' => 'required|exists:users,id',
-            'paket' => 'required|string|max:255',
-            'periode' => 'required|string|max:255',
-            'total' => 'required|numeric|min:0',
+            'owner_id' => 'required|exists:owner,id',
+            'langganan_id' => 'required|exists:langganan,id',
+            'nominal' => 'required|numeric|min:0',
+            'metode_pembayaran' => 'required|string|max:100',
             'status' => 'required|in:Paid,Pending,Failed',
-            'notes' => 'nullable|string',
         ]);
 
-        // Get owner details
-        $owner = User::findOrFail($validated['owner_id']);
-        
-        $validated['owner_name'] = $owner->name;
-        $validated['email'] = $owner->email;
+        $validated['paid_at'] = $request->status === 'Paid' ? now() : null;
+        $validated['created_at'] = now();
 
         Pembayaran::create($validated);
 
@@ -63,7 +54,7 @@ class PembayaranController extends Controller
      */
     public function show(string $id)
     {
-        $item = Pembayaran::with('owner')->findOrFail($id);
+        $item = Pembayaran::with(['owner.pengguna', 'langganan.tipeLayanan'])->findOrFail($id);
         
         return view('pembayaran.show', compact('item'));
     }
@@ -73,8 +64,8 @@ class PembayaranController extends Controller
      */
     public function edit(string $id)
     {
-        $item = Pembayaran::findOrFail($id);
-        $owners = User::where('roles', 'OWNER')->get();
+        $item = Pembayaran::with(['owner.pengguna', 'langganan'])->findOrFail($id);
+        $owners = \App\Models\Owner::with('pengguna')->get();
         
         return view('pembayaran.edit', compact('item', 'owners'));
     }
@@ -87,20 +78,19 @@ class PembayaranController extends Controller
         $pembayaran = Pembayaran::findOrFail($id);
 
         $validated = $request->validate([
-            'tanggal' => 'required|date',
-            'owner_id' => 'required|exists:users,id',
-            'paket' => 'required|string|max:255',
-            'periode' => 'required|string|max:255',
-            'total' => 'required|numeric|min:0',
+            'owner_id' => 'required|exists:owner,id',
+            'langganan_id' => 'required|exists:langganan,id',
+            'nominal' => 'required|numeric|min:0',
+            'metode_pembayaran' => 'required|string|max:100',
             'status' => 'required|in:Paid,Pending,Failed',
-            'notes' => 'nullable|string',
         ]);
 
-        // Get owner details
-        $owner = User::findOrFail($validated['owner_id']);
-        
-        $validated['owner_name'] = $owner->name;
-        $validated['email'] = $owner->email;
+        // Update paid_at based on status
+        if ($request->status === 'Paid' && !$pembayaran->paid_at) {
+            $validated['paid_at'] = now();
+        } elseif ($request->status !== 'Paid') {
+            $validated['paid_at'] = null;
+        }
 
         $pembayaran->update($validated);
 

@@ -17,20 +17,23 @@ class Pembayaran extends Model
     protected $table = 'pembayaran';
 
     /**
+     * Indicates if the model should be timestamped.
+     */
+    public $timestamps = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'tanggal',
         'owner_id',
-        'owner_name',
-        'email',
-        'paket',
-        'periode',
-        'total',
+        'langganan_id',
+        'nominal',
+        'metode_pembayaran',
         'status',
-        'notes',
+        'paid_at',
+        'created_at',
     ];
 
     /**
@@ -39,10 +42,9 @@ class Pembayaran extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tanggal' => 'date',
-        'total' => 'decimal:2',
+        'nominal' => 'decimal:2',
+        'paid_at' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime',
     ];
 
     /**
@@ -50,7 +52,15 @@ class Pembayaran extends Model
      */
     public function owner()
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(Owner::class, 'owner_id');
+    }
+
+    /**
+     * Get the subscription for this payment.
+     */
+    public function langganan()
+    {
+        return $this->belongsTo(Langganan::class, 'langganan_id');
     }
 
     /**

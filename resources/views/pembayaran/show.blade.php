@@ -26,33 +26,39 @@
             </div>
             
             <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Date</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->tanggal->format('d F Y') }}</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Paid Date</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->paid_at ? $item->paid_at->format('d F Y H:i') : 'Not Paid Yet' }}</p>
             </div>
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Owner Name</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->owner_name }}</p>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Email</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->email }}</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->owner->pengguna->name ?? 'N/A' }}</p>
             </div>
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Package</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->paket }}</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->langganan->tipeLayanan->nama ?? 'N/A' }}</p>
             </div>
             
             <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Period</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->periode }}</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Subscription Period</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">
+                    @if($item->langganan)
+                        {{ $item->langganan->started_date->format('d M Y') }} - {{ $item->langganan->end_date->format('d M Y') }}
+                    @else
+                        N/A
+                    @endif
+                </p>
             </div>
             
             <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Amount</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">Rp {{ number_format($item->total, 0, ',', '.') }}</p>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Amount</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">Rp {{ number_format($item->nominal, 0, ',', '.') }}</p>
+            </div>
+            
+            <div>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Payment Method</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $item->metode_pembayaran }}</p>
             </div>
             
             <div>
@@ -77,21 +83,9 @@
                 </div>
             </div>
             
-            @if($item->notes)
-            <div class="md:col-span-2">
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Notes</p>
-                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $item->notes }}</p>
-            </div>
-            @endif
-            
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Created At</p>
                 <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $item->created_at->format('d F Y H:i') }}</p>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Last Updated</p>
-                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $item->updated_at->format('d F Y H:i') }}</p>
             </div>
         </div>
     </div>

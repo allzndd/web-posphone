@@ -89,5 +89,9 @@ Route::middleware(['auth'])->group(function () {
         
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
+        
+        // Menu Baru - Langganan (Subscriptions)
+        Route::resource('langganan', \App\Http\Controllers\LanggananController::class);
+        Route::post('langganan/{id}/toggle-active', [\App\Http\Controllers\LanggananController::class, 'toggleActive'])->name('langganan.toggle-active');
     });
 });

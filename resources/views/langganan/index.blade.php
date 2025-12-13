@@ -1,0 +1,195 @@
+@extends('layouts.app')
+
+@section('title', 'Services')
+
+@section('main')
+<div class="mt-3 px-[11px] pr-[10px]">
+    <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
+        <div class="flex items-center justify-between p-6 pb-4">
+            <div>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Services</h4>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Manage owner subscriptions and their service packages
+                </p>
+            </div>
+            
+            <a href="{{ route('langganan.create') }}" 
+               class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                </svg>
+                Add Service
+            </a>
+        </div>
+
+        <div class="overflow-x-auto px-6 pb-6">
+            @if(session('success'))
+            <div class="mb-4 rounded-xl bg-green-100 px-4 py-3 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                {{ session('success') }}
+            </div>
+            @endif
+
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-white/10">
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Owner</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Email</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Service Package</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Started Date</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">End Date</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Days Remaining</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
+                        </th>
+                        <th class="py-3 text-center">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Action</p>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($langganan as $item)
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
+                        <td class="py-4">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">
+                                {{ $item->owner->pengguna->name ?? 'N/A' }}
+                            </p>
+                        </td>
+                        <td class="py-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->owner->pengguna->email ?? 'N/A' }}
+                            </p>
+                        </td>
+                        <td class="py-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->tipeLayanan->nama ?? 'N/A' }}
+                            </p>
+                        </td>
+                        <td class="py-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->started_date->format('d/m/Y') }}
+                            </p>
+                        </td>
+                        <td class="py-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->end_date->format('d/m/Y') }}
+                            </p>
+                        </td>
+                        <td class="py-4">
+                            @php
+                                $today = \Carbon\Carbon::today();
+                                $daysRemaining = $today->diffInDays($item->end_date, false);
+                            @endphp
+                            <p class="text-sm font-medium {{ $daysRemaining < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400' }}">
+                                @if($daysRemaining < 0)
+                                    {{ abs($daysRemaining) }} days ago
+                                @elseif($daysRemaining == 0)
+                                    Today
+                                @else
+                                    {{ $daysRemaining }} days
+                                @endif
+                            </p>
+                        </td>
+                        <td class="py-4">
+                            @php
+                                $today = \Carbon\Carbon::today();
+                                $isExpired = $item->end_date < $today;
+                                $isActive = $item->is_active == 1;
+                                $isTrial = $item->is_trial == 1;
+                                
+                                // Logika status sesuai prioritas
+                                if ($isExpired) {
+                                    $status = 'Expired';
+                                    $statusClass = 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
+                                } elseif (!$isActive) {
+                                    $status = 'Inactive';
+                                    $statusClass = 'bg-gray-100 dark:bg-gray-900/30 text-gray-800 dark:text-gray-300';
+                                } elseif ($isTrial) {
+                                    $status = 'Trial';
+                                    $statusClass = 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+                                } else {
+                                    $status = 'Active';
+                                    $statusClass = 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+                                }
+                            @endphp
+                            <span class="inline-flex items-center rounded-full {{ $statusClass }} px-3 py-1 text-xs font-medium">
+                                <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                {{ $status }}
+                            </span>
+                        </td>
+                        <td class="py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('langganan.show', $item->id) }}" 
+                                   class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
+                                   title="View">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path>
+                                    </svg>
+                                </a>
+                                <a href="{{ route('langganan.edit', $item->id) }}" 
+                                   class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
+                                   title="Edit">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 000-1.41l-2.34-2.34a.996.996 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                                    </svg>
+                                </a>
+                                <form action="{{ route('langganan.toggle-active', $item->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="flex h-9 w-9 items-center justify-center rounded-lg {{ $item->is_active ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30' : 'bg-green-100 text-green-600 dark:bg-green-900/30' }} transition duration-200 hover:opacity-80"
+                                            title="{{ $item->is_active ? 'Deactivate' : 'Activate' }}">
+                                        @if($item->is_active)
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill="none" d="M0 0h24v24H0z"></path>
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-3.1L7.1 5.69C8.45 4.63 10.15 4 12 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z"></path>
+                                            </svg>
+                                        @else
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill="none" d="M0 0h24v24H0z"></path>
+                                                <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"></path>
+                                            </svg>
+                                        @endif
+                                    </button>
+                                </form>
+                                <form action="{{ route('langganan.destroy', $item->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this subscription?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                                            title="Delete">
+                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                            <path fill="none" d="M0 0h24v24H0z"></path>
+                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="py-8 text-center">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">No subscriptions found</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@endsection

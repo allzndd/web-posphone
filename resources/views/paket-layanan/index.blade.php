@@ -37,16 +37,10 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Package Name</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Description</p>
-                        </th>
-                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Price</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Duration</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
                         </th>
                         <th class="py-3 text-center">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Action</p>
@@ -54,32 +48,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($paket as $item)
+                    @forelse($paket as $item)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->nama }}</p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->deskripsi }}</p>
-                        </td>
-                        <td class="py-4">
                             <p class="text-sm font-semibold text-navy-700 dark:text-white">Rp {{ number_format($item->harga, 0, ',', '.') }}</p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->durasi }}</p>
-                        </td>
-                        <td class="py-4">
-                            @if($item->status === 'Active')
-                                <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-800 dark:text-green-300">
-                                    <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                    Active
-                                </span>
-                            @else
-                                <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-900/30 px-3 py-1 text-xs font-medium text-gray-800 dark:text-gray-300">
-                                    <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                    Inactive
-                                </span>
-                            @endif
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->duration_text }}</p>
                         </td>
                         <td class="py-4">
                             <div class="flex items-center justify-center gap-2">
@@ -109,7 +87,13 @@
                             </div>
                         </td>
                     </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td colspan="4" class="py-8 text-center">
+                            <p class="text-gray-500 dark:text-gray-400">No service packages found</p>
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

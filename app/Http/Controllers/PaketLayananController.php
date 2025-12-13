@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PaketLayanan;
+use App\Models\TipeLayanan;
 use Illuminate\Http\Request;
 
 class PaketLayananController extends Controller
@@ -12,7 +12,7 @@ class PaketLayananController extends Controller
      */
     public function index()
     {
-        $paket = PaketLayanan::latest()->get();
+        $paket = TipeLayanan::latest()->get();
         return view('paket-layanan.index', compact('paket'));
     }
 
@@ -31,13 +31,14 @@ class PaketLayananController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
             'harga' => 'required|numeric|min:0',
-            'durasi' => 'required|string|max:100',
-            'status' => 'required|in:Active,Inactive',
+            'durasi' => 'required|integer|min:1',
         ]);
 
-        PaketLayanan::create($validated);
+        // Auto-generate slug
+        $validated['slug'] = \Illuminate\Support\Str::slug($validated['nama']);
+
+        TipeLayanan::create($validated);
 
         return redirect()->route('paket-layanan.index')->with('success', 'Service package successfully created');
     }
@@ -47,7 +48,7 @@ class PaketLayananController extends Controller
      */
     public function show($id)
     {
-        $paket = PaketLayanan::findOrFail($id);
+        $paket = TipeLayanan::findOrFail($id);
         return view('paket-layanan.show', compact('paket'));
     }
 
@@ -56,7 +57,7 @@ class PaketLayananController extends Controller
      */
     public function edit($id)
     {
-        $paket = PaketLayanan::findOrFail($id);
+        $paket = TipeLayanan::findOrFail($id);
         return view('paket-layanan.edit', compact('paket'));
     }
 
@@ -67,13 +68,14 @@ class PaketLayananController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'deskripsi' => 'required|string',
             'harga' => 'required|numeric|min:0',
-            'durasi' => 'required|string|max:100',
-            'status' => 'required|in:Active,Inactive'
+            'durasi' => 'required|integer|min:1',
         ]);
 
-        $paket = PaketLayanan::findOrFail($id);
+        // Auto-generate slug
+        $validated['slug'] = \Illuminate\Support\Str::slug($validated['nama']);
+
+        $paket = TipeLayanan::findOrFail($id);
         $paket->update($validated);
 
         return redirect()->route('paket-layanan.index')->with('success', 'Service package successfully updated');
@@ -84,7 +86,7 @@ class PaketLayananController extends Controller
      */
     public function destroy($id)
     {
-        $paket = PaketLayanan::findOrFail($id);
+        $paket = TipeLayanan::findOrFail($id);
         $paket->delete();
 
         return redirect()->route('paket-layanan.index')->with('success', 'Service package successfully deleted');

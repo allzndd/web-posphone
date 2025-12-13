@@ -34,13 +34,10 @@
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Date</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Paid Date</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Owner</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Email</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Package</p>
@@ -49,7 +46,10 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Period</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Total</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Amount</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Payment Method</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
@@ -63,22 +63,34 @@
                     @foreach($pembayaran as $item)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->tanggal->format('d/m/Y') }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->paid_at ? $item->paid_at->format('d/m/Y H:i') : '-' }}
+                            </p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->owner_name }}</p>
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">
+                                {{ $item->owner->pengguna->name ?? '-' }}
+                            </p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->email }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->langganan->tipeLayanan->nama ?? '-' }}
+                            </p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->paket }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                @if($item->langganan)
+                                    {{ $item->langganan->started_date->format('d/m/Y') }} - {{ $item->langganan->end_date->format('d/m/Y') }}
+                                @else
+                                    -
+                                @endif
+                            </p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->periode }}</p>
+                            <p class="text-sm font-semibold text-navy-700 dark:text-white">Rp {{ number_format($item->nominal, 0, ',', '.') }}</p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm font-semibold text-navy-700 dark:text-white">Rp {{ number_format($item->total, 0, ',', '.') }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->metode_pembayaran }}</p>
                         </td>
                         <td class="py-4">
                             @if($item->status === 'Paid')

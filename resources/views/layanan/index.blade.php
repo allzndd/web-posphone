@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Additional Services')
+@section('title', 'Services')
 
 @section('main')
 <div class="mt-3 px-[11px] pr-[10px]">
@@ -8,9 +8,9 @@
         <!-- Card Header -->
         <div class="flex items-center justify-between p-6 pb-4">
             <div>
-                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Additional Services</h4>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Services</h4>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    Manage additional services for POS system owners
+                    Manage services for POS system owners
                 </p>
             </div>
             

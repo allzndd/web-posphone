@@ -431,18 +431,18 @@
         @endif
 
         @if(auth()->user()->isSuperadmin())
-        <!-- Additional Services -->
+        <!-- Services -->
         <li class="relative mb-3 flex hover:cursor-pointer">
-            <a href="{{ route('layanan.index') }}" class="w-full">
+            <a href="{{ route('langganan.index') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
-                    <span class="{{ Request::is('layanan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"></path></svg>
+                    <span class="{{ Request::is('langganan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
                     </span>
-                    <p class="leading-1 ml-4 flex {{ Request::is('layanan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
-                        Additional Services
+                    <p class="leading-1 ml-4 flex {{ Request::is('langganan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                        Services
                     </p>
                 </div>
-                @if(Request::is('layanan*'))
+                @if(Request::is('langganan*'))
                     <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
                 @endif
             </a>

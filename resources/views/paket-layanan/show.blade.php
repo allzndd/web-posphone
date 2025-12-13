@@ -30,11 +30,6 @@
                 <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $paket->nama }}</p>
             </div>
             
-            <div class="md:col-span-2">
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Description</p>
-                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $paket->deskripsi }}</p>
-            </div>
-            
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Price</p>
                 <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">Rp {{ number_format($paket->harga, 0, ',', '.') }}</p>
@@ -42,24 +37,7 @@
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Duration</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $paket->durasi }}</p>
-            </div>
-            
-            <div>
-                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Status</p>
-                <div class="mt-1">
-                    @if($paket->status === 'Active')
-                        <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-300">
-                            <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                            Active
-                        </span>
-                    @else
-                        <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-900/30 px-3 py-1 text-sm font-medium text-gray-800 dark:text-gray-300">
-                            <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                            Inactive
-                        </span>
-                    @endif
-                </div>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $paket->duration_text }}</p>
             </div>
             
             <div>

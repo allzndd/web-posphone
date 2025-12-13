@@ -11,22 +11,13 @@
             @csrf
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Date</label>
-                    <input type="date" name="tanggal" value="{{ old('tanggal', date('Y-m-d')) }}" required
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('tanggal') border-red-500 @enderror">
-                    @error('tanggal')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div>
                     <label class="text-sm font-bold text-navy-700 dark:text-white">Owner</label>
-                    <select name="owner_id" required
+                    <select name="owner_id" id="owner_id" required
                             class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('owner_id') border-red-500 @enderror">
                         <option value="">Select Owner</option>
                         @foreach($owners as $owner)
                             <option value="{{ $owner->id }}" {{ old('owner_id') == $owner->id ? 'selected' : '' }}>
-                                {{ $owner->name }} ({{ $owner->email }})
+                                {{ $owner->pengguna->name ?? 'N/A' }}
                             </option>
                         @endforeach
                     </select>
@@ -36,46 +27,41 @@
                 </div>
                 
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Package</label>
-                    <select name="paket" required
-                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('paket') border-red-500 @enderror">
-                        <option value="">Select Package</option>
-                        <option value="Starter Package" {{ old('paket') == 'Starter Package' ? 'selected' : '' }}>Starter Package</option>
-                        <option value="Basic Package" {{ old('paket') == 'Basic Package' ? 'selected' : '' }}>Basic Package</option>
-                        <option value="Professional Package" {{ old('paket') == 'Professional Package' ? 'selected' : '' }}>Professional Package</option>
-                        <option value="Premium Package" {{ old('paket') == 'Premium Package' ? 'selected' : '' }}>Premium Package</option>
-                        <option value="Enterprise Package" {{ old('paket') == 'Enterprise Package' ? 'selected' : '' }}>Enterprise Package</option>
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Subscription</label>
+                    <select name="langganan_id" id="langganan_id" required
+                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('langganan_id') border-red-500 @enderror">
+                        <option value="">Select Owner First</option>
                     </select>
-                    @error('paket')
+                    @error('langganan_id')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
                 
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Period</label>
-                    <select name="periode" required
-                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('periode') border-red-500 @enderror">
-                        <option value="">Select Period</option>
-                        <option value="1 Month" {{ old('periode') == '1 Month' ? 'selected' : '' }}>1 Month</option>
-                        <option value="3 Months" {{ old('periode') == '3 Months' ? 'selected' : '' }}>3 Months</option>
-                        <option value="6 Months" {{ old('periode') == '6 Months' ? 'selected' : '' }}>6 Months</option>
-                        <option value="1 Year" {{ old('periode') == '1 Year' ? 'selected' : '' }}>1 Year</option>
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Amount (Rp)</label>
+                    <input type="number" name="nominal" id="nominal" value="{{ old('nominal') }}" required min="0" step="0.01"
+                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('nominal') border-red-500 @enderror">
+                    @error('nominal')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+                
+                <div>
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Payment Method</label>
+                    <select name="metode_pembayaran" required
+                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('metode_pembayaran') border-red-500 @enderror">
+                        <option value="">Select Method</option>
+                        <option value="Transfer Bank" {{ old('metode_pembayaran') == 'Transfer Bank' ? 'selected' : '' }}>Transfer Bank</option>
+                        <option value="E-Wallet" {{ old('metode_pembayaran') == 'E-Wallet' ? 'selected' : '' }}>E-Wallet</option>
+                        <option value="Cash" {{ old('metode_pembayaran') == 'Cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="Credit Card" {{ old('metode_pembayaran') == 'Credit Card' ? 'selected' : '' }}>Credit Card</option>
                     </select>
-                    @error('periode')
+                    @error('metode_pembayaran')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
                 
-                <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Total Amount (Rp)</label>
-                    <input type="number" name="total" value="{{ old('total') }}" required min="0" step="0.01"
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('total') border-red-500 @enderror">
-                    @error('total')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div>
+                <div class="md:col-span-2">
                     <label class="text-sm font-bold text-navy-700 dark:text-white">Status</label>
                     <select name="status" required
                             class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('status') border-red-500 @enderror">
@@ -84,15 +70,6 @@
                         <option value="Failed" {{ old('status') == 'Failed' ? 'selected' : '' }}>Failed</option>
                     </select>
                     @error('status')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div class="md:col-span-2">
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Notes (Optional)</label>
-                    <textarea name="notes" rows="3"
-                              class="mt-2 flex w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('notes') border-red-500 @enderror">{{ old('notes') }}</textarea>
-                    @error('notes')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
@@ -111,4 +88,55 @@
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('owner_id').addEventListener('change', function() {
+    const ownerId = this.value;
+    const langgananSelect = document.getElementById('langganan_id');
+    const nominalInput = document.getElementById('nominal');
+    
+    langgananSelect.innerHTML = '<option value="">Loading...</option>';
+    
+    if (!ownerId) {
+        langgananSelect.innerHTML = '<option value="">Select Owner First</option>';
+        nominalInput.value = '';
+        return;
+    }
+    
+    fetch(`/api/langganan/owner/${ownerId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.length === 0) {
+                langgananSelect.innerHTML = '<option value="">No Subscription Found</option>';
+                nominalInput.value = '';
+            } else {
+                langgananSelect.innerHTML = '<option value="">Select Subscription</option>';
+                data.forEach(langganan => {
+                    const option = document.createElement('option');
+                    option.value = langganan.id;
+                    option.textContent = `${langganan.tipe_layanan.nama} (${langganan.started_date} - ${langganan.end_date})`;
+                    option.dataset.harga = langganan.tipe_layanan.harga;
+                    langgananSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            langgananSelect.innerHTML = '<option value="">Error Loading Data</option>';
+        });
+});
+
+document.getElementById('langganan_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const harga = selectedOption.dataset.harga;
+    const nominalInput = document.getElementById('nominal');
+    
+    if (harga) {
+        nominalInput.value = harga;
+    } else {
+        nominalInput.value = '';
+    }
+});
+</script>
 @endsection
+

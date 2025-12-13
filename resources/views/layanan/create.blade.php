@@ -7,7 +7,7 @@
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
         <div class="mb-6">
             <h4 class="text-xl font-bold text-navy-700 dark:text-white">Add New Service</h4>
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Fill in the form to create a new additional service</p>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Fill in the form to create a new service</p>
         </div>
 
         <form action="{{ route('layanan.store') }}" method="POST">

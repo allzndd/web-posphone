@@ -31,21 +31,6 @@
             </div>
 
             <div class="mb-6">
-                <label for="deskripsi" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                    Description <span class="text-red-500">*</span>
-                </label>
-                <textarea id="deskripsi" 
-                          name="deskripsi" 
-                          rows="4"
-                          class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('deskripsi') border-red-500 @enderror"
-                          placeholder="Describe the package features..."
-                          required>{{ old('deskripsi', $paket->deskripsi) }}</textarea>
-                @error('deskripsi')
-                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div class="mb-6">
                 <label for="harga" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                     Price (Rp) <span class="text-red-500">*</span>
                 </label>
@@ -65,32 +50,19 @@
 
             <div class="mb-6">
                 <label for="durasi" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                    Duration <span class="text-red-500">*</span>
+                    Duration (Months) <span class="text-red-500">*</span>
                 </label>
-                <input type="text" 
-                       id="durasi" 
-                       name="durasi" 
-                       value="{{ old('durasi', $paket->durasi) }}"
-                       class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('durasi') border-red-500 @enderror"
-                       placeholder="e.g., 1 Month, 3 Months, 1 Year"
-                       required>
-                @error('durasi')
-                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div class="mb-6">
-                <label for="status" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                    Status <span class="text-red-500">*</span>
-                </label>
-                <select id="status" 
-                        name="status"
-                        class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('status') border-red-500 @enderror"
+                <select id="durasi" 
+                        name="durasi"
+                        class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('durasi') border-red-500 @enderror"
                         required>
-                    <option value="Active" {{ old('status', $paket->status) === 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Inactive" {{ old('status', $paket->status) === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="">Select Duration</option>
+                    <option value="1" {{ old('durasi', $paket->durasi) == '1' ? 'selected' : '' }}>1 Month</option>
+                    <option value="3" {{ old('durasi', $paket->durasi) == '3' ? 'selected' : '' }}>3 Months</option>
+                    <option value="6" {{ old('durasi', $paket->durasi) == '6' ? 'selected' : '' }}>6 Months</option>
+                    <option value="12" {{ old('durasi', $paket->durasi) == '12' ? 'selected' : '' }}>1 Year (12 Months)</option>
                 </select>
-                @error('status')
+                @error('durasi')
                     <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
