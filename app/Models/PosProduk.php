@@ -37,6 +37,14 @@ class PosProduk extends Model
     ];
 
     // Auto-generate slug from nama
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     protected static function boot()
     {
         parent::boot();
