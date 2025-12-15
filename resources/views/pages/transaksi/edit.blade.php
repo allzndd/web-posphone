@@ -364,3 +364,83 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currency = '{{ get_currency() }}';
+    
+    function formatCurrencyDisplay(value) {
+        // Remove all non-numeric characters
+        let cleanValue = value.replace(/[^0-9]/g, '');
+        
+        if (!cleanValue || cleanValue === '') return '';
+        
+        // Format with thousands separator only, no decimals
+        if (currency === 'IDR') {
+            return parseInt(cleanValue).toLocaleString('id-ID');
+        } else {
+            return parseInt(cleanValue).toLocaleString('en-US');
+        }
+    }
+    
+    function unformatCurrency(displayValue) {
+        // Remove all formatting characters, keep only numbers
+        let cleaned = displayValue.replace(/[^0-9]/g, '');
+        return cleaned || '0';
+    }
+    
+    const priceInput = document.querySelector('#total_harga');
+    if (priceInput) {
+        // Format the initial value on load for readability
+        if (priceInput.value) {
+            priceInput.value = formatCurrencyDisplay(priceInput.value);
+        }
+        
+        priceInput.addEventListener('input', function(e) {
+            // Store cursor position
+            let cursorPos = this.selectionStart;
+            let oldValue = this.value;
+            let oldLength = oldValue.length;
+            
+            // Remove invalid characters, keep only numbers
+            let cleanValue = this.value.replace(/[^0-9]/g, '');
+            
+            // Don't format if empty
+            if (!cleanValue) {
+                this.value = '';
+                return;
+            }
+            
+            // Apply formatting
+            const formatted = formatCurrencyDisplay(cleanValue);
+            
+            if (formatted && formatted !== '0') {
+                this.value = formatted;
+                
+                // Adjust cursor position based on added characters (commas)
+                const newLength = formatted.length;
+                const diff = newLength - oldLength;
+                this.setSelectionRange(cursorPos + diff, cursorPos + diff);
+            } else {
+                this.value = cleanValue;
+            }
+        });
+        
+        priceInput.addEventListener('blur', function() {
+            // Final formatting on blur
+            if (this.value) {
+                this.value = formatCurrencyDisplay(this.value);
+            }
+        });
+        
+        priceInput.closest('form').addEventListener('submit', function() {
+            // Convert back to cents/integer for database
+            if (priceInput.value) {
+                priceInput.value = unformatCurrency(priceInput.value);
+            }
+        });
+    }
+});
+</script>
+@endpush
