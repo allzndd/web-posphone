@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosTransaksi;
+use App\Models\PosTransaksiItem;
 use App\Models\PosToko;
 use App\Models\PosPelanggan;
 use App\Models\PosSupplier;
+use App\Traits\UpdatesStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TransaksiController extends Controller
+{
+    use UpdatesStock;
 {
     /**
      * Display a listing of the resource.
@@ -266,6 +270,42 @@ class TransaksiController extends Controller
             'metode_pembayaran' => $request->metode_pembayaran,
         ]);
 
+        // Process transaction items and update stock if items exist
+        if ($request->has('items') && is_array($request->items)) {
+            foreach ($request->items as $itemData) {
+                if (isset($itemData['pos_produk_id']) || isset($itemData['pos_service_id'])) {
+                    // Create transaction item
+                    PosTransaksiItem::create([
+                        'pos_transaksi_id' => $transaksi->id,
+                        'pos_produk_id' => $itemData['pos_produk_id'] ?? null,
+                        'pos_service_id' => $itemData['pos_service_id'] ?? null,
+                        'quantity' => $itemData['quantity'] ?? 1,
+                        'harga_satuan' => $itemData['harga_satuan'] ?? 0,
+                        'subtotal' => $itemData['subtotal'] ?? 0,
+                        'diskon' => $itemData['diskon'] ?? 0,
+                        'garansi' => $itemData['garansi'] ?? null,
+                        'garansi_expires_at' => $itemData['garansi_expires_at'] ?? null,
+                        'pajak' => $itemData['pajak'] ?? 0,
+                    ]);
+
+                    // Update stock for products (not services)
+                    if (isset($itemData['pos_produk_id']) && $itemData['pos_produk_id']) {
+                        $quantity = $itemData['quantity'] ?? 1;
+                        // Transaksi masuk (sales) = stock out (reduce stock)
+                        $this->updateProductStock(
+                            $ownerId,
+                            $request->pos_toko_id,
+                            $itemData['pos_produk_id'],
+                            -$quantity,
+                            'keluar',
+                            $request->invoice,
+                            'Penjualan produk'
+                        );
+                    }
+                }
+            }
+        }
+
         return redirect()->route('transaksi.masuk.index')->with('success', 'Transaksi masuk berhasil ditambahkan');
     }
 
@@ -385,6 +425,42 @@ class TransaksiController extends Controller
             'status' => $request->status,
             'metode_pembayaran' => $request->metode_pembayaran,
         ]);
+
+        // Process transaction items and update stock if items exist
+        if ($request->has('items') && is_array($request->items)) {
+            foreach ($request->items as $itemData) {
+                if (isset($itemData['pos_produk_id']) || isset($itemData['pos_service_id'])) {
+                    // Create transaction item
+                    PosTransaksiItem::create([
+                        'pos_transaksi_id' => $transaksi->id,
+                        'pos_produk_id' => $itemData['pos_produk_id'] ?? null,
+                        'pos_service_id' => $itemData['pos_service_id'] ?? null,
+                        'quantity' => $itemData['quantity'] ?? 1,
+                        'harga_satuan' => $itemData['harga_satuan'] ?? 0,
+                        'subtotal' => $itemData['subtotal'] ?? 0,
+                        'diskon' => $itemData['diskon'] ?? 0,
+                        'garansi' => $itemData['garansi'] ?? null,
+                        'garansi_expires_at' => $itemData['garansi_expires_at'] ?? null,
+                        'pajak' => $itemData['pajak'] ?? 0,
+                    ]);
+
+                    // Update stock for products (not services)
+                    if (isset($itemData['pos_produk_id']) && $itemData['pos_produk_id']) {
+                        $quantity = $itemData['quantity'] ?? 1;
+                        // Transaksi keluar (purchase) = stock in (add stock)
+                        $this->updateProductStock(
+                            $ownerId,
+                            $request->pos_toko_id,
+                            $itemData['pos_produk_id'],
+                            $quantity,
+                            'masuk',
+                            $request->invoice,
+                            'Pembelian produk dari supplier'
+                        );
+                    }
+                }
+            }
+        }
 
         return redirect()->route('transaksi.keluar.index')->with('success', 'Transaksi keluar berhasil ditambahkan');
     }
