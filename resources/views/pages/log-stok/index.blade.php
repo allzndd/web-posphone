@@ -166,7 +166,9 @@
                         
                         <!-- User -->
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $log->pengguna->name ?? '-' }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $log->user->nama ?? $log->pengguna->nama ?? 'System' }}
+                            </p>
                         </td>
                     </tr>
                     @empty
