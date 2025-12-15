@@ -223,7 +223,7 @@
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Rp
+                                {{ get_currency_symbol() }}
                             </span>
                             <input 
                                 type="number" 
