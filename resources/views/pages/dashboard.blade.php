@@ -8,6 +8,21 @@
 
 @section('main')
 <div class="p-4 md:p-6">
+    <!-- Header with Download Button -->
+    <div class="flex items-center justify-between mb-5">
+        <div>
+            <h3 class="text-2xl font-bold text-navy-700 dark:text-white">Dashboard</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Overview of your business performance</p>
+        </div>
+        <button onclick="document.getElementById('downloadModal').classList.remove('hidden')"
+                class="flex items-center gap-2 rounded-xl bg-green-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-green-600 active:bg-green-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Download Financial Report
+        </button>
+    </div>
+    
     <!-- Statistics Cards - Horizon Style -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-5">
         <!-- Total Transaksi -->
@@ -347,6 +362,51 @@
                 @endif
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Download Report Modal -->
+<div id="downloadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-navy-800 rounded-[20px] max-w-md w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h4 class="text-xl font-bold text-navy-700 dark:text-white">Download Financial Report</h4>
+            <button onclick="document.getElementById('downloadModal').classList.add('hidden')" 
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form action="{{ route('dashboard.download-report') }}" method="GET">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Start Date</label>
+                    <input type="date" name="start_date" value="{{ now()->startOfMonth()->format('Y-m-d') }}"
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">End Date</label>
+                    <input type="date" name="end_date" value="{{ now()->format('Y-m-d') }}"
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('downloadModal').classList.add('hidden')"
+                        class="flex-1 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-green-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
