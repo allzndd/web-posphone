@@ -21,6 +21,15 @@
             
             <!-- Search & Add Button -->
             <div class="flex items-center gap-3">
+                <!-- Download Button -->
+                <button onclick="document.getElementById('downloadTransaksiModal').classList.remove('hidden')"
+                        class="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-green-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Download
+                </button>
+                
                 <!-- Search Form -->
                 <form method="GET" action="{{ route('transaksi.index') }}" class="relative">
                     <div class="flex items-center rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-4 py-2">
@@ -185,6 +194,62 @@
     </div>
 </div>
 
+<!-- Download Report Modal -->
+<div id="downloadTransaksiModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-navy-800 rounded-[20px] max-w-md w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h4 class="text-xl font-bold text-navy-700 dark:text-white">Download Transactions Report</h4>
+            <button onclick="document.getElementById('downloadTransaksiModal').classList.add('hidden')" 
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form action="{{ route('transaksi.download-report') }}" method="GET">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Start Date</label>
+                    <input type="date" name="start_date" value="{{ now()->startOfMonth()->format('Y-m-d') }}"
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">End Date</label>
+                    <input type="date" name="end_date" value="{{ now()->format('Y-m-d') }}"
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Status Filter (Optional)</label>
+                    <select name="status"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('downloadTransaksiModal').classList.add('hidden')"
+                        class="flex-1 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-green-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-green-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download CSV
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     // Make table rows clickable
     document.querySelectorAll('tr[data-href]').forEach(row => {
@@ -193,6 +258,13 @@
                 window.location.href = this.dataset.href;
             }
         });
+    });
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('downloadTransaksiModal').classList.add('hidden');
+        }
     });
 </script>
 @endsection
