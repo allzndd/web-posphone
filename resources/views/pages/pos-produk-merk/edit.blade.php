@@ -61,16 +61,12 @@
                             <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->slug }}</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Products with this brand</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-600">Total Products</p>
                             <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->produk_count }} products</p>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Created</p>
-                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->created_at->format('d M Y H:i') }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Last Updated</p>
-                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->updated_at->format('d M Y H:i') }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-600">Brand Slug</p>
+                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->slug }}</p>
                         </div>
                     </div>
                 </div>
