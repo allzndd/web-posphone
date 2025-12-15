@@ -14,10 +14,37 @@ class PosSupplier extends Model
     protected $fillable = [
         'owner_id',
         'nama',
+        'slug',
         'telepon',
         'alamat',
         'email',
     ];
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    // Auto-generate slug from nama
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->slug)) {
+                $model->slug = \Illuminate\Support\Str::slug($model->nama);
+            }
+        });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('nama')) {
+                $model->slug = \Illuminate\Support\Str::slug($model->nama);
+            }
+        });
+    }
 
     /**
      * Get the owner that owns the supplier.
