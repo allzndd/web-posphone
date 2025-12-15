@@ -30,10 +30,10 @@ class PosTransaksi extends Model
         'is_transaksi_masuk' => 'integer',
     ];
 
-    // Relationship to owner (User)
+    // Relationship to owner
     public function owner()
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(Owner::class, 'owner_id');
     }
 
     // Relationship to toko
