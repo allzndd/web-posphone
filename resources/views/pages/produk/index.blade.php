@@ -96,13 +96,13 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->imei ?? '-' }}</p>
                         </td>
                         <td class="py-4 text-right">
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                Rp {{ number_format($item->harga_beli, 0, ',', '.') }}
+                            <p class="text-sm font-bold text-brand-500 dark:text-brand-400">
+                                {{ get_currency_symbol() }} {{ number_format($item->harga_beli, 0, ',', '.') }}
                             </p>
                         </td>
                         <td class="py-4 text-right">
-                            <p class="text-sm font-bold text-green-600 dark:text-green-400">
-                                Rp {{ number_format($item->harga_jual, 0, ',', '.') }}
+                            <p class="text-sm font-bold text-green-500 dark:text-green-400">
+                                {{ get_currency_symbol() }} {{ number_format($item->harga_jual, 0, ',', '.') }}
                             </p>
                         </td>
                         <td class="py-4" onclick="event.stopPropagation()">
