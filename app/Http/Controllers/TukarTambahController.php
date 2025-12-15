@@ -6,10 +6,12 @@ use App\Models\PosTukarTambah;
 use App\Models\PosToko;
 use App\Models\PosPelanggan;
 use App\Models\PosProduk;
+use App\Traits\UpdatesStock;
 use Illuminate\Http\Request;
 
 class TukarTambahController extends Controller
 {
+    use UpdatesStock;
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -73,7 +75,30 @@ class TukarTambahController extends Controller
         $user = auth()->user();
         $validated['owner_id'] = $user->owner ? $user->owner->id : null;
 
-        PosTukarTambah::create($validated);
+        $tukarTambah = PosTukarTambah::create($validated);
+
+        // Update stock for trade-in
+        // Product IN (from customer) - increase stock
+        $this->updateProductStock(
+            $validated['owner_id'],
+            $validated['pos_toko_id'],
+            $validated['pos_produk_masuk_id'],
+            1,
+            'masuk',
+            'Trade-In #' . $tukarTambah->id,
+            'Produk masuk dari trade-in'
+        );
+
+        // Product OUT (to customer) - decrease stock
+        $this->updateProductStock(
+            $validated['owner_id'],
+            $validated['pos_toko_id'],
+            $validated['pos_produk_keluar_id'],
+            -1,
+            'keluar',
+            'Trade-In #' . $tukarTambah->id,
+            'Produk keluar untuk trade-in'
+        );
 
         return redirect()->route('tukar-tambah.index')->with('success', 'Trade-in berhasil ditambahkan');
     }
@@ -99,7 +124,54 @@ class TukarTambahController extends Controller
             'pos_produk_keluar_id' => 'required|exists:pos_produk,id',
         ]);
 
+        // Revert old stock changes
+        // Old product IN - decrease stock
+        $this->updateProductStock(
+            $tukarTambah->owner_id,
+            $tukarTambah->pos_toko_id,
+            $tukarTambah->pos_produk_masuk_id,
+            -1,
+            'adjustment',
+            'Trade-In #' . $tukarTambah->id . ' (Update)',
+            'Koreksi produk masuk trade-in yang diupdate'
+        );
+
+        // Old product OUT - increase stock
+        $this->updateProductStock(
+            $tukarTambah->owner_id,
+            $tukarTambah->pos_toko_id,
+            $tukarTambah->pos_produk_keluar_id,
+            1,
+            'adjustment',
+            'Trade-In #' . $tukarTambah->id . ' (Update)',
+            'Koreksi produk keluar trade-in yang diupdate'
+        );
+
+        // Update the trade-in record
         $tukarTambah->update($validated);
+
+        // Apply new stock changes
+        // New product IN - increase stock
+        $this->updateProductStock(
+            $validated['owner_id'] ?? $tukarTambah->owner_id,
+            $validated['pos_toko_id'],
+            $validated['pos_produk_masuk_id'],
+            1,
+            'masuk',
+            'Trade-In #' . $tukarTambah->id . ' (Updated)',
+            'Produk masuk dari trade-in (updated)'
+        );
+
+        // New product OUT - decrease stock
+        $this->updateProductStock(
+            $validated['owner_id'] ?? $tukarTambah->owner_id,
+            $validated['pos_toko_id'],
+            $validated['pos_produk_keluar_id'],
+            -1,
+            'keluar',
+            'Trade-In #' . $tukarTambah->id . ' (Updated)',
+            'Produk keluar untuk trade-in (updated)'
+        );
 
         return redirect()->route('tukar-tambah.index')->with('success', 'Trade-in berhasil diupdate');
     }
