@@ -512,4 +512,93 @@ class TransaksiController extends Controller
 
         return redirect()->route('transaksi.keluar.index')->with('success', 'Transaksi keluar berhasil diperbarui');
     }
+
+    /**
+     * Download transaction report
+     */
+    public function downloadReport(Request $request)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Get filters
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $status = $request->get('status');
+
+        // Get transactions
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->with(['toko', 'pelanggan', 'supplier', 'items.produk', 'items.service'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->when($status, function ($query, $status) {
+                return $query->where('status', $status);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Generate filename
+        $filename = 'transactions_report_' . $startDate . '_to_' . $endDate . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function() use ($transaksi, $startDate, $endDate) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Report Header
+            fputcsv($file, ['TRANSACTIONS REPORT']);
+            fputcsv($file, ['Period:', $startDate . ' to ' . $endDate]);
+            fputcsv($file, ['Generated:', now()->format('Y-m-d H:i:s')]);
+            fputcsv($file, []);
+            
+            // Column Headers
+            fputcsv($file, [
+                'Date',
+                'Invoice',
+                'Type',
+                'Store',
+                'Customer/Supplier',
+                'Payment Method',
+                'Status',
+                'Total Amount',
+                'Items Count'
+            ]);
+            
+            // Data Rows
+            foreach ($transaksi as $trans) {
+                fputcsv($file, [
+                    $trans->created_at->format('Y-m-d H:i'),
+                    $trans->invoice,
+                    $trans->is_transaksi_masuk ? 'Income' : 'Expense',
+                    $trans->toko->nama ?? '-',
+                    $trans->is_transaksi_masuk ? ($trans->pelanggan->nama ?? '-') : ($trans->supplier->nama ?? '-'),
+                    $trans->metode_pembayaran,
+                    $trans->status,
+                    number_format($trans->total_harga, 0, ',', '.'),
+                    $trans->items->count()
+                ]);
+            }
+            
+            fputcsv($file, []);
+            
+            // Summary
+            $totalIncome = $transaksi->where('is_transaksi_masuk', 1)->sum('total_harga');
+            $totalExpense = $transaksi->where('is_transaksi_masuk', 0)->sum('total_harga');
+            
+            fputcsv($file, ['SUMMARY']);
+            fputcsv($file, ['Total Transactions', $transaksi->count()]);
+            fputcsv($file, ['Total Income', number_format($totalIncome, 0, ',', '.')]);
+            fputcsv($file, ['Total Expense', number_format($totalExpense, 0, ',', '.')]);
+            fputcsv($file, ['Net Profit', number_format($totalIncome - $totalExpense, 0, ',', '.')]);
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
