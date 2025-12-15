@@ -61,11 +61,21 @@ class LogStok extends Model
     }
 
     /**
-     * Get the user who made the change.
+     * Get the POS user who made the change.
      */
     public function pengguna()
     {
-        return $this->belongsTo(User::class, 'pos_pengguna_id');
+        return $this->belongsTo(PosPengguna::class, 'pos_pengguna_id');
+    }
+
+    /**
+     * Get the Laravel auth user who made the change.
+     * Since auth uses 'pengguna' table and log uses 'pos_pengguna_id',
+     * we try to match by looking at User table with the stored ID.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'pos_pengguna_id', 'id');
     }
 
     /**
