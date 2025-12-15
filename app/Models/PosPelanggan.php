@@ -14,15 +14,21 @@ class PosPelanggan extends Model
     protected $fillable = [
         'owner_id',
         'nama',
-        'telepon',
-        'alamat',
+        'slug',
+        'nomor_hp',
         'email',
+        'alamat',
+        'tanggal_bergabung',
     ];
 
-    // Relationship to owner (User)
+    protected $casts = [
+        'tanggal_bergabung' => 'date',
+    ];
+
+    // Relationship to owner
     public function owner()
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(Owner::class, 'owner_id');
     }
 
     // Relationship to transactions
