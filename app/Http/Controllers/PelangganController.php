@@ -51,17 +51,20 @@ class PelangganController extends Controller
 
         $request->validate([
             'nama' => 'required|string|max:255',
-            'telepon' => 'nullable|string|max:20',
+            'nomor_hp' => 'nullable|string|max:45',
             'alamat' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
+            'tanggal_bergabung' => 'nullable|date',
         ]);
 
         PosPelanggan::create([
             'owner_id' => $ownerId,
             'nama' => $request->nama,
-            'telepon' => $request->telepon,
+            'slug' => \Illuminate\Support\Str::slug($request->nama),
+            'nomor_hp' => $request->nomor_hp,
             'alamat' => $request->alamat,
             'email' => $request->email,
+            'tanggal_bergabung' => $request->tanggal_bergabung ?? now()->toDateString(),
         ]);
 
         return redirect()->route('pelanggan.index')->with('success', 'Customer berhasil ditambahkan');
@@ -115,16 +118,19 @@ class PelangganController extends Controller
 
         $request->validate([
             'nama' => 'required|string|max:255',
-            'telepon' => 'nullable|string|max:20',
+            'nomor_hp' => 'nullable|string|max:45',
             'alamat' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
+            'tanggal_bergabung' => 'nullable|date',
         ]);
 
         $pelanggan->update([
             'nama' => $request->nama,
-            'telepon' => $request->telepon,
+            'slug' => \Illuminate\Support\Str::slug($request->nama),
+            'nomor_hp' => $request->nomor_hp,
             'alamat' => $request->alamat,
             'email' => $request->email,
+            'tanggal_bergabung' => $request->tanggal_bergabung,
         ]);
 
         return redirect()->route('pelanggan.index')->with('success', 'Customer berhasil diperbarui');
