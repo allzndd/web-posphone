@@ -13,9 +13,12 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+        
         $perPage = $request->get('per_page', 10);
         
-        $query = PosSupplier::query()
+        $query = PosSupplier::where('owner_id', $ownerId)
             ->orderBy('created_at', 'desc');
 
         // Search by name
