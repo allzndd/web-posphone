@@ -163,18 +163,72 @@ document.addEventListener('DOMContentLoaded', function() {
     const priceInput = document.querySelector('#harga');
     if (priceInput) {
         priceInput.addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9.,]/g, '');
+            let cursorPos = this.selectionStart;
+            let oldValue = this.value;
+            const currency = '{{ get_currency() }}';
             
-            // Format immediately
-            formatCurrency(this);
+            let cleanValue;
+            if (currency === 'USD' || currency === 'MYR') {
+                cleanValue = this.value.replace(/[^0-9.]/g, '');
+                
+                let parts = cleanValue.split('.');
+                if (parts.length > 2) {
+                    cleanValue = parts[0] + '.' + parts.slice(1).join('');
+                }
+                if (parts.length === 2 && parts[1].length > 2) {
+                    cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                this.value = cleanValue;
+            } else {
+                cleanValue = this.value.replace(/[^0-9]/g, '');
+                
+                if (!cleanValue) {
+                    this.value = '';
+                    return;
+                }
+                
+                this.value = parseInt(cleanValue).toLocaleString('id-ID');
+            }
+            
+            if (this.value.length !== oldValue.length) {
+                let diff = this.value.length - oldValue.length;
+                this.setSelectionRange(cursorPos + diff, cursorPos + diff);
+            } else {
+                this.setSelectionRange(cursorPos, cursorPos);
+            }
         });
         
         priceInput.addEventListener('blur', function() {
-            formatCurrency(this);
+            if (this.value) {
+                const currency = '{{ get_currency() }}';
+                
+                if (currency === 'USD' || currency === 'MYR') {
+                    let num = parseFloat(this.value);
+                    if (!isNaN(num)) {
+                        this.value = num.toFixed(2);
+                    }
+                } else {
+                    let cleanValue = this.value.replace(/[^0-9]/g, '');
+                    if (cleanValue) {
+                        this.value = parseInt(cleanValue).toLocaleString('id-ID');
+                    }
+                }
+            }
         });
         
         priceInput.closest('form').addEventListener('submit', function() {
-            priceInput.value = unformatCurrency(priceInput.value);
+            if (priceInput.value) {
+                const currency = '{{ get_currency() }}';
+                
+                if (currency === 'USD' || currency === 'MYR') {
+                    let cleanValue = priceInput.value.replace(/[^0-9.]/g, '');
+                    priceInput.value = parseFloat(cleanValue).toFixed(2);
+                } else {
+                    let cleanValue = priceInput.value.replace(/[^0-9]/g, '');
+                    priceInput.value = cleanValue;
+                }
+            }
         });
     }
 });
