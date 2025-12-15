@@ -70,7 +70,6 @@
                         <td class="py-4">
                             <div>
                                 <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->produk->nama ?? '-' }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $item->produk->kode ?? '-' }}</p>
                             </div>
                         </td>
                         
