@@ -92,13 +92,8 @@ class PelangganController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(PosPelanggan $pelanggan)
     {
-        $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
-
-        $pelanggan = PosPelanggan::where('owner_id', $ownerId)->findOrFail($id);
-
         return view('pages.pelanggan.edit', compact('pelanggan'));
     }
 
@@ -106,15 +101,12 @@ class PelangganController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  PosPelanggan  $pelanggan
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, PosPelanggan $pelanggan)
     {
-        $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
-
-        $pelanggan = PosPelanggan::where('owner_id', $ownerId)->findOrFail($id);
+        // Model already injected via route model binding
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -142,12 +134,8 @@ class PelangganController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(PosPelanggan $pelanggan)
     {
-        $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
-
-        $pelanggan = PosPelanggan::where('owner_id', $ownerId)->findOrFail($id);
         $pelanggan->delete();
 
         return redirect()->route('pelanggan.index')->with('success', 'Customer berhasil dihapus');
