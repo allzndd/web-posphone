@@ -206,12 +206,12 @@
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                             <option value="">Select Payment Method</option>
                             @php
-                                $metodePembayaran = old('metode_pembayaran', $tukarTambah->transaksiPenjualan->metode_pembayaran ?? 'Cash');
+                                $metodePembayaran = strtolower(old('metode_pembayaran', $tukarTambah->transaksiPenjualan->metode_pembayaran ?? 'cash'));
                             @endphp
-                            <option value="Cash" {{ $metodePembayaran == 'Cash' ? 'selected' : '' }}>Cash</option>
-                            <option value="Transfer" {{ $metodePembayaran == 'Transfer' ? 'selected' : '' }}>Transfer</option>
-                            <option value="Credit Card" {{ $metodePembayaran == 'Credit Card' ? 'selected' : '' }}>Credit Card</option>
-                            <option value="Debit Card" {{ $metodePembayaran == 'Debit Card' ? 'selected' : '' }}>Debit Card</option>
+                            <option value="cash" {{ $metodePembayaran == 'cash' ? 'selected' : '' }}>Cash</option>
+                            <option value="transfer" {{ $metodePembayaran == 'transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                            <option value="e-wallet" {{ $metodePembayaran == 'e-wallet' ? 'selected' : '' }}>E-Wallet</option>
+                            <option value="credit" {{ $metodePembayaran == 'credit' ? 'selected' : '' }}>Credit</option>
                         </select>
                     </div>
 
@@ -287,21 +287,33 @@
 @push('scripts')
 <script>
 // Currency formatter using server-side settings
-const currencySymbol = '{{ getCurrencySymbol() }}';
-const currencyPosition = '{{ setting('currency_position', 'left') }}';
-const thousandsSeparator = '{{ setting('thousands_separator', ',') }}';
-const decimalSeparator = '{{ setting('decimal_separator', '.') }}';
-const decimalPlaces = {{ setting('decimal_places', 0) }};
+const currency = '{{ get_currency() }}';
+const currencySymbol = '{{ get_currency_symbol() }}';
+const decimalPlaces = {{ get_decimal_places() }};
 
 function formatCurrency(amount) {
-    const formatted = new Intl.NumberFormat('id-ID', {
-        minimumFractionDigits: decimalPlaces,
-        maximumFractionDigits: decimalPlaces
-    }).format(amount);
+    let formatted;
     
-    return currencyPosition === 'left' 
-        ? currencySymbol + ' ' + formatted 
-        : formatted + ' ' + currencySymbol;
+    if (currency === 'IDR') {
+        // Indonesian: Rp 100.000 (no decimals)
+        formatted = new Intl.NumberFormat('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    } else if (currency === 'MYR' || currency === 'USD') {
+        // Malaysian/US: RM 100.00 or $ 100.00 (2 decimals)
+        formatted = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    } else {
+        formatted = new Intl.NumberFormat('id-ID', {
+            minimumFractionDigits: decimalPlaces,
+            maximumFractionDigits: decimalPlaces
+        }).format(amount);
+    }
+    
+    return currencySymbol + ' ' + formatted;
 }
 
 function calculateNet() {
