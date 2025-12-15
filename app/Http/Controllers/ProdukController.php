@@ -142,12 +142,11 @@ class ProdukController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(PosProduk $produk)
     {
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
-        $produk = PosProduk::findOrFail($id);
         $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
 
         return view('pages.produk.edit', compact('produk', 'merks'));
@@ -157,13 +156,11 @@ class ProdukController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  PosProduk  $produk
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, PosProduk $produk)
     {
-        $produk = PosProduk::findOrFail($id);
-
         $request->validate([
             'nama' => 'required|string|max:255',
             'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
@@ -210,12 +207,11 @@ class ProdukController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  PosProduk  $produk
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(PosProduk $produk)
     {
-        $produk = PosProduk::findOrFail($id);
         $produk->delete();
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
