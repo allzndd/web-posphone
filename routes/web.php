@@ -21,6 +21,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('home', [\App\Http\Controllers\DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard-general-dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
+    
+    // Download Reports (accessible by all authenticated users)
+    Route::get('dashboard/download-report', [\App\Http\Controllers\DashboardController::class, 'downloadFinancialReport'])->name('dashboard.download-report');
+    Route::get('transaksi/download-report', [\App\Http\Controllers\TransaksiController::class, 'downloadReport'])->name('transaksi.download-report');
 
     // Admin & Owner Routes - POS Transactions & Customers
     Route::middleware(['role:OWNER,ADMIN'])->group(function () {
@@ -57,6 +61,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Owner Only Routes - POS Management
     Route::middleware(['role:OWNER'])->group(function () {
+        // Settings
+        Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
+        
         // Trade-In (pos_tukar_tambah) - OWNER ONLY
         Route::resource('tukar-tambah', \App\Http\Controllers\TukarTambahController::class);
         
@@ -109,9 +117,5 @@ Route::middleware(['auth'])->group(function () {
         
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
-        
-        // Menu Baru - Langganan (Subscriptions)
-        Route::resource('langganan', \App\Http\Controllers\LanggananController::class);
-        Route::post('langganan/{id}/toggle-active', [\App\Http\Controllers\LanggananController::class, 'toggleActive'])->name('langganan.toggle-active');
     });
 });
