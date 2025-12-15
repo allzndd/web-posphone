@@ -77,18 +77,18 @@
 
                 <!-- Phone Field -->
                 <div>
-                    <label for="telepon" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                    <label for="nomor_hp" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                         Phone Number
                     </label>
                     <input 
                         type="text" 
-                        id="telepon"
-                        name="telepon" 
-                        value="{{ old('telepon', $pelanggan->telepon) }}"
+                        id="nomor_hp"
+                        name="nomor_hp" 
+                        value="{{ old('nomor_hp', $pelanggan->nomor_hp) }}"
                         placeholder="e.g., 08123456789"
-                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('telepon') !border-red-500 @enderror"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('nomor_hp') !border-red-500 @enderror"
                     >
-                    @error('telepon')
+                    @error('nomor_hp')
                         <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
