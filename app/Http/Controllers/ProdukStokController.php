@@ -48,7 +48,21 @@ class ProdukStokController extends Controller
         $user = auth()->user();
         $validated['owner_id'] = $user->owner ? $user->owner->id : null;
 
-        ProdukStok::create($validated);
+        $produkStok = ProdukStok::create($validated);
+
+        // Create log stok
+        \App\Models\LogStok::create([
+            'owner_id' => $validated['owner_id'],
+            'pos_produk_id' => $validated['pos_produk_id'],
+            'pos_toko_id' => $validated['pos_toko_id'],
+            'stok_sebelum' => 0,
+            'stok_sesudah' => $validated['stok'],
+            'perubahan' => $validated['stok'],
+            'tipe' => 'masuk',
+            'referensi' => 'Stok Manual',
+            'keterangan' => 'Penambahan stok manual',
+            'pos_pengguna_id' => $user->id,
+        ]);
 
         return redirect()->route('produk-stok.index')
             ->with('success', 'Product stock created successfully');
@@ -85,7 +99,28 @@ class ProdukStokController extends Controller
             'stok' => 'required|integer|min:0',
         ]);
 
+        $stokLama = $produkStok->stok;
+        $stokBaru = $validated['stok'];
+        $perubahan = $stokBaru - $stokLama;
+
         $produkStok->update($validated);
+
+        // Create log stok if there's a change
+        if ($perubahan != 0) {
+            $user = auth()->user();
+            \App\Models\LogStok::create([
+                'owner_id' => $produkStok->owner_id,
+                'pos_produk_id' => $produkStok->pos_produk_id,
+                'pos_toko_id' => $produkStok->pos_toko_id,
+                'stok_sebelum' => $stokLama,
+                'stok_sesudah' => $stokBaru,
+                'perubahan' => $perubahan,
+                'tipe' => $perubahan > 0 ? 'masuk' : 'keluar',
+                'referensi' => 'Update Stok',
+                'keterangan' => 'Perubahan stok manual via edit',
+                'pos_pengguna_id' => $user->id,
+            ]);
+        }
 
         return redirect()->route('produk-stok.index')
             ->with('success', 'Product stock updated successfully');
@@ -100,7 +135,28 @@ class ProdukStokController extends Controller
             'stok' => 'required|integer|min:0',
         ]);
 
+        $stokLama = $produkStok->stok;
+        $stokBaru = $validated['stok'];
+        $perubahan = $stokBaru - $stokLama;
+
         $produkStok->update($validated);
+
+        // Create log stok if there's a change
+        if ($perubahan != 0) {
+            $user = auth()->user();
+            \App\Models\LogStok::create([
+                'owner_id' => $produkStok->owner_id,
+                'pos_produk_id' => $produkStok->pos_produk_id,
+                'pos_toko_id' => $produkStok->pos_toko_id,
+                'stok_sebelum' => $stokLama,
+                'stok_sesudah' => $stokBaru,
+                'perubahan' => $perubahan,
+                'tipe' => $perubahan > 0 ? 'masuk' : 'keluar',
+                'referensi' => 'Adjustment',
+                'keterangan' => 'Penyesuaian stok via increment/decrement',
+                'pos_pengguna_id' => $user->id,
+            ]);
+        }
 
         return redirect()->route('produk-stok.index')
             ->with('success', 'Stock updated successfully');
