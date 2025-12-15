@@ -26,7 +26,7 @@
             </a>
         </div>
 
-        <form action="{{ route('pos-produk-merk.update', $merk->id) }}" method="POST">
+        <form action="{{ route('pos-produk-merk.update', $merk) }}" method="POST">
             @csrf
             @method('PUT')
             
@@ -128,7 +128,7 @@
         </form>
 
         <!-- Delete Form (Hidden) -->
-        <form id="deleteForm" action="{{ route('pos-produk-merk.destroy', $merk->id) }}" method="POST" class="hidden">
+        <form id="deleteForm" action="{{ route('pos-produk-merk.destroy', $merk) }}" method="POST" class="hidden">
             @csrf
             @method('DELETE')
         </form>
