@@ -26,7 +26,7 @@
             </a>
         </div>
 
-        <form action="{{ route('produk.update', $produk->id) }}" method="POST">
+        <form action="{{ route('produk.update', $produk) }}" method="POST">
             @csrf
             @method('PUT')
             
@@ -353,7 +353,7 @@
         </form>
 
         <!-- Delete Form (Hidden) -->
-        <form id="deleteForm" action="{{ route('produk.destroy', $produk->id) }}" method="POST" class="hidden">
+        <form id="deleteForm" action="{{ route('produk.destroy', $produk) }}" method="POST" class="hidden">
             @csrf
             @method('DELETE')
         </form>
@@ -369,63 +369,77 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const currency = '{{ get_currency() }}';
     
-    // Currency formatting function
-    function formatCurrencyDisplay(value) {
-        // Remove all non-numeric characters
-        let cleanValue = value.replace(/[^0-9]/g, '');
+    // Format display based on currency type
+    function formatDisplay(value) {
+        if (!value) return '';
         
-        if (!cleanValue || cleanValue === '') return '';
+        let num = parseFloat(value);
+        if (isNaN(num)) return '';
         
-        // Format with thousands separator only, no decimals
-        if (currency === 'IDR') {
-            return parseInt(cleanValue).toLocaleString('id-ID');
+        // For USD/MYR: show with 2 decimals (5.99)
+        // For IDR: show as integer with thousands separator (10,000)
+        if (currency === 'USD' || currency === 'MYR') {
+            return num.toFixed(2);
         } else {
-            return parseInt(cleanValue).toLocaleString('en-US');
+            return parseInt(num).toLocaleString('id-ID');
         }
     }
     
-    function unformatCurrency(displayValue) {
-        // Remove all formatting characters, keep only numbers
-        let cleaned = displayValue.replace(/[^0-9]/g, '');
-        return cleaned || '0';
+    // Clean input - allow numbers and decimal point
+    function cleanInput(value) {
+        if (currency === 'USD' || currency === 'MYR') {
+            return value.replace(/[^0-9.]/g, '');
+        } else {
+            return value.replace(/[^0-9]/g, '');
+        }
     }
     
     // Apply to price inputs
     const priceInputs = document.querySelectorAll('#harga_beli, #harga_jual');
     
     priceInputs.forEach(input => {
-        // Format the initial value on load for readability
+        // Format initial DB value for display
         if (input.value) {
-            input.value = formatCurrencyDisplay(input.value);
+            input.value = formatDisplay(input.value);
         }
         
         input.addEventListener('input', function(e) {
-            // Store cursor position
             let cursorPos = this.selectionStart;
             let oldValue = this.value;
-            let oldLength = oldValue.length;
             
-            // Remove invalid characters, keep only numbers
-            let cleanValue = this.value.replace(/[^0-9]/g, '');
+            // Clean input
+            let cleanValue = cleanInput(this.value);
             
-            // Don't format if empty
             if (!cleanValue) {
                 this.value = '';
                 return;
             }
             
-            // Apply formatting
-            const formatted = formatCurrencyDisplay(cleanValue);
-            
-            if (formatted && formatted !== '0') {
-                this.value = formatted;
+            // For USD/MYR: Allow typing decimals naturally
+            if (currency === 'USD' || currency === 'MYR') {
+                // Prevent multiple decimal points
+                let parts = cleanValue.split('.');
+                if (parts.length > 2) {
+                    cleanValue = parts[0] + '.' + parts.slice(1).join('');
+                }
                 
-                // Adjust cursor position based on added characters (commas)
-                const newLength = formatted.length;
-                const diff = newLength - oldLength;
+                // Limit to 2 decimal places
+                if (parts.length === 2 && parts[1].length > 2) {
+                    cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                this.value = cleanValue;
+            } else {
+                // For IDR: Format with thousands separator
+                this.value = formatDisplay(cleanValue);
+            }
+            
+            // Restore cursor position
+            if (this.value.length !== oldValue.length) {
+                let diff = this.value.length - oldValue.length;
                 this.setSelectionRange(cursorPos + diff, cursorPos + diff);
             } else {
-                this.value = cleanValue;
+                this.setSelectionRange(cursorPos, cursorPos);
             }
         });
         
@@ -516,10 +530,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     @endif
     
-    // Unformat cost amounts before submit
+    // Clean cost amounts before submit
     document.querySelector('form').addEventListener('submit', function() {
         document.querySelectorAll('.cost-amount').forEach(input => {
-            input.value = unformatCurrency(input.value);
+            if (input.value) {
+                let cleanValue = cleanInput(input.value);
+                
+                if (currency === 'USD' || currency === 'MYR') {
+                    input.value = parseFloat(cleanValue).toFixed(2);
+                } else {
+                    input.value = cleanValue;
+                }
+            }
         });
     });
     
