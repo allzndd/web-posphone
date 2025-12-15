@@ -79,9 +79,9 @@ class PosProdukMerkController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(PosProdukMerk $posProdukMerk)
     {
-        $merk = PosProdukMerk::withCount('produk')->findOrFail($id);
+        $merk = $posProdukMerk->loadCount('produk');
         return view('pages.pos-produk-merk.edit', compact('merk'));
     }
 
@@ -89,12 +89,12 @@ class PosProdukMerkController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  PosProdukMerk  $posProdukMerk
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, PosProdukMerk $posProdukMerk)
     {
-        $merk = PosProdukMerk::findOrFail($id);
+        $merk = $posProdukMerk;
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -113,9 +113,9 @@ class PosProdukMerkController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(PosProdukMerk $posProdukMerk)
     {
-        $merk = PosProdukMerk::findOrFail($id);
+        $merk = $posProdukMerk;
         $merk->delete();
 
         return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil dihapus');
