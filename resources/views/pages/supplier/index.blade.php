@@ -82,7 +82,7 @@
                 <tbody>
                     @forelse($suppliers as $supplier)
                     <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition" 
-                        data-href="{{ route('supplier.edit', $supplier->id) }}"
+                        data-href="{{ route('supplier.edit', $supplier) }}"
                         onclick="window.location = this.dataset.href">
                         <!-- Name -->
                         <td class="py-4">
@@ -132,14 +132,14 @@
                         <!-- Actions -->
                         <td class="py-4 text-center">
                             <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation()">
-                                <a href="{{ route('supplier.edit', $supplier->id) }}" 
+                                <a href="{{ route('supplier.edit', $supplier) }}" 
                                    class="flex items-center justify-center rounded-lg bg-lightPrimary p-2 text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
                                         <path fill="none" d="M0 0h24v24H0z"></path>
                                         <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
                                     </svg>
                                 </a>
-                                <form action="{{ route('supplier.destroy', $supplier->id) }}" method="POST" class="inline-block">
+                                <form action="{{ route('supplier.destroy', $supplier) }}" method="POST" class="inline-block">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
