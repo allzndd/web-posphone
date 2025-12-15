@@ -317,41 +317,77 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    function formatCurrency(input) {
-        let value = input.value.replace(/[^0-9]/g, '');
-        if (value) {
-            const currency = '{{ get_currency() }}';
-            if (currency === 'IDR') {
-                input.value = parseInt(value).toLocaleString('id-ID');
-            } else {
-                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
+    const currency = '{{ get_currency() }}';
+    
+    function formatCurrencyDisplay(value) {
+        // Remove all non-numeric characters
+        let cleanValue = value.replace(/[^0-9]/g, '');
+        
+        if (!cleanValue || cleanValue === '') return '';
+        
+        // Format with thousands separator only, no decimals
+        if (currency === 'IDR') {
+            return parseInt(cleanValue).toLocaleString('id-ID');
+        } else {
+            return parseInt(cleanValue).toLocaleString('en-US');
         }
     }
     
-    function unformatCurrency(value) {
-        return value.replace(/[^0-9]/g, '');
+    function unformatCurrency(displayValue) {
+        // Remove all formatting characters, keep only numbers
+        let cleaned = displayValue.replace(/[^0-9]/g, '');
+        return cleaned || '0';
     }
     
     const priceInput = document.querySelector('#total_harga');
     if (priceInput) {
+        // Format the initial value on load for readability
         if (priceInput.value) {
-            formatCurrency(priceInput);
+            priceInput.value = formatCurrencyDisplay(priceInput.value);
         }
         
         priceInput.addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9.,]/g, '');
+            // Store cursor position
+            let cursorPos = this.selectionStart;
+            let oldValue = this.value;
+            let oldLength = oldValue.length;
             
-            // Format immediately
-            formatCurrency(this);
+            // Remove invalid characters, keep only numbers
+            let cleanValue = this.value.replace(/[^0-9]/g, '');
+            
+            // Don't format if empty
+            if (!cleanValue) {
+                this.value = '';
+                return;
+            }
+            
+            // Apply formatting
+            const formatted = formatCurrencyDisplay(cleanValue);
+            
+            if (formatted && formatted !== '0') {
+                this.value = formatted;
+                
+                // Adjust cursor position based on added characters (commas)
+                const newLength = formatted.length;
+                const diff = newLength - oldLength;
+                this.setSelectionRange(cursorPos + diff, cursorPos + diff);
+            } else {
+                this.value = cleanValue;
+            }
         });
         
         priceInput.addEventListener('blur', function() {
-            formatCurrency(this);
+            // Final formatting on blur
+            if (this.value) {
+                this.value = formatCurrencyDisplay(this.value);
+            }
         });
         
         priceInput.closest('form').addEventListener('submit', function() {
-            priceInput.value = unformatCurrency(priceInput.value);
+            // Convert back to cents/integer for database
+            if (priceInput.value) {
+                priceInput.value = unformatCurrency(priceInput.value);
+            }
         });
     }
 });
