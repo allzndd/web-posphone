@@ -65,18 +65,18 @@ class PosRoleController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(PosRole $posRole)
     {
-        $role = PosRole::findOrFail($id);
+        $role = $posRole;
         return view('pages.pos-role.edit', compact('role'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, PosRole $posRole)
     {
-        $role = PosRole::findOrFail($id);
+        $role = $posRole;
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -92,10 +92,9 @@ class PosRoleController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(PosRole $posRole)
     {
-        $role = PosRole::findOrFail($id);
-        $role->delete();
+        $posRole->delete();
 
         return redirect()->route('pos-role.index')->with('success', 'Role berhasil dihapus');
     }
