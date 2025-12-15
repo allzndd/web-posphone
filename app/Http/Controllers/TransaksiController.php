@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 class TransaksiController extends Controller
 {
     use UpdatesStock;
-{
     /**
      * Display a listing of the resource.
      *
