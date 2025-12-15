@@ -192,20 +192,20 @@
                             Total Amount <span class="text-red-500">*</span>
                         </label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Rp
-                            </span>
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
+                            </div>
                             <input 
-                                type="number" 
+                                type="text" 
                                 id="total_harga"
                                 name="total_harga" 
                                 value="{{ old('total_harga', $transaksi->total_harga) }}"
-                                step="0.01"
-                                min="0"
-                                placeholder="0"
+                                inputmode="numeric"
+                                placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('total_harga') !border-red-500 @enderror"
                             >
                         </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
                         @error('total_harga')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -313,3 +313,47 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function formatCurrency(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value) {
+            const currency = '{{ get_currency() }}';
+            if (currency === 'IDR') {
+                input.value = parseInt(value).toLocaleString('id-ID');
+            } else {
+                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+        }
+    }
+    
+    function unformatCurrency(value) {
+        return value.replace(/[^0-9]/g, '');
+    }
+    
+    const priceInput = document.querySelector('#total_harga');
+    if (priceInput) {
+        if (priceInput.value) {
+            formatCurrency(priceInput);
+        }
+        
+        priceInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9.,]/g, '');
+            
+            // Format immediately
+            formatCurrency(this);
+        });
+        
+        priceInput.addEventListener('blur', function() {
+            formatCurrency(this);
+        });
+        
+        priceInput.closest('form').addEventListener('submit', function() {
+            priceInput.value = unformatCurrency(priceInput.value);
+        });
+    }
+});
+</script>
+@endpush
