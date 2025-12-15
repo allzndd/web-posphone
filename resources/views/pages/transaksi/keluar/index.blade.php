@@ -82,7 +82,7 @@
                         </td>
                         <!-- Total -->
                         <td class="py-4 text-right">
-                            <p class="text-sm font-bold text-red-500">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</p>
+                            <p class="text-sm font-bold text-red-500">{{ get_currency_symbol() }} {{ number_format($item->total_harga, 0, ',', '.') }}</p>
                         </td>
                         <!-- Payment Method -->
                         <td class="py-4">
