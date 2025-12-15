@@ -65,21 +65,24 @@ class ProdukController extends Controller
             'battery_health' => 'nullable|string|max:255',
             'harga_beli' => 'required|numeric|min:0',
             'harga_jual' => 'required|numeric|min:0',
-            'biaya_tambahan' => 'nullable|string',
+            'cost_names.*' => 'nullable|string',
+            'cost_amounts.*' => 'nullable|numeric',
             'imei' => 'nullable|string|max:255',
             'aksesoris' => 'nullable|string|max:45',
         ]);
 
-        // Parse biaya_tambahan JSON if provided
+        // Convert cost arrays to JSON format for biaya_tambahan
         $biayaTambahan = null;
-        if ($request->filled('biaya_tambahan')) {
-            $biayaTambahan = json_decode($request->biaya_tambahan, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return back()->withErrors(['biaya_tambahan' => 'Format JSON tidak valid'])->withInput();
+        if ($request->has('cost_names') && $request->has('cost_amounts')) {
+            $names = array_filter($request->cost_names, fn($value) => !empty($value));
+            $amounts = array_filter($request->cost_amounts, fn($value) => !empty($value));
+            
+            if (!empty($names) && !empty($amounts) && count($names) === count($amounts)) {
+                $biayaTambahan = array_combine(array_values($names), array_values($amounts));
             }
         }
 
-        PosProduk::create([
+        $produk = PosProduk::create([
             'owner_id' => $ownerId,
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
             'nama' => $request->nama,
@@ -93,6 +96,31 @@ class ProdukController extends Controller
             'imei' => $request->imei,
             'aksesoris' => $request->aksesoris,
         ]);
+
+        // Automatically create stock entry for all stores with quantity 1
+        $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
+        foreach ($toko as $store) {
+            \App\Models\ProdukStok::create([
+                'owner_id' => $ownerId,
+                'pos_toko_id' => $store->id,
+                'pos_produk_id' => $produk->id,
+                'stok' => 1,
+            ]);
+
+            // Create log stok (stock history) for initial stock
+            \App\Models\LogStok::create([
+                'owner_id' => $ownerId,
+                'pos_produk_id' => $produk->id,
+                'pos_toko_id' => $store->id,
+                'stok_sebelum' => 0,
+                'stok_sesudah' => 1,
+                'perubahan' => 1,
+                'tipe' => 'masuk',
+                'referensi' => 'Produk Baru: ' . $produk->nama,
+                'keterangan' => 'Stok awal produk baru',
+                'pos_pengguna_id' => $user->id,
+            ]);
+        }
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan');
     }
@@ -145,17 +173,20 @@ class ProdukController extends Controller
             'battery_health' => 'nullable|string|max:255',
             'harga_beli' => 'required|numeric|min:0',
             'harga_jual' => 'required|numeric|min:0',
-            'biaya_tambahan' => 'nullable|string',
+            'cost_names.*' => 'nullable|string',
+            'cost_amounts.*' => 'nullable|numeric',
             'imei' => 'nullable|string|max:255',
             'aksesoris' => 'nullable|string|max:45',
         ]);
 
-        // Parse biaya_tambahan JSON if provided
+        // Convert cost arrays to JSON format for biaya_tambahan
         $biayaTambahan = null;
-        if ($request->filled('biaya_tambahan')) {
-            $biayaTambahan = json_decode($request->biaya_tambahan, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return back()->withErrors(['biaya_tambahan' => 'Format JSON tidak valid'])->withInput();
+        if ($request->has('cost_names') && $request->has('cost_amounts')) {
+            $names = array_filter($request->cost_names, fn($value) => !empty($value));
+            $amounts = array_filter($request->cost_amounts, fn($value) => !empty($value));
+            
+            if (!empty($names) && !empty($amounts) && count($names) === count($amounts)) {
+                $biayaTambahan = array_combine(array_values($names), array_values($amounts));
             }
         }
 
