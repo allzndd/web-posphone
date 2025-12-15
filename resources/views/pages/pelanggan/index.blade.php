@@ -73,7 +73,7 @@
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->nama }}</p>
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->telepon ?? '-' }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->nomor_hp ?? '-' }}</p>
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->email ?? '-' }}</p>
