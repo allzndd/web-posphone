@@ -91,10 +91,10 @@ class TukarTambahController extends Controller
             'produk_masuk_type' => 'required|in:existing,new',
             'pos_produk_masuk_id' => 'required_if:produk_masuk_type,existing|nullable|exists:pos_produk,id',
             
-            // New product fields
+            // New product fields (only when produk_masuk_type is 'new')
             'merk_type' => 'nullable|in:existing,new',
-            'pos_produk_merk_id' => 'required_if:merk_type,existing|nullable|exists:pos_produk_merk,id',
-            'merk_nama_baru' => 'required_if:merk_type,new|nullable|string|max:255',
+            'pos_produk_merk_id' => 'nullable|exists:pos_produk_merk,id',
+            'merk_nama_baru' => 'nullable|string|max:255',
             'produk_nama_baru' => 'required_if:produk_masuk_type,new|nullable|string|max:255',
             'warna' => 'nullable|string|max:255',
             'penyimpanan' => 'nullable|string|max:255',
@@ -107,6 +107,19 @@ class TukarTambahController extends Controller
             'metode_pembayaran' => 'required|string|max:45',
             'keterangan' => 'nullable|string|max:255',
         ]);
+
+        // Additional validation for new product
+        if ($request->produk_masuk_type === 'new') {
+            if ($request->merk_type === 'existing' && !$request->pos_produk_merk_id) {
+                return back()->withErrors(['pos_produk_merk_id' => 'Please select a brand.'])->withInput();
+            }
+            if ($request->merk_type === 'new' && !$request->merk_nama_baru) {
+                return back()->withErrors(['merk_nama_baru' => 'Please enter a brand name.'])->withInput();
+            }
+            if (!$request->merk_type) {
+                return back()->withErrors(['merk_type' => 'Please select brand type.'])->withInput();
+            }
+        }
 
         DB::beginTransaction();
         try {
@@ -169,8 +182,8 @@ class TukarTambahController extends Controller
                 'invoice' => $invoicePenjualan,
                 'total_harga' => $subtotalKeluar,
                 'keterangan' => 'Penjualan Trade-In: ' . ($validated['keterangan'] ?? ''),
-                'status' => 'Paid',
-                'metode_pembayaran' => $validated['metode_pembayaran'],
+                'status' => 'completed',
+                'metode_pembayaran' => strtolower($validated['metode_pembayaran']),
                 'pos_tukar_tambah_id' => $tukarTambah->id,
             ]);
 
@@ -209,8 +222,8 @@ class TukarTambahController extends Controller
                 'invoice' => $invoicePembelian,
                 'total_harga' => $validated['harga_beli_masuk'],
                 'keterangan' => 'Pembelian Trade-In: ' . ($validated['keterangan'] ?? ''),
-                'status' => 'Paid',
-                'metode_pembayaran' => $validated['metode_pembayaran'],
+                'status' => 'completed',
+                'metode_pembayaran' => strtolower($validated['metode_pembayaran']),
                 'pos_tukar_tambah_id' => $tukarTambah->id,
             ]);
 
@@ -325,7 +338,7 @@ class TukarTambahController extends Controller
                     'pos_pelanggan_id' => $validated['pos_pelanggan_id'],
                     'total_harga' => $subtotalKeluar,
                     'keterangan' => 'Penjualan Trade-In (Updated): ' . ($validated['keterangan'] ?? ''),
-                    'metode_pembayaran' => $validated['metode_pembayaran'],
+                    'metode_pembayaran' => strtolower($validated['metode_pembayaran']),
                 ]);
 
                 // Update item
@@ -348,7 +361,7 @@ class TukarTambahController extends Controller
                     'pos_supplier_id' => $validated['pos_pelanggan_id'],
                     'total_harga' => $validated['harga_beli_masuk'],
                     'keterangan' => 'Pembelian Trade-In (Updated): ' . ($validated['keterangan'] ?? ''),
-                    'metode_pembayaran' => $validated['metode_pembayaran'],
+                    'metode_pembayaran' => strtolower($validated['metode_pembayaran']),
                 ]);
 
                 // Update item
