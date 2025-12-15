@@ -15,9 +15,11 @@ class PosSupplier extends Model
         'owner_id',
         'nama',
         'slug',
+        'nomor_hp',
         'telepon',
         'alamat',
         'email',
+        'keterangan',
     ];
 
     /**
