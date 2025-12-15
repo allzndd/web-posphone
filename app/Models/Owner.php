@@ -63,4 +63,12 @@ class Owner extends Model
     {
         return $this->hasMany(PosTransaksi::class, 'owner_id');
     }
+
+    /**
+     * Get the settings for the owner.
+     */
+    public function settings()
+    {
+        return $this->hasOne(OwnerSetting::class, 'owner_id');
+    }
 }
