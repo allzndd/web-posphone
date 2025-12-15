@@ -24,7 +24,7 @@
         </div>
 
         <!-- Form -->
-        <form action="{{ route('supplier.update', $supplier->id) }}" method="POST" class="p-6">
+        <form action="{{ route('supplier.update', $supplier) }}" method="POST" class="p-6">
             @csrf
             @method('PUT')
             
