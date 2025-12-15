@@ -160,10 +160,14 @@ class DashboardController extends Controller
             ->where('stok', '<=', 5)
             ->with('produk')
             ->get()
+            ->filter(function($stok) {
+                // Filter out orphaned stock records (where product has been deleted)
+                return $stok->produk !== null;
+            })
             ->map(function($stok) {
                 return (object)[
-                    'id' => $stok->produk->id ?? 0,
-                    'name' => $stok->produk->nama ?? 'Unknown',
+                    'id' => $stok->produk->id,
+                    'name' => $stok->produk->nama,
                     'stock' => $stok->stok
                 ];
             });
