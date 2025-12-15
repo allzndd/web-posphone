@@ -63,4 +63,12 @@ class Owner extends Model
     {
         return $this->hasMany(PosTransaksi::class, 'owner_id');
     }
+
+    /**
+     * Get the subscriptions for the owner.
+     */
+    public function langganan()
+    {
+        return $this->hasMany(Langganan::class, 'owner_id');
+    }
 }
