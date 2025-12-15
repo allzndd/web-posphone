@@ -46,6 +46,20 @@ class PosTukarTambah extends Model
 
     public function transaksi()
     {
-        return $this->hasOne(PosTransaksi::class, 'pos_tukar_tambah_id', 'id');
+        return $this->hasMany(PosTransaksi::class, 'pos_tukar_tambah_id', 'id');
+    }
+    
+    // Transaksi penjualan (produk keluar)
+    public function transaksiPenjualan()
+    {
+        return $this->hasOne(PosTransaksi::class, 'pos_tukar_tambah_id', 'id')
+            ->where('is_transaksi_masuk', 1);
+    }
+    
+    // Transaksi pembelian (produk masuk)
+    public function transaksiPembelian()
+    {
+        return $this->hasOne(PosTransaksi::class, 'pos_tukar_tambah_id', 'id')
+            ->where('is_transaksi_masuk', 0);
     }
 }
