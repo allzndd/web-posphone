@@ -60,6 +60,15 @@ class PosProduk extends Model
                 $model->slug = Str::slug($model->nama);
             }
         });
+
+        // Cascade delete: when product is deleted, delete related stock and logs
+        static::deleting(function ($model) {
+            // Delete all stock records for this product
+            $model->stok()->delete();
+            
+            // Delete all log stok records for this product
+            \App\Models\LogStok::where('pos_produk_id', $model->id)->delete();
+        });
     }
 
     // Relationships
