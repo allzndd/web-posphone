@@ -23,7 +23,7 @@ class PosProdukMerkController extends Controller
             ->when($request->input('nama'), function ($query, $nama) {
                 return $query->where('nama', 'like', '%' . $nama . '%');
             })
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate($request->input('per_page', 10));
 
         return view('pages.pos-produk-merk.index', compact('merks'));
