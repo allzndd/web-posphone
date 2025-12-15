@@ -26,7 +26,7 @@
             </a>
         </div>
 
-        <form action="{{ route('toko.update', $toko->id) }}" method="POST">
+        <form action="{{ route('toko.update', $toko) }}" method="POST">
             @csrf
             @method('PUT')
             
@@ -116,7 +116,7 @@
         </form>
 
         <!-- Delete Form (Hidden) -->
-        <form id="deleteForm" action="{{ route('toko.destroy', $toko->id) }}" method="POST" class="hidden">
+        <form id="deleteForm" action="{{ route('toko.destroy', $toko) }}" method="POST" class="hidden">
             @csrf
             @method('DELETE')
         </form>
