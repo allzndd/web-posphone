@@ -49,7 +49,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('transaksi', \App\Http\Controllers\TransaksiController::class);
         
         // Returns (pos_retur)
-        Route::resource('retur', \App\Http\Controllers\ReturController::class);
+        // Route::resource('retur', \App\Http\Controllers\ReturController::class);
         
         // Customers (pos_pelanggan)
         Route::resource('pelanggan', \App\Http\Controllers\PelangganController::class);
@@ -57,6 +57,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Owner Only Routes - POS Management
     Route::middleware(['role:OWNER'])->group(function () {
+        // Trade-In (pos_tukar_tambah) - OWNER ONLY
+        Route::resource('tukar-tambah', \App\Http\Controllers\TukarTambahController::class);
+        
         // POS Roles (pos_role)
         Route::resource('pos-role', \App\Http\Controllers\PosRoleController::class);
         
@@ -88,8 +91,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // API Routes for AJAX
-    Route::get('api/products/search', [\App\Http\Controllers\Api\ProductController::class, 'search'])->name('products.search');
-    Route::get('api/produk/search', [\App\Http\Controllers\Api\ProdukController::class, 'search'])->name('produk.search');
+    // Route::get('api/products/search', [\App\Http\Controllers\Api\ProductController::class, 'search'])->name('products.search');
+    // Route::get('api/produk/search', [\App\Http\Controllers\Api\ProdukController::class, 'search'])->name('produk.search');
 
     // Superadmin Only - Dashboard Superadmin
     Route::middleware(['role:SUPERADMIN'])->group(function () {
