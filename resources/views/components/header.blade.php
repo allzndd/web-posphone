@@ -130,9 +130,11 @@
                         <a href="#" class="text-sm text-gray-800 dark:text-white hover:dark:text-white">
                             Profile Settings
                         </a>
-                        <a href="#" class="mt-3 text-sm text-gray-800 dark:text-white hover:dark:text-white">
-                            Newsletter Settings
+                        @if(auth()->user()->isOwner())
+                        <a href="{{ route('settings.index') }}" class="mt-3 text-sm text-gray-800 dark:text-white hover:dark:text-white">
+                            Currency Settings
                         </a>
+                        @endif
                         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="mt-3 text-sm font-medium text-red-500 hover:text-red-500 transition duration-150 ease-out hover:ease-in">
                             Log Out
                         </a>
