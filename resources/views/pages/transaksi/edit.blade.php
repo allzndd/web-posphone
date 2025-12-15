@@ -157,9 +157,9 @@
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('status') !border-red-500 @enderror appearance-none"
                             >
                                 <option value="">Select Status</option>
-                                <option value="pending" {{ old('status', $transaksi->status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="completed" {{ old('status', $transaksi->status) == 'completed' ? 'selected' : '' }}>Completed</option>
-                                <option value="cancelled" {{ old('status', $transaksi->status) == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                <option value="pending" {{ strtolower(old('status', $transaksi->status)) == 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="completed" {{ strtolower(old('status', $transaksi->status)) == 'completed' ? 'selected' : '' }}>Completed</option>
+                                <option value="cancelled" {{ strtolower(old('status', $transaksi->status)) == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
                                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
@@ -288,10 +288,10 @@
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('metode_pembayaran') !border-red-500 @enderror appearance-none"
                             >
                                 <option value="">Select Payment Method</option>
-                                <option value="cash" {{ old('metode_pembayaran', $transaksi->metode_pembayaran) == 'cash' ? 'selected' : '' }}>Cash</option>
-                                <option value="transfer" {{ old('metode_pembayaran', $transaksi->metode_pembayaran) == 'transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                                <option value="e-wallet" {{ old('metode_pembayaran', $transaksi->metode_pembayaran) == 'e-wallet' ? 'selected' : '' }}>E-Wallet</option>
-                                <option value="credit" {{ old('metode_pembayaran', $transaksi->metode_pembayaran) == 'credit' ? 'selected' : '' }}>Credit</option>
+                                <option value="cash" {{ strtolower(old('metode_pembayaran', $transaksi->metode_pembayaran)) == 'cash' ? 'selected' : '' }}>Cash</option>
+                                <option value="transfer" {{ strtolower(old('metode_pembayaran', $transaksi->metode_pembayaran)) == 'transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                                <option value="e-wallet" {{ strtolower(old('metode_pembayaran', $transaksi->metode_pembayaran)) == 'e-wallet' ? 'selected' : '' }}>E-Wallet</option>
+                                <option value="credit" {{ strtolower(old('metode_pembayaran', $transaksi->metode_pembayaran)) == 'credit' ? 'selected' : '' }}>Credit</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
                                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
