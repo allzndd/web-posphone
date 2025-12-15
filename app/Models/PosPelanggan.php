@@ -25,6 +25,32 @@ class PosPelanggan extends Model
         'tanggal_bergabung' => 'date',
     ];
 
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    // Auto-generate slug from nama
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->slug)) {
+                $model->slug = \Illuminate\Support\Str::slug($model->nama);
+            }
+        });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('nama')) {
+                $model->slug = \Illuminate\Support\Str::slug($model->nama);
+            }
+        });
+    }
+
     // Relationship to owner
     public function owner()
     {
