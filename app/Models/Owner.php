@@ -65,10 +65,10 @@ class Owner extends Model
     }
 
     /**
-     * Get the settings for the owner.
+     * Get the subscriptions for the owner.
      */
-    public function settings()
+    public function langganan()
     {
-        return $this->hasOne(OwnerSetting::class, 'owner_id');
+        return $this->hasMany(Langganan::class, 'owner_id');
     }
 }

@@ -40,10 +40,10 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Email</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Registered</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Package</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Subscription</p>
                         </th>
                         <th class="py-3 text-center">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Action</p>
@@ -52,6 +52,12 @@
                 </thead>
                 <tbody>
                     @forelse($owners as $owner)
+                    @php
+                        $subscription = $owner->owner ? $owner->owner->langganan()->with('tipeLayanan')->orderBy('created_at', 'desc')->first() : null;
+                        $isExpired = $subscription && $subscription->end_date < now();
+                        $isInactive = $subscription && !$subscription->is_active;
+                        $isTrial = $subscription && $subscription->is_trial;
+                    @endphp
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $owner->nama }}</p>
@@ -59,22 +65,49 @@
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->email }}</p>
-                        </td>
-                        <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $owner->created_at->format('d M Y') }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-500">{{ $owner->created_at->diffForHumans() }}</p>
-                        </td>
-                        <td class="py-4">
                             @if($owner->email_is_verified)
-                                <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-800 dark:text-green-300">
-                                    <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                <span class="inline-flex items-center mt-1 text-xs text-green-600 dark:text-green-400">
+                                    <svg class="mr-1 h-3 w-3 fill-current" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
                                     Verified
                                 </span>
+                            @endif
+                        </td>
+                        <td class="py-4">
+                            @if($subscription && $subscription->tipeLayanan)
+                                <p class="text-sm font-medium text-navy-700 dark:text-white">{{ $subscription->tipeLayanan->nama }}</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Rp {{ number_format($subscription->tipeLayanan->harga, 0, ',', '.') }}</p>
                             @else
-                                <span class="inline-flex items-center rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 text-xs font-medium text-yellow-800 dark:text-yellow-300">
-                                    <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
-                                    Unverified
-                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-500">No package</span>
+                            @endif
+                        </td>
+                        <td class="py-4">
+                            @if($subscription)
+                                @if($isExpired)
+                                    <span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300">
+                                        <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                        Expired
+                                    </span>
+                                @elseif($isInactive)
+                                    <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-900/30 px-3 py-1 text-xs font-medium text-gray-800 dark:text-gray-300">
+                                        <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                        Inactive
+                                    </span>
+                                @elseif($isTrial)
+                                    <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
+                                        <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                        Trial
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-800 dark:text-green-300">
+                                        <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                        Active
+                                    </span>
+                                @endif
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                    Until {{ $subscription->end_date->format('d M Y') }}
+                                </p>
+                            @else
+                                <span class="text-xs text-gray-500 dark:text-gray-500">No subscription</span>
                             @endif
                         </td>
                         <td class="py-4">

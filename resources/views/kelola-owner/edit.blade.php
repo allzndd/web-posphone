@@ -13,19 +13,10 @@
             
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Company Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_perusahaan" value="{{ old('nama_perusahaan', $owner->nama_perusahaan) }}" required
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('nama_perusahaan') border-red-500 @enderror">
-                    @error('nama_perusahaan')
-                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-                
-                <div>
                     <label class="text-sm font-bold text-navy-700 dark:text-white">Owner Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_pemilik" value="{{ old('nama_pemilik', $owner->nama_pemilik) }}" required
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('nama_pemilik') border-red-500 @enderror">
-                    @error('nama_pemilik')
+                    <input type="text" name="nama" value="{{ old('nama', $owner->nama) }}" required
+                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('nama') border-red-500 @enderror">
+                    @error('nama')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
@@ -40,62 +31,98 @@
                 </div>
                 
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Phone <span class="text-red-500">*</span></label>
-                    <input type="text" name="telepon" value="{{ old('telepon', $owner->telepon) }}" required
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('telepon') border-red-500 @enderror">
-                    @error('telepon')
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Password <span class="text-gray-500">(kosongkan jika tidak diubah)</span></label>
+                    <input type="password" name="password"
+                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('password') border-red-500 @enderror">
+                    @error('password')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
                 
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Package <span class="text-red-500">*</span></label>
-                    <select name="paket" required
-                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('paket') border-red-500 @enderror">
-                        <option value="Paket Starter" {{ old('paket', $owner->paket) == 'Paket Starter' ? 'selected' : '' }}>Starter Package</option>
-                        <option value="Paket Basic" {{ old('paket', $owner->paket) == 'Paket Basic' ? 'selected' : '' }}>Basic Package</option>
-                        <option value="Paket Professional" {{ old('paket', $owner->paket) == 'Paket Professional' ? 'selected' : '' }}>Professional Package</option>
-                        <option value="Paket Premium" {{ old('paket', $owner->paket) == 'Paket Premium' ? 'selected' : '' }}>Premium Package</option>
-                        <option value="Paket Enterprise" {{ old('paket', $owner->paket) == 'Paket Enterprise' ? 'selected' : '' }}>Enterprise Package</option>
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Confirm Password</label>
+                    <input type="password" name="password_confirmation"
+                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white">
+                </div>
+                
+                @if($subscription)
+                <div class="md:col-span-2">
+                    <div class="rounded-xl bg-blue-50 dark:bg-navy-900 p-4 mb-4">
+                        <h5 class="text-sm font-bold text-navy-700 dark:text-white mb-2">Current Subscription</h5>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Package: <span class="font-semibold">{{ $subscription->tipeLayanan->nama ?? '-' }}</span> | 
+                            Started: <span class="font-semibold">{{ $subscription->started_date->format('d M Y') }}</span> | 
+                            Expires: <span class="font-semibold">{{ $subscription->end_date->format('d M Y') }}</span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Package</label>
+                    <select name="tipe_layanan_id" id="packageSelect"
+                            style="text-overflow: ellipsis; overflow: visible; white-space: normal;"
+                            class="mt-2 h-auto min-h-[48px] w-full rounded-xl border border-gray-200 bg-white p-3 text-sm outline-none dark:!border-white/10 dark:text-white dark:bg-navy-800 @error('tipe_layanan_id') border-red-500 @enderror">
+                        <option value="">Keep Current Package</option>
+                        @foreach($packages as $package)
+                            <option value="{{ $package->id }}" 
+                                    data-duration="{{ $package->durasi }}"
+                                    {{ old('tipe_layanan_id', $subscription->tipe_layanan_id ?? '') == $package->id ? 'selected' : '' }}>
+                                {{ $package->nama }} - Rp {{ number_format($package->harga, 0, ',', '.') }} ({{ $package->durasi }} bulan)
+                            </option>
+                        @endforeach
                     </select>
-                    @error('paket')
+                    @error('tipe_layanan_id')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
                 
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Number of Outlets <span class="text-red-500">*</span></label>
-                    <input type="number" name="jumlah_outlet" value="{{ old('jumlah_outlet', $owner->jumlah_outlet) }}" required min="1"
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('jumlah_outlet') border-red-500 @enderror">
-                    @error('jumlah_outlet')
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">Started Date</label>
+                    <input type="date" name="started_date" id="startedDate" value="{{ old('started_date', $subscription->started_date->format('Y-m-d')) }}"
+                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('started_date') border-red-500 @enderror">
+                    @error('started_date')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
                 
                 <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Registration Date <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_daftar" value="{{ old('tanggal_daftar', $owner->tanggal_daftar->format('Y-m-d')) }}" required
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('tanggal_daftar') border-red-500 @enderror">
-                    @error('tanggal_daftar')
+                    <label class="text-sm font-bold text-navy-700 dark:text-white">End Date</label>
+                    <input type="date" name="end_date" id="endDate" value="{{ old('end_date', $subscription->end_date->format('Y-m-d')) }}"
+                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('end_date') border-red-500 @enderror">
+                    @error('end_date')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
                 
-                <div>
-                    <label class="text-sm font-bold text-navy-700 dark:text-white">Expiration Date <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_expired" value="{{ old('tanggal_expired', $owner->tanggal_expired->format('Y-m-d')) }}" required
-                           class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('tanggal_expired') border-red-500 @enderror">
-                    @error('tanggal_expired')
-                        <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
+                <div class="flex items-center gap-4 md:col-span-2">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_trial" value="1" {{ old('is_trial', $subscription->is_trial) ? 'checked' : '' }}
+                               class="h-5 w-5 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-white/10 dark:bg-navy-800">
+                        <span class="ml-2 text-sm font-medium text-navy-700 dark:text-white">Trial Mode</span>
+                    </label>
+                    
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" value="1" {{ old('is_active', $subscription->is_active) ? 'checked' : '' }}
+                               class="h-5 w-5 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-white/10 dark:bg-navy-800">
+                        <span class="ml-2 text-sm font-medium text-navy-700 dark:text-white">Active</span>
+                    </label>
                 </div>
+                @else
+                <div class="md:col-span-2">
+                    <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/30 p-4">
+                        <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                            No subscription found for this owner. Please create one from Services menu.
+                        </p>
+                    </div>
+                </div>
+                @endif
                 
-                <div>
+                <div class="hidden">
                     <label class="text-sm font-bold text-navy-700 dark:text-white">Status <span class="text-red-500">*</span></label>
                     <select name="status" required
                             class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('status') border-red-500 @enderror">
-                        <option value="Active" {{ old('status', $owner->status) == 'Active' ? 'selected' : '' }}>Active</option>
-                        <option value="Expired" {{ old('status', $owner->status) == 'Expired' ? 'selected' : '' }}>Expired</option>
+                        <option value="Active" {{ old('status', 'Active') == 'Active' ? 'selected' : '' }}>Active</option>
+                        <option value="Expired" {{ old('status', 'Active') == 'Expired' ? 'selected' : '' }}>Expired</option>
                     </select>
                     @error('status')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
@@ -116,4 +143,34 @@
         </form>
     </div>
 </div>
+
+@if($subscription)
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const packageSelect = document.getElementById('packageSelect');
+    const startedDate = document.getElementById('startedDate');
+    const endDate = document.getElementById('endDate');
+    
+    function calculateEndDate() {
+        const selectedOption = packageSelect.options[packageSelect.selectedIndex];
+        const duration = selectedOption.getAttribute('data-duration');
+        const startDate = startedDate.value;
+        
+        if (duration && startDate && selectedOption.value) {
+            const start = new Date(startDate);
+            start.setMonth(start.getMonth() + parseInt(duration));
+            
+            const year = start.getFullYear();
+            const month = String(start.getMonth() + 1).padStart(2, '0');
+            const day = String(start.getDate()).padStart(2, '0');
+            
+            endDate.value = `${year}-${month}-${day}`;
+        }
+    }
+    
+    packageSelect.addEventListener('change', calculateEndDate);
+    startedDate.addEventListener('change', calculateEndDate);
+});
+</script>
+@endif
 @endsection
