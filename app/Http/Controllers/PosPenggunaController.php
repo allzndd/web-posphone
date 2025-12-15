@@ -83,12 +83,12 @@ class PosPenggunaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(PosPengguna $posPengguna)
     {
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
-        $pengguna = PosPengguna::findOrFail($id);
+        $pengguna = $posPengguna;
         $roles = PosRole::where('owner_id', $ownerId)->get();
         $tokos = PosToko::where('owner_id', $ownerId)->get();
 
@@ -98,9 +98,9 @@ class PosPenggunaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, PosPengguna $posPengguna)
     {
-        $pengguna = PosPengguna::findOrFail($id);
+        $pengguna = $posPengguna;
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -130,9 +130,9 @@ class PosPenggunaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(PosPengguna $posPengguna)
     {
-        $pengguna = PosPengguna::findOrFail($id);
+        $pengguna = $posPengguna;
         $pengguna->delete();
 
         return redirect()->route('pos-pengguna.index')->with('success', 'Pengguna berhasil dihapus');
