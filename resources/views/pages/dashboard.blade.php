@@ -8,21 +8,6 @@
 
 @section('main')
 <div class="p-4 md:p-6">
-    <!-- Header with Download Button -->
-    <div class="flex items-center justify-between mb-5">
-        <div>
-            <h3 class="text-2xl font-bold text-navy-700 dark:text-white">Dashboard</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Overview of your business performance</p>
-        </div>
-        <button onclick="document.getElementById('downloadModal').classList.remove('hidden')"
-                class="flex items-center gap-2 rounded-xl bg-green-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-green-600 active:bg-green-700">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            Download Financial Report
-        </button>
-    </div>
-    
     <!-- Statistics Cards - Horizon Style -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-5">
         <!-- Total Transaksi -->
@@ -96,35 +81,46 @@
                     </p>
                 </div>
                 
-                <!-- Custom Dropdown with Alpine.js -->
-                <div x-data="{ open: false, selected: '{{ $period }}' }" class="relative">
-                    <button @click="open = !open" type="button" class="flex items-center justify-between rounded-xl border border-gray-200 dark:!border-white/10 !bg-white dark:!bg-navy-700 px-4 py-2 text-sm font-medium !text-navy-700 dark:!text-white outline-none focus:border-brand-500 min-w-[120px]">
-                        <span x-text="selected === 'week' ? 'Mingguan' : (selected === 'monthly' ? 'Bulanan' : 'Tahunan')"></span>
-                        <svg class="ml-2 h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                <div class="flex items-center gap-3">
+                    <!-- Download Report Button -->
+                    <button onclick="document.getElementById('downloadModal').classList.remove('hidden')"
+                            class="flex items-center gap-2 rounded-xl bg-green-500 px-4 py-2 text-sm font-bold text-white transition duration-200 hover:bg-green-600 active:bg-green-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
+                        Download Report
                     </button>
                     
-                    <div x-show="open" @click.away="open = false" x-cloak
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute right-0 mt-2 w-[120px] rounded-xl !bg-white dark:!bg-navy-700 shadow-xl shadow-shadow-500 dark:shadow-none border border-gray-200 dark:border-white/10 py-1 z-10">
-                        <a href="{{ route('home', ['period' => 'week']) }}" 
-                           class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'week' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
-                            Mingguan
-                        </a>
-                        <a href="{{ route('home', ['period' => 'monthly']) }}" 
-                           class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'monthly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
-                            Bulanan
-                        </a>
-                        <a href="{{ route('home', ['period' => 'yearly']) }}" 
-                           class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'yearly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
-                            Tahunan
-                        </a>
+                    <!-- Custom Dropdown with Alpine.js -->
+                    <div x-data="{ open: false, selected: '{{ $period }}' }" class="relative">
+                        <button @click="open = !open" type="button" class="flex items-center justify-between rounded-xl border border-gray-200 dark:!border-white/10 !bg-white dark:!bg-navy-700 px-4 py-2 text-sm font-medium !text-navy-700 dark:!text-white outline-none focus:border-brand-500 min-w-[120px]">
+                            <span x-text="selected === 'week' ? 'Mingguan' : (selected === 'monthly' ? 'Bulanan' : 'Tahunan')"></span>
+                            <svg class="ml-2 h-4 w-4 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-[120px] rounded-xl !bg-white dark:!bg-navy-700 shadow-xl shadow-shadow-500 dark:shadow-none border border-gray-200 dark:border-white/10 py-1 z-10">
+                            <a href="{{ route('home', ['period' => 'week']) }}" 
+                               class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'week' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
+                                Mingguan
+                            </a>
+                            <a href="{{ route('home', ['period' => 'monthly']) }}" 
+                               class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'monthly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
+                                Bulanan
+                            </a>
+                            <a href="{{ route('home', ['period' => 'yearly']) }}" 
+                               class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'yearly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
+                                Tahunan
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -299,7 +295,8 @@
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-white/10">
                             <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Invoice</th>
-                            <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Customer</th>
+                            <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Type</th>
+                            <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Customer/Supplier</th>
                             <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Total</th>
                             <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Tanggal</th>
                             <th class="text-left py-3 px-2 text-sm font-bold text-gray-600 dark:text-gray-400">Status</th>
@@ -313,21 +310,30 @@
                                     {{ $transaction->invoice_number }}
                                 </a>
                             </td>
+                            <td class="py-3 px-2">
+                                @if($transaction->transaction_type === 'income')
+                                    <span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Income</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">Expense</span>
+                                @endif
+                            </td>
                             <td class="py-3 px-2 text-sm text-navy-700 dark:text-white">{{ $transaction->customer->name ?? '-' }}</td>
                             <td class="py-3 px-2 text-sm font-medium text-navy-700 dark:text-white">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</td>
                             <td class="py-3 px-2 text-sm text-gray-600 dark:text-gray-400">{{ \Carbon\Carbon::parse($transaction->date)->format('d/m/Y') }}</td>
                             <td class="py-3 px-2">
                                 @php($payStatus = $transaction->payment?->status ?? 'pending')
-                                @if($payStatus === 'paid')
-                                    <span class="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">Lunas</span>
-                                @else
+                                @if($payStatus === 'paid' || $payStatus === 'completed')
+                                    <span class="px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">{{ ucfirst($payStatus) }}</span>
+                                @elseif($payStatus === 'pending')
                                     <span class="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">{{ ucfirst($payStatus) }}</span>
+                                @else
+                                    <span class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">{{ ucfirst($payStatus) }}</span>
                                 @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-8 text-gray-600 dark:text-gray-400">Belum ada transaksi</td>
+                            <td colspan="6" class="text-center py-8 text-gray-600 dark:text-gray-400">Belum ada transaksi</td>
                         </tr>
                         @endforelse
                     </tbody>
