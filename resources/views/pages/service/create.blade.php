@@ -84,9 +84,15 @@
                     <label class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                         Price <span class="text-red-500">*</span>
                     </label>
-                    <input type="number" name="harga" value="{{ old('harga', 0) }}" required min="0" step="0.01"
-                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 @error('harga') border-red-500 @enderror"
-                           placeholder="Enter price">
+                    <div class="relative">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
+                        </div>
+                        <input type="text" id="harga" name="harga" value="{{ old('harga', 0) }}" required inputmode="numeric"
+                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 @error('harga') border-red-500 @enderror"
+                               placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
                     @error('harga')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -134,3 +140,43 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function formatCurrency(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value) {
+            const currency = '{{ get_currency() }}';
+            if (currency === 'IDR') {
+                input.value = parseInt(value).toLocaleString('id-ID');
+            } else {
+                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+        }
+    }
+    
+    function unformatCurrency(value) {
+        return value.replace(/[^0-9]/g, '');
+    }
+    
+    const priceInput = document.querySelector('#harga');
+    if (priceInput) {
+        priceInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9.,]/g, '');
+            
+            // Format immediately
+            formatCurrency(this);
+        });
+        
+        priceInput.addEventListener('blur', function() {
+            formatCurrency(this);
+        });
+        
+        priceInput.closest('form').addEventListener('submit', function() {
+            priceInput.value = unformatCurrency(priceInput.value);
+        });
+    }
+});
+</script>
+@endpush
