@@ -65,7 +65,7 @@
                 </thead>
                 <tbody>
                     @forelse ($roles as $role)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-role.edit', $role->id) }}">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-role.edit', $role) }}">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $role->nama }}</p>
                         </td>
@@ -82,7 +82,7 @@
                         <td class="py-4" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-2">
                                 <!-- Edit Button -->
-                                <a href="{{ route('pos-role.edit', $role->id) }}" 
+                                <a href="{{ route('pos-role.edit', $role) }}" 
                                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
                                    title="Edit">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -92,7 +92,7 @@
                                 </a>
                                 
                                 <!-- Delete Button -->
-                                <form action="{{ route('pos-role.destroy', $role->id) }}" method="POST" class="inline-block" 
+                                <form action="{{ route('pos-role.destroy', $role) }}" method="POST" class="inline-block" 
                                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus role ini?');">
                                     @csrf
                                     @method('DELETE')
