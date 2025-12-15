@@ -19,6 +19,14 @@ class PosToko extends Model
         'alamat'
     ];
 
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     // Auto-generate slug from nama
     protected static function boot()
     {
