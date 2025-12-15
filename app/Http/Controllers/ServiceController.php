@@ -60,7 +60,8 @@ class ServiceController extends Controller
             'durasi' => 'nullable|integer|min:0',
         ]);
 
-        $validated['owner_id'] = auth()->id();
+        $user = auth()->user();
+        $validated['owner_id'] = $user->owner ? $user->owner->id : null;
 
         PosService::create($validated);
 
