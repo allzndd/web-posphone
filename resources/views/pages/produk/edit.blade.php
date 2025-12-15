@@ -160,14 +160,20 @@
                         <label for="penyimpanan" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Storage
                         </label>
-                        <input 
-                            type="text" 
-                            id="penyimpanan"
-                            name="penyimpanan" 
-                            value="{{ old('penyimpanan', $produk->penyimpanan) }}"
-                            placeholder="e.g., 128GB"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('penyimpanan') !border-red-500 @enderror"
-                        >
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="penyimpanan"
+                                name="penyimpanan" 
+                                value="{{ old('penyimpanan', $produk->penyimpanan) }}"
+                                placeholder="e.g., 128"
+                                inputmode="numeric"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 pr-12 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('penyimpanan') !border-red-500 @enderror"
+                            >
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">GB</span>
+                            </div>
+                        </div>
                         @error('penyimpanan')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -178,14 +184,20 @@
                         <label for="battery_health" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Battery Health
                         </label>
-                        <input 
-                            type="text" 
-                            id="battery_health"
-                            name="battery_health" 
-                            value="{{ old('battery_health', $produk->battery_health) }}"
-                            placeholder="e.g., 95%"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('battery_health') !border-red-500 @enderror"
-                        >
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="battery_health"
+                                name="battery_health" 
+                                value="{{ old('battery_health', $produk->battery_health) }}"
+                                placeholder="e.g., 95"
+                                inputmode="numeric"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 pr-12 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('battery_health') !border-red-500 @enderror"
+                            >
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">%</span>
+                            </div>
+                        </div>
                         @error('battery_health')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -243,19 +255,19 @@
                         </label>
                         <div class="relative">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Rp</span>
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
                             </div>
                             <input 
-                                type="number" 
+                                type="text" 
                                 id="harga_beli"
                                 name="harga_beli" 
                                 value="{{ old('harga_beli', $produk->harga_beli) }}"
-                                placeholder="0"
-                                step="0.01"
-                                min="0"
+                                placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
+                                inputmode="numeric"
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('harga_beli') !border-red-500 @enderror"
                             >
                         </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
                         @error('harga_beli')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -268,40 +280,44 @@
                         </label>
                         <div class="relative">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Rp</span>
+                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
                             </div>
                             <input 
-                                type="number" 
+                                type="text" 
                                 id="harga_jual"
                                 name="harga_jual" 
                                 value="{{ old('harga_jual', $produk->harga_jual) }}"
-                                placeholder="0"
-                                step="0.01"
-                                min="0"
+                                placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
+                                inputmode="numeric"
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('harga_jual') !border-red-500 @enderror"
                             >
                         </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
                         @error('harga_jual')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <!-- Additional Costs (JSON) -->
+                    <!-- Additional Costs -->
                     <div class="md:col-span-2">
-                        <label for="biaya_tambahan" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            Additional Costs (JSON Format)
-                        </label>
-                        <textarea 
-                            id="biaya_tambahan"
-                            name="biaya_tambahan" 
-                            rows="3"
-                            placeholder='{"repair": 100000, "upgrade": 50000}'
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 resize-none font-mono @error('biaya_tambahan') !border-red-500 @enderror"
-                        >{{ old('biaya_tambahan', $produk->biaya_tambahan ? json_encode($produk->biaya_tambahan, JSON_PRETTY_PRINT) : '') }}</textarea>
-                        @error('biaya_tambahan')
-                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Optional: Enter additional costs in JSON format</p>
+                        <div class="mb-3 flex items-center justify-between">
+                            <label class="text-sm font-bold text-navy-700 dark:text-white">
+                                Additional Costs
+                            </label>
+                            <button type="button" id="addCostBtn" 
+                                    class="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-bold text-white transition duration-200 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                Add Cost
+                            </button>
+                        </div>
+                        
+                        <div id="costsContainer" class="space-y-3">
+                            <!-- Existing costs will be loaded here -->
+                        </div>
+                        
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Optional: Add any additional costs (e.g., repair, upgrade, shipping)</p>
                     </div>
 
                 </div>
@@ -350,6 +366,127 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-focus on name field
     document.getElementById('nama').focus();
+    
+    // Currency formatting function
+    function formatCurrency(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value) {
+            const currency = '{{ get_currency() }}';
+            if (currency === 'IDR') {
+                input.value = parseInt(value).toLocaleString('id-ID');
+            } else {
+                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+        }
+    }
+    
+    function unformatCurrency(value) {
+        return value.replace(/[^0-9]/g, '');
+    }
+    
+    // Apply to price inputs
+    const priceInputs = document.querySelectorAll('#harga_beli, #harga_jual');
+    priceInputs.forEach(input => {
+        // Format existing value
+        if (input.value) {
+            formatCurrency(input);
+        }
+        
+        // Real-time formatting on every keystroke
+        input.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9.,]/g, '');
+            
+            // Format immediately
+            formatCurrency(this);
+        });
+        
+        input.addEventListener('blur', function() {
+            formatCurrency(this);
+        });
+        
+        input.closest('form').addEventListener('submit', function() {
+            priceInputs.forEach(inp => {
+                inp.value = unformatCurrency(inp.value);
+            });
+        });
+    });
+    
+    // Additional Costs Dynamic Fields
+    let costIndex = 0;
+    const costsContainer = document.getElementById('costsContainer');
+    const addCostBtn = document.getElementById('addCostBtn');
+    
+    function addCostField(name = '', amount = '') {
+        const costItem = document.createElement('div');
+        costItem.className = 'flex gap-3 items-start';
+        costItem.innerHTML = `
+            <div class="flex-1">
+                <input type="text" 
+                       name="cost_names[]" 
+                       value="${name}"
+                       placeholder="Cost name (e.g., Repair, Upgrade)"
+                       class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-3 py-2 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
+            </div>
+            <div class="flex-1">
+                <div class="relative">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
+                    </div>
+                    <input type="text" 
+                           name="cost_amounts[]" 
+                           value="${amount}"
+                           placeholder="0"
+                           inputmode="numeric"
+                           class="cost-amount w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-10 pr-3 py-2 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
+                </div>
+            </div>
+            <button type="button" 
+                    class="remove-cost rounded-lg bg-red-100 p-2 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+        `;
+        
+        costsContainer.appendChild(costItem);
+        
+        // Add formatting to the new amount input
+        const amountInput = costItem.querySelector('.cost-amount');
+        amountInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9.,]/g, '');
+            formatCurrency(this);
+        });
+        
+        amountInput.addEventListener('blur', function() {
+            formatCurrency(this);
+        });
+        
+        // Remove button handler
+        costItem.querySelector('.remove-cost').addEventListener('click', function() {
+            costItem.remove();
+        });
+        
+        costIndex++;
+    }
+    
+    addCostBtn.addEventListener('click', function() {
+        addCostField();
+    });
+    
+    // Load existing costs
+    @if($produk->biaya_tambahan)
+        const existingCosts = @json($produk->biaya_tambahan);
+        for (const [name, amount] of Object.entries(existingCosts)) {
+            addCostField(name, amount);
+        }
+    @endif
+    
+    // Unformat cost amounts before submit
+    document.querySelector('form').addEventListener('submit', function() {
+        document.querySelectorAll('.cost-amount').forEach(input => {
+            input.value = unformatCurrency(input.value);
+        });
+    });
     
     // Confirm before delete
     document.querySelector('button[onclick*="deleteForm"]').addEventListener('click', function(e) {
