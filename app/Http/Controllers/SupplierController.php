@@ -54,7 +54,8 @@ class SupplierController extends Controller
             'keterangan' => 'nullable|string|max:255',
         ]);
 
-        $validated['owner_id'] = auth()->id();
+        $user = auth()->user();
+        $validated['owner_id'] = $user->owner ? $user->owner->id : null;
         $validated['slug'] = Str::slug($validated['nama']);
 
         PosSupplier::create($validated);
