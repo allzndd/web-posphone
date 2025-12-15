@@ -75,22 +75,15 @@ class TokoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($id)
+    public function edit(PosToko $toko)
     {
-        $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
-
-        $toko = PosToko::where('owner_id', $ownerId)
-            ->where('id', $id)
-            ->firstOrFail();
-
         return view('pages.toko.edit', compact('toko'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, PosToko $toko)
     {
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
@@ -115,7 +108,7 @@ class TokoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(PosToko $toko)
     {
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
