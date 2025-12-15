@@ -45,7 +45,8 @@ class ProdukStokController extends Controller
             'stok' => 'required|integer|min:0',
         ]);
 
-        $validated['owner_id'] = auth()->id();
+        $user = auth()->user();
+        $validated['owner_id'] = $user->owner ? $user->owner->id : null;
 
         ProdukStok::create($validated);
 
