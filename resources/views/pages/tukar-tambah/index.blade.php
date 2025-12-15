@@ -64,6 +64,15 @@
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Out</p>
                         </th>
+                        <th class="py-3 text-right">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Sale</p>
+                        </th>
+                        <th class="py-3 text-right">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Purchase</p>
+                        </th>
+                        <th class="py-3 text-right">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Profit</p>
+                        </th>
                         <th class="py-3 text-center">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
                         </th>
@@ -71,9 +80,15 @@
                 </thead>
                 <tbody>
                     @forelse ($tukarTambahs as $tukarTambah)
+                    @php
+                        $saleAmount = $tukarTambah->transaksiPenjualan->total_harga ?? 0;
+                        $purchaseAmount = $tukarTambah->transaksiPembelian->total_harga ?? 0;
+                        $profit = $saleAmount - $purchaseAmount;
+                    @endphp
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('tukar-tambah.edit', $tukarTambah->id) }}">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $tukarTambah->created_at->format('d M Y') }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-600">{{ $tukarTambah->created_at->format('H:i') }}</p>
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $tukarTambah->toko ? $tukarTambah->toko->nama : '-' }}</p>
@@ -87,21 +102,52 @@
                         </td>
                         <td class="py-4">
                             @if($tukarTambah->produkMasuk)
-                                <span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-800 dark:text-green-300">
-                                    ↑ {{ $tukarTambah->produkMasuk->nama }}
-                                </span>
+                                <div class="flex flex-col">
+                                    <span class="inline-flex items-center gap-1 text-sm font-medium text-green-700 dark:text-green-400">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 13l5 5m0 0l5-5m-5 5V6"></path>
+                                        </svg>
+                                        {{ $tukarTambah->produkMasuk->nama }}
+                                    </span>
+                                    @if($tukarTambah->transaksiPembelian)
+                                        <span class="text-xs text-gray-500 dark:text-gray-600 mt-1">{{ $tukarTambah->transaksiPembelian->invoice }}</span>
+                                    @endif
+                                </div>
                             @else
                                 <span class="text-xs text-gray-400 dark:text-gray-600">-</span>
                             @endif
                         </td>
                         <td class="py-4">
                             @if($tukarTambah->produkKeluar)
-                                <span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-xs font-medium text-red-800 dark:text-red-300">
-                                    ↓ {{ $tukarTambah->produkKeluar->nama }}
-                                </span>
+                                <div class="flex flex-col">
+                                    <span class="inline-flex items-center gap-1 text-sm font-medium text-red-700 dark:text-red-400">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                                        </svg>
+                                        {{ $tukarTambah->produkKeluar->nama }}
+                                    </span>
+                                    @if($tukarTambah->transaksiPenjualan)
+                                        <span class="text-xs text-gray-500 dark:text-gray-600 mt-1">{{ $tukarTambah->transaksiPenjualan->invoice }}</span>
+                                    @endif
+                                </div>
                             @else
                                 <span class="text-xs text-gray-400 dark:text-gray-600">-</span>
                             @endif
+                        </td>
+                        <td class="py-4 text-right">
+                            <p class="text-sm font-bold text-green-600 dark:text-green-400">
+                                Rp {{ number_format($saleAmount, 0, ',', '.') }}
+                            </p>
+                        </td>
+                        <td class="py-4 text-right">
+                            <p class="text-sm font-bold text-red-600 dark:text-red-400">
+                                Rp {{ number_format($purchaseAmount, 0, ',', '.') }}
+                            </p>
+                        </td>
+                        <td class="py-4 text-right">
+                            <p class="text-sm font-bold {{ $profit >= 0 ? 'text-navy-700 dark:text-white' : 'text-red-600 dark:text-red-400' }}">
+                                Rp {{ number_format($profit, 0, ',', '.') }}
+                            </p>
                         </td>
                         <td class="py-4" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-2">
@@ -134,7 +180,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="py-12 text-center">
+                        <td colspan="9" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
