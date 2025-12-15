@@ -71,7 +71,7 @@
                 </thead>
                 <tbody>
                     @forelse ($pengguna as $user)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-pengguna.edit', $user->id) }}">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-pengguna.edit', $user) }}">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $user->nama }}</p>
                         </td>
@@ -104,7 +104,7 @@
                         <td class="py-4" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-2">
                                 <!-- Edit Button -->
-                                <a href="{{ route('pos-pengguna.edit', $user->id) }}" 
+                                <a href="{{ route('pos-pengguna.edit', $user) }}" 
                                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
                                    title="Edit">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -114,7 +114,7 @@
                                 </a>
                                 
                                 <!-- Delete Button -->
-                                <form action="{{ route('pos-pengguna.destroy', $user->id) }}" method="POST" class="inline-block" 
+                                <form action="{{ route('pos-pengguna.destroy', $user) }}" method="POST" class="inline-block" 
                                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?');">
                                     @csrf
                                     @method('DELETE')
