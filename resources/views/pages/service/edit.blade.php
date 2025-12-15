@@ -147,60 +147,62 @@
 document.addEventListener('DOMContentLoaded', function() {
     const currency = '{{ get_currency() }}';
     
-    function formatCurrencyDisplay(value) {
-        // Remove all non-numeric characters
-        let cleanValue = value.replace(/[^0-9]/g, '');
+    function formatDisplay(value) {
+        if (!value) return '';
+        let num = parseFloat(value);
+        if (isNaN(num)) return '';
         
-        if (!cleanValue || cleanValue === '') return '';
-        
-        // Format with thousands separator only, no decimals
-        if (currency === 'IDR') {
-            return parseInt(cleanValue).toLocaleString('id-ID');
+        if (currency === 'USD' || currency === 'MYR') {
+            return num.toFixed(2);
         } else {
-            return parseInt(cleanValue).toLocaleString('en-US');
+            return parseInt(num).toLocaleString('id-ID');
         }
     }
     
-    function unformatCurrency(displayValue) {
-        // Remove all formatting characters, keep only numbers
-        let cleaned = displayValue.replace(/[^0-9]/g, '');
-        return cleaned || '0';
+    function cleanInput(value) {
+        if (currency === 'USD' || currency === 'MYR') {
+            return value.replace(/[^0-9.]/g, '');
+        } else {
+            return value.replace(/[^0-9]/g, '');
+        }
     }
     
     const priceInput = document.querySelector('#harga');
     if (priceInput) {
-        // Format the initial value on load for readability
+        // Format initial value
         if (priceInput.value) {
-            priceInput.value = formatCurrencyDisplay(priceInput.value);
+            priceInput.value = formatDisplay(priceInput.value);
         }
         
         priceInput.addEventListener('input', function(e) {
-            // Store cursor position
             let cursorPos = this.selectionStart;
             let oldValue = this.value;
-            let oldLength = oldValue.length;
             
-            // Remove invalid characters, keep only numbers
-            let cleanValue = this.value.replace(/[^0-9]/g, '');
+            let cleanValue = cleanInput(this.value);
             
-            // Don't format if empty
             if (!cleanValue) {
                 this.value = '';
                 return;
             }
             
-            // Apply formatting
-            const formatted = formatCurrencyDisplay(cleanValue);
+            if (currency === 'USD' || currency === 'MYR') {
+                let parts = cleanValue.split('.');
+                if (parts.length > 2) {
+                    cleanValue = parts[0] + '.' + parts.slice(1).join('');
+                }
+                if (parts.length === 2 && parts[1].length > 2) {
+                    cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                this.value = cleanValue;
+            } else {
+                this.value = formatDisplay(cleanValue);
+            }
             
-            if (formatted && formatted !== '0') {
-                this.value = formatted;
-                
-                // Adjust cursor position based on added characters (commas)
-                const newLength = formatted.length;
-                const diff = newLength - oldLength;
+            if (this.value.length !== oldValue.length) {
+                let diff = this.value.length - oldValue.length;
                 this.setSelectionRange(cursorPos + diff, cursorPos + diff);
             } else {
-                this.value = cleanValue;
+                this.setSelectionRange(cursorPos, cursorPos);
             }
         });
         
@@ -212,9 +214,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         priceInput.closest('form').addEventListener('submit', function() {
-            // Convert back to cents/integer for database
             if (priceInput.value) {
-                priceInput.value = unformatCurrency(priceInput.value);
+                let cleanValue = cleanInput(priceInput.value);
+                
+                if (currency === 'USD' || currency === 'MYR') {
+                    priceInput.value = parseFloat(cleanValue).toFixed(2);
+                } else {
+                    priceInput.value = cleanValue;
+                }
             }
         });
     }
