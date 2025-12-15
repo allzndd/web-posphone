@@ -65,7 +65,7 @@
                 </thead>
                 <tbody>
                     @forelse ($tokos as $toko)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('toko.edit', $toko->id) }}">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('toko.edit', $toko) }}">
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $toko->nama }}</p>
                         </td>
@@ -80,7 +80,7 @@
                         <td class="py-4" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center gap-2">
                                 <!-- Edit Button -->
-                                <a href="{{ route('toko.edit', $toko->id) }}" 
+                                <a href="{{ route('toko.edit', $toko) }}" 
                                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
                                    title="Edit">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -90,7 +90,7 @@
                                 </a>
                                 
                                 <!-- Delete Button -->
-                                <form action="{{ route('toko.destroy', $toko->id) }}" method="POST" class="inline-block" 
+                                <form action="{{ route('toko.destroy', $toko) }}" method="POST" class="inline-block" 
                                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus toko ini?');">
                                     @csrf
                                     @method('DELETE')
