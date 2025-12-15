@@ -45,7 +45,7 @@
                 </svg>
                 <div>
                     <p class="text-xs text-gray-600 dark:text-gray-400">Total Amount</p>
-                    <p class="text-sm font-bold text-navy-700 dark:text-white">Rp {{ number_format($transaksi->total_harga, 0, ',', '.') }}</p>
+                    <p class="text-sm font-bold text-navy-700 dark:text-white">{{ get_currency_symbol() }} {{ number_format($transaksi->total_harga, 0, ',', '.') }}</p>
                 </div>
             </div>
             <div class="h-8 w-px bg-gray-300 dark:bg-white/10"></div>
@@ -258,7 +258,7 @@
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Rp
+                                {{ get_currency_symbol() }}
                             </span>
                             <input 
                                 type="number" 
