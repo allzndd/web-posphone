@@ -64,4 +64,9 @@ class PosProduk extends Model
     {
         return $this->belongsTo(PosProdukMerk::class, 'pos_produk_merk_id');
     }
+
+    public function stok()
+    {
+        return $this->hasMany(ProdukStok::class, 'pos_produk_id');
+    }
 }
