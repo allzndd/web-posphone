@@ -60,9 +60,9 @@ class PosTransaksi extends Model
         return $this->belongsTo(PosSupplier::class, 'pos_supplier_id');
     }
 
-    // Relationship to transaksi details (assuming pos_transaksi_detail table exists)
-    public function details()
+    // Relationship to transaksi items
+    public function items()
     {
-        return $this->hasMany(PosTransaksiDetail::class, 'pos_transaksi_id');
+        return $this->hasMany(PosTransaksiItem::class, 'pos_transaksi_id');
     }
 }
