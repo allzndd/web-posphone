@@ -133,7 +133,7 @@
                         </td>
                         <td class="py-4 text-right">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">
-                                Rp {{ number_format($item->total_harga, 0, ',', '.') }}
+                                {{ get_currency_symbol() }} {{ number_format($item->total_harga, 0, ',', '.') }}
                             </p>
                         </td>
                         <td class="py-4">
