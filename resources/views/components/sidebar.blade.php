@@ -361,6 +361,98 @@
                 </ul>
             </div>
         </li>
+
+        <!-- Reports Dropdown -->
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('reports*') || Request::is('laporan*') ? 'true' : 'false' }} }">
+            <div class="flex hover:cursor-pointer" @click="open = !open">
+                <div class="w-full">
+                    <div class="my-[3px] flex cursor-pointer items-center px-8">
+                        <span class="{{ Request::is('reports*') || Request::is('laporan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 2h6a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm0 2v16h6V4H9zM5 10H3v10a1 1 0 0 0 1 1h2v-2H5V10zm14 0v9h-1v2h2a1 1 0 0 0 1-1V10h-2z"></path>
+                            </svg>
+                        </span>
+                        <p class="leading-1 ml-4 flex {{ Request::is('reports*') || Request::is('laporan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                            Laporan
+                        </p>
+                        <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
+                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M7 10l5 5 5-5z"></path></svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            @if(Request::is('reports*') || Request::is('laporan*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+            <!-- Submenu -->
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('reports*') && !Request::is('laporan*')) style="display: none;" @endif>
+                <ul class="my-[3px]">
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.index') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports') || Request::is('laporan') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Semua Laporan
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.sales') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports/sales') || Request::is('laporan/penjualan') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Laporan Penjualan
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.trade-in') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports/trade-in') || Request::is('laporan/tukar-tambah') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Laporan Tukar Tambah
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.products') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports/products') || Request::is('laporan/produk') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Laporan Produk
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.stock') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports/stock') || Request::is('laporan/stok') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Laporan Stok
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.customers') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports/customers') || Request::is('laporan/pelanggan') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Laporan Pelanggan
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('reports.financial') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('reports/financial') || Request::is('laporan/keuangan') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Ringkasan Keuangan
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </li>
         @endif
 
         @if(auth()->user()->isAdmin())
