@@ -57,6 +57,17 @@ Route::middleware(['auth'])->group(function () {
         
         // Customers (pos_pelanggan)
         Route::resource('pelanggan', \App\Http\Controllers\PelangganController::class);
+        
+        // Reports - Laporan
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
+            Route::get('/sales', [\App\Http\Controllers\ReportController::class, 'sales'])->name('sales');
+            Route::get('/trade-in', [\App\Http\Controllers\ReportController::class, 'tradeIn'])->name('trade-in');
+            Route::get('/products', [\App\Http\Controllers\ReportController::class, 'products'])->name('products');
+            Route::get('/stock', [\App\Http\Controllers\ReportController::class, 'stock'])->name('stock');
+            Route::get('/customers', [\App\Http\Controllers\ReportController::class, 'customers'])->name('customers');
+            Route::get('/financial', [\App\Http\Controllers\ReportController::class, 'financial'])->name('financial');
+        });
     });
 
     // Owner Only Routes - POS Management
