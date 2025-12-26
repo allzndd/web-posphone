@@ -413,16 +413,16 @@
         @if(auth()->user()->isSuperadmin())
         <!-- Services -->
         <li class="relative mb-3 flex hover:cursor-pointer">
-            <a href="{{ route('langganan.index') }}" class="w-full">
+            <a href="{{ route('layanan.index') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
-                    <span class="{{ Request::is('langganan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                    <span class="{{ Request::is('layanan*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>
                     </span>
-                    <p class="leading-1 ml-4 flex {{ Request::is('langganan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                    <p class="leading-1 ml-4 flex {{ Request::is('layanan*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
                         Services
                     </p>
                 </div>
-                @if(Request::is('langganan*'))
+                @if(Request::is('layanan*'))
                     <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
                 @endif
             </a>
@@ -460,6 +460,44 @@
                     <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
                 @endif
             </a>
+        </li>
+        @endif
+
+        @if(auth()->user()->isSuperadmin())
+        <!-- Manage Profile Dropdown -->
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('manage-profil*') ? 'true' : 'false' }} }">
+            <div class="flex hover:cursor-pointer" @click="open = !open">
+                <div class="w-full">
+                    <div class="my-[3px] flex cursor-pointer items-center px-8">
+                        <span class="{{ Request::is('manage-profil*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"></path></svg>
+                        </span>
+                        <p class="leading-1 ml-4 flex {{ Request::is('manage-profil*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                            Manage Profile
+                        </p>
+                        <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
+                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M7 10l5 5 5-5z"></path></svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            @if(Request::is('manage-profil*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+            <!-- Submenu -->
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('manage-profil*')) style="display: none;" @endif>
+                <ul class="my-[3px]">
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('manage-profil.contact-admin.index') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('manage-profil*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Contact Admin
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </li>
         @endif
 

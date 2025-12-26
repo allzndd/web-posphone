@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ManageProfilController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -117,5 +118,8 @@ Route::middleware(['auth'])->group(function () {
         
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
+
+                // Manage Profile - Contact Admin
+                Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');
     });
 });
