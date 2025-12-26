@@ -4,58 +4,6 @@
 
 @section('main')
 <div class="p-3 md:pt-[100px] md:pl-3 md:pr-3">
-    <!-- Header with Breadcrumb -->
-    <div class="mb-5 flex items-center justify-between">
-        <div>
-            <h4 class="text-2xl font-bold text-navy-700 dark:text-white">Laporan Penjualan</h4>
-            <p class="text-base text-gray-600 dark:text-gray-400 mt-1">
-                <a href="{{ route('reports.index') }}" class="hover:text-brand-500">Laporan</a> 
-                <span class="mx-1">/</span> Penjualan
-            </p>
-        </div>
-    </div>
-
-    <!-- Filter Card -->
-    <div class="!z-5 relative mb-5 flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
-        <div class="p-6">
-            <form method="GET" action="{{ route('reports.sales') }}" class="grid grid-cols-1 gap-4 md:grid-cols-6">
-                <div class="md:col-span-1">
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Periode</label>
-                    <select name="period" id="periodSelect" class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white">
-                        <option value="all" {{ $period == 'all' ? 'selected' : '' }}>Semua</option>
-                        <option value="today" {{ $period == 'today' ? 'selected' : '' }}>Hari Ini</option>
-                        <option value="week" {{ $period == 'week' ? 'selected' : '' }}>Minggu Ini</option>
-                        <option value="month" {{ $period == 'month' ? 'selected' : '' }}>Bulan Ini</option>
-                        <option value="year" {{ $period == 'year' ? 'selected' : '' }}>Tahun Ini</option>
-                        <option value="custom" {{ $period == 'custom' ? 'selected' : '' }}>Kustom</option>
-                    </select>
-                </div>
-                <div class="md:col-span-1 custom-date" style="display: {{ $period == 'custom' ? 'block' : 'none' }};">
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Dari Tanggal</label>
-                    <input type="date" name="start_date" value="{{ $startDate }}" class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white">
-                </div>
-                <div class="md:col-span-1 custom-date" style="display: {{ $period == 'custom' ? 'block' : 'none' }};">
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Sampai Tanggal</label>
-                    <input type="date" name="end_date" value="{{ $endDate }}" class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white">
-                </div>
-                <div class="md:col-span-1">
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">Toko</label>
-                    <select name="store_id" class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white">
-                        <option value="">Semua Toko</option>
-                        @foreach($stores as $store)
-                            <option value="{{ $store->id }}" {{ $storeId == $store->id ? 'selected' : '' }}>{{ $store->nama_toko }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="md:col-span-1 flex items-end">
-                    <button type="submit" class="linear w-full rounded-xl bg-brand-500 py-3 text-base font-medium text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                        <i class="fas fa-filter mr-2"></i>Filter
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4 mb-5">
         <!-- Total Transactions -->
@@ -130,7 +78,38 @@
     <!-- Transactions Table -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <div class="p-6">
-            <h5 class="text-xl font-bold text-navy-700 dark:text-white mb-4">Detail Transaksi</h5>
+            <div class="flex items-center justify-between gap-4 mb-4">
+                <h5 class="text-xl font-bold text-navy-700 dark:text-white">Detail Transaksi</h5>
+                <div class="flex items-center gap-3">
+                    <form id="salesFilterForm" method="GET" action="{{ route('reports.sales') }}" class="flex items-center gap-2">
+                        <select name="period" id="periodSelect" onchange="handleSalesPeriodChange(this.value)" class="rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700">
+                            <option value="today" {{ $period == 'today' ? 'selected' : '' }}>Hari Ini</option>
+                            <option value="week" {{ $period == 'week' ? 'selected' : '' }}>Minggu Ini</option>
+                            <option value="month" {{ $period == 'month' ? 'selected' : '' }}>Bulan Ini</option>
+                            <option value="year" {{ $period == 'year' ? 'selected' : '' }}>Tahun Ini</option>
+                            <option value="all" {{ $period == 'all' ? 'selected' : '' }}>Semua</option>
+                            <option value="custom" {{ $period == 'custom' ? 'selected' : '' }}>Custom</option>
+                        </select>
+                        <input type="date" name="start_date" value="{{ $startDate }}" class="custom-date rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700" style="display: {{ $period == 'custom' ? 'block' : 'none' }};">
+                        <input type="date" name="end_date" value="{{ $endDate }}" class="custom-date rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700" style="display: {{ $period == 'custom' ? 'block' : 'none' }};">
+                        <select name="store_id" onchange="this.form.submit()" class="rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700">
+                            <option value="">Semua Toko</option>
+                            @foreach($stores as $store)
+                                <option value="{{ $store->id }}" {{ $storeId == $store->id ? 'selected' : '' }}>{{ $store->nama }}</option>
+                            @endforeach
+                        </select>
+                        <button id="salesFilterButton" type="submit" class="linear rounded-xl bg-brand-500 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700" style="display: {{ $period == 'custom' ? 'block' : 'none' }};">
+                            Filter
+                        </button>
+                    </form>
+                    <a href="{{ route('reports.sales.export', request()->query()) }}" class="linear rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-green-600 active:bg-green-700 flex items-center gap-2">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download Excel
+                    </a>
+                </div>
+            </div>
             
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -176,14 +155,19 @@
 
 @push('scripts')
 <script>
-    document.getElementById('periodSelect').addEventListener('change', function() {
+    function handleSalesPeriodChange(value) {
         const customDates = document.querySelectorAll('.custom-date');
-        if (this.value === 'custom') {
+        const filterButton = document.getElementById('salesFilterButton');
+        
+        if (value === 'custom') {
             customDates.forEach(el => el.style.display = 'block');
+            filterButton.style.display = 'flex';
         } else {
             customDates.forEach(el => el.style.display = 'none');
+            filterButton.style.display = 'none';
+            document.getElementById('salesFilterForm').submit();
         }
-    });
+    }
 </script>
 @endpush
 @endsection
