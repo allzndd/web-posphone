@@ -62,11 +62,17 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [\App\Http\Controllers\ReportController::class, 'index'])->name('index');
             Route::get('/sales', [\App\Http\Controllers\ReportController::class, 'sales'])->name('sales');
+            Route::get('/sales/export', [\App\Http\Controllers\ReportController::class, 'exportSales'])->name('sales.export');
             Route::get('/trade-in', [\App\Http\Controllers\ReportController::class, 'tradeIn'])->name('trade-in');
+            Route::get('/trade-in/export', [\App\Http\Controllers\ReportController::class, 'exportTradeIn'])->name('trade-in.export');
             Route::get('/products', [\App\Http\Controllers\ReportController::class, 'products'])->name('products');
+            Route::get('/products/export', [\App\Http\Controllers\ReportController::class, 'exportProducts'])->name('products.export');
             Route::get('/stock', [\App\Http\Controllers\ReportController::class, 'stock'])->name('stock');
+            Route::get('/stock/export', [\App\Http\Controllers\ReportController::class, 'exportStock'])->name('stock.export');
             Route::get('/customers', [\App\Http\Controllers\ReportController::class, 'customers'])->name('customers');
+            Route::get('/customers/export', [\App\Http\Controllers\ReportController::class, 'exportCustomers'])->name('customers.export');
             Route::get('/financial', [\App\Http\Controllers\ReportController::class, 'financial'])->name('financial');
+            Route::get('/financial/export', [\App\Http\Controllers\ReportController::class, 'exportFinancial'])->name('financial.export');
         });
     });
 
