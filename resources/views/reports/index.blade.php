@@ -4,12 +4,6 @@
 
 @section('main')
 <div class="p-3 md:pt-[100px] md:pl-3 md:pr-3">
-    <!-- Header -->
-    <div class="mb-5">
-        <h4 class="text-2xl font-bold text-navy-700 dark:text-white">Laporan & Ringkasan</h4>
-        <p class="text-base text-gray-600 dark:text-gray-400 mt-1">Lihat berbagai laporan dan analisis bisnis Anda</p>
-    </div>
-
     <!-- Reports Grid -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         
