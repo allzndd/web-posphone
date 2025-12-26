@@ -13,6 +13,61 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
+     * Register new user
+     * Membuat akun di tabel pengguna dan sekaligus membuat owner
+     */
+    public function register(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:pengguna,email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        try {
+            // Create user di tabel pengguna
+            $user = User::create([
+                'nama' => $request->nama,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'slug' => \Illuminate\Support\Str::slug($request->nama . '-' . time()),
+                'role_id' => 1, // Default role ID, sesuaikan jika perlu
+                'email_is_verified' => false,
+            ]);
+
+            // Create owner untuk user tersebut
+            $owner = Owner::create([
+                'pengguna_id' => $user->id,
+            ]);
+
+            // Generate token untuk mobile app
+            $token = $user->createToken('mobile-app')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Registrasi berhasil',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'nama' => $user->nama,
+                        'email' => $user->email,
+                        'role_id' => $user->role_id,
+                        'is_owner' => true,
+                        'owner_id' => $owner->id,
+                    ],
+                    'token' => $token,
+                    'token_type' => 'Bearer',
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Registrasi gagal: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Login user
      * Bisa login dengan data dari pengguna atau pos_pengguna
      * Tapi harus terdaftar sebagai owner
