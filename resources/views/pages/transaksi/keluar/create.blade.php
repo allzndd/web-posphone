@@ -145,7 +145,33 @@
                 </div>
             </div>
 
-            <!-- Section 2: Payment Details -->
+            <!-- Section 2: Transaction Items -->
+            <div class="mb-8">
+                <div class="mb-4 flex items-center justify-between">
+                    <h5 class="text-lg font-bold text-navy-700 dark:text-white border-l-4 border-purple-500 pl-3">Transaction Items</h5>
+                    <button type="button" onclick="addItem()" class="flex items-center gap-2 rounded-xl bg-purple-500 px-4 py-2 text-sm font-bold text-white transition duration-200 hover:bg-purple-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Item
+                    </button>
+                </div>
+
+                <!-- Items Container -->
+                <div id="items-container" class="space-y-4">
+                    <!-- Items will be added here dynamically -->
+                </div>
+
+                <!-- Total Summary -->
+                <div class="mt-6 rounded-xl bg-lightPrimary dark:bg-navy-900 p-4">
+                    <div class="flex items-center justify-between text-lg font-bold">
+                        <span class="text-navy-700 dark:text-white">Grand Total:</span>
+                        <span id="grand-total" class="text-red-600 dark:text-red-400">{{ get_currency_symbol() }} 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Payment Details -->
             <div class="mb-8">
                 <h5 class="mb-4 text-lg font-bold text-navy-700 dark:text-white border-l-4 border-blue-500 pl-3">Payment Details</h5>
                 
@@ -165,12 +191,12 @@
                                 id="total_harga"
                                 name="total_harga" 
                                 value="{{ old('total_harga') }}"
-                                inputmode="numeric"
+                                readonly
                                 placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
-                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('total_harga') !border-red-500 @enderror"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900/50 pl-12 pr-4 py-3 text-sm font-semibold text-navy-700 dark:text-white outline-none"
                             >
                         </div>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Auto-calculated from items</p>
                         @error('total_harga')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -259,98 +285,369 @@
         </form>
     </div>
 </div>
+
+<!-- Quick Add Product Modal -->
+<div id="quickAddProductModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-navy-800 rounded-[20px] max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h4 class="text-xl font-bold text-navy-700 dark:text-white">Quick Add Product</h4>
+            <button onclick="closeProductModal()" 
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="quickProductForm" onsubmit="submitQuickProduct(event)">
+            <div class="space-y-4">
+                <!-- Product Name -->
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                        Product Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="quick_nama" required
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                           placeholder="e.g. iPhone 13 Pro Max">
+                </div>
+
+                <!-- Brand -->
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                        Brand <span class="text-red-500">*</span>
+                    </label>
+                    <select id="quick_merk" required
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        <option value="">Select Brand</option>
+                        @foreach($merks ?? [] as $merk)
+                            <option value="{{ $merk->id }}">{{ $merk->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Purchase Price -->
+                    <div>
+                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                            Purchase Price <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" id="quick_harga_beli" step="0.01" min="0" required
+                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                               placeholder="0">
+                    </div>
+
+                    <!-- Selling Price -->
+                    <div>
+                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                            Selling Price <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" id="quick_harga_jual" step="0.01" min="0" required
+                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                               placeholder="0">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Color -->
+                    <div>
+                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                            Color
+                        </label>
+                        <input type="text" id="quick_warna"
+                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                               placeholder="e.g. Sierra Blue">
+                    </div>
+
+                    <!-- Storage -->
+                    <div>
+                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                            Storage
+                        </label>
+                        <input type="text" id="quick_penyimpanan"
+                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                               placeholder="e.g. 256GB">
+                    </div>
+                </div>
+
+                <!-- Battery Health -->
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                        Battery Health
+                    </label>
+                    <input type="text" id="quick_battery_health"
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                           placeholder="e.g. 85% or Good">
+                </div>
+
+                <!-- IMEI -->
+                <div>
+                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                        IMEI
+                    </label>
+                    <input type="text" id="quick_imei"
+                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                           placeholder="15-digit IMEI">
+                </div>
+
+                <!-- Error Messages -->
+                <div id="quickProductErrors" class="hidden rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-3">
+                    <p class="text-sm text-red-600 dark:text-red-400"></p>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="closeProductModal()"
+                        class="flex-1 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                    Cancel
+                </button>
+                <button type="submit" id="quickProductSubmitBtn"
+                        class="flex-1 flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Create Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    function formatCurrency(input) {
-        let value = input.value.replace(/[^0-9]/g, '');
-        if (value) {
-            const currency = '{{ get_currency() }}';
-            if (currency === 'IDR') {
-                input.value = parseInt(value).toLocaleString('id-ID');
-            } else {
-                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const products = @json($produks);
+const services = @json($services);
+const currencySymbol = '{{ get_currency_symbol() }}';
+const currency = '{{ get_currency() }}';
+const csrfToken = '{{ csrf_token() }}';
+let itemCounter = 0;
+let currentItemIdForModal = null;
+
+function formatNumber(num) {
+    if (currency === 'IDR') {
+        return parseInt(num).toLocaleString('id-ID');
+    } else {
+        return parseFloat(num).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+}
+
+function addItem() {
+    itemCounter++;
+    const container = document.getElementById('items-container');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'item-row border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-navy-900';
+    itemDiv.id = `item-${itemCounter}`;
+    
+    itemDiv.innerHTML = `
+        <div class="flex items-start gap-3">
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3">
+                <input type="hidden" name="items[${itemCounter}][type]" value="product">
+                <div class="md:col-span-2">
+                    <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                            <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Product</label>
+                            <select name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" class="item-select w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleItemChange(${itemCounter})" required>
+                                <option value="">Select Product</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="openProductModal(${itemCounter})" class="rounded-lg bg-brand-500 px-3 py-2 text-xs font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
+                            + New
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Qty</label>
+                    <input type="number" name="items[${itemCounter}][quantity]" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="1" min="1" onchange="calculateSubtotal(${itemCounter})" required>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Unit Price</label>
+                    <input type="number" name="items[${itemCounter}][harga_satuan]" id="unit-price-${itemCounter}" class="item-price w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="0" step="0.01" onchange="calculateSubtotal(${itemCounter})">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Subtotal</label>
+                    <input type="text" id="subtotal-display-${itemCounter}" class="item-subtotal w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900 px-3 py-2 text-sm font-semibold text-red-600 dark:text-red-400" readonly value="${currencySymbol} 0">
+                    <input type="hidden" name="items[${itemCounter}][subtotal]" id="subtotal-value-${itemCounter}" value="0">
+                </div>
+            </div>
+            <button type="button" onclick="removeItem(${itemCounter})" class="mt-6 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(itemDiv);
+    
+    // Populate products immediately
+    populateProducts(itemCounter);
+}
+
+function populateProducts(itemId) {
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    
+    itemSelect.innerHTML = '<option value="">Select Product</option>';
+    
+    products.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product.id;
+        option.textContent = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''}`;
+        option.dataset.price = product.harga_beli || product.harga_jual;
+        itemSelect.appendChild(option);
+    });
+}
+
+function handleItemChange(itemId) {
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+    
+    if (selectedOption && selectedOption.dataset.price) {
+        priceInput.value = selectedOption.dataset.price;
+        calculateSubtotal(itemId);
+    }
+}
+
+function calculateSubtotal(itemId) {
+    const qtyInput = document.querySelector(`#item-${itemId} .item-qty`);
+    const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const subtotalDisplay = document.getElementById(`subtotal-display-${itemId}`);
+    const subtotalValue = document.getElementById(`subtotal-value-${itemId}`);
+    
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const subtotal = qty * price;
+    
+    subtotalDisplay.value = `${currencySymbol} ${formatNumber(subtotal)}`;
+    subtotalValue.value = subtotal;
+    
+    calculateGrandTotal();
+}
+
+function calculateGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('[id^="subtotal-value-"]').forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('grand-total').textContent = `${currencySymbol} ${formatNumber(total)}`;
+    document.getElementById('total_harga').value = total;
+}
+
+function removeItem(itemId) {
+    const item = document.getElementById(`item-${itemId}`);
+    if (item) {
+        item.remove();
+        calculateGrandTotal();
+    }
+}
+
+// Quick Add Product Modal Functions
+function openProductModal(itemId) {
+    currentItemIdForModal = itemId;
+    document.getElementById('quickAddProductModal').classList.remove('hidden');
+    document.getElementById('quickProductForm').reset();
+    document.getElementById('quickProductErrors').classList.add('hidden');
+}
+
+function closeProductModal() {
+    document.getElementById('quickAddProductModal').classList.add('hidden');
+    currentItemIdForModal = null;
+    document.getElementById('quickProductForm').reset();
+    document.getElementById('quickProductErrors').classList.add('hidden');
+}
+
+function submitQuickProduct(event) {
+    event.preventDefault();
+    
+    const submitBtn = document.getElementById('quickProductSubmitBtn');
+    const errorDiv = document.getElementById('quickProductErrors');
+    
+    // Disable button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating...';
+    errorDiv.classList.add('hidden');
+    
+    const formData = {
+        nama: document.getElementById('quick_nama').value,
+        pos_produk_merk_id: document.getElementById('quick_merk').value,
+        harga_beli: document.getElementById('quick_harga_beli').value,
+        harga_jual: document.getElementById('quick_harga_jual').value,
+        warna: document.getElementById('quick_warna').value,
+        penyimpanan: document.getElementById('quick_penyimpanan').value,
+        battery_health: document.getElementById('quick_battery_health').value,
+        imei: document.getElementById('quick_imei').value,
+    };
+    
+    fetch('{{ route("produk.quick-store") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add new product to products array
+            products.push({
+                id: data.data.id,
+                nama: data.data.nama,
+                merk: { nama: data.data.merk_nama },
+                harga_beli: data.data.harga_beli,
+                harga_jual: data.data.harga_jual
+            });
+            
+            // Update dropdown for current item
+            if (currentItemIdForModal) {
+                const itemSelect = document.getElementById(`item-select-${currentItemIdForModal}`);
+                const option = document.createElement('option');
+                option.value = data.data.id;
+                option.textContent = `${data.data.nama}${data.data.merk_nama ? ' - ' + data.data.merk_nama : ''}`;
+                option.dataset.price = data.data.harga_beli || data.data.harga_jual;
+                option.selected = true;
+                itemSelect.appendChild(option);
+                
+                // Trigger change to auto-fill price
+                handleItemChange(currentItemIdForModal);
             }
+            
+            closeProductModal();
+            
+            // Show success notification
+            alert('Product created successfully!');
+        } else {
+            throw new Error(data.message || 'Failed to create product');
         }
+    })
+    .catch(error => {
+        errorDiv.classList.remove('hidden');
+        errorDiv.querySelector('p').textContent = error.message || 'An error occurred while creating the product';
+    })
+    .finally(() => {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create Product
+        `;
+    });
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeProductModal();
     }
-    
-    function unformatCurrency(value) {
-        return value.replace(/[^0-9]/g, '');
-    }
-    
-    const priceInput = document.querySelector('#total_harga');
-    if (priceInput) {
-        priceInput.addEventListener('input', function(e) {
-            let cursorPos = this.selectionStart;
-            let oldValue = this.value;
-            const currency = '{{ get_currency() }}';
-            
-            let cleanValue;
-            if (currency === 'USD' || currency === 'MYR') {
-                cleanValue = this.value.replace(/[^0-9.]/g, '');
-                
-                let parts = cleanValue.split('.');
-                if (parts.length > 2) {
-                    cleanValue = parts[0] + '.' + parts.slice(1).join('');
-                }
-                if (parts.length === 2 && parts[1].length > 2) {
-                    cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
-                }
-                
-                this.value = cleanValue;
-            } else {
-                cleanValue = this.value.replace(/[^0-9]/g, '');
-                
-                if (!cleanValue) {
-                    this.value = '';
-                    return;
-                }
-                
-                this.value = parseInt(cleanValue).toLocaleString('id-ID');
-            }
-            
-            if (this.value.length !== oldValue.length) {
-                let diff = this.value.length - oldValue.length;
-                this.setSelectionRange(cursorPos + diff, cursorPos + diff);
-            } else {
-                this.setSelectionRange(cursorPos, cursorPos);
-            }
-        });
-        
-        priceInput.addEventListener('blur', function() {
-            if (this.value) {
-                const currency = '{{ get_currency() }}';
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    let num = parseFloat(this.value);
-                    if (!isNaN(num)) {
-                        this.value = num.toFixed(2);
-                    }
-                } else {
-                    let cleanValue = this.value.replace(/[^0-9]/g, '');
-                    if (cleanValue) {
-                        this.value = parseInt(cleanValue).toLocaleString('id-ID');
-                    }
-                }
-            }
-        });
-        
-        priceInput.closest('form').addEventListener('submit', function() {
-            if (priceInput.value) {
-                const currency = '{{ get_currency() }}';
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    let cleanValue = priceInput.value.replace(/[^0-9.]/g, '');
-                    priceInput.value = parseFloat(cleanValue).toFixed(2);
-                } else {
-                    let cleanValue = priceInput.value.replace(/[^0-9]/g, '');
-                    priceInput.value = cleanValue;
-                }
-            }
-        });
-    }
+});
+
+// Initialize - add first item on page load
+document.addEventListener('DOMContentLoaded', function() {
+    addItem();
 });
 </script>
 @endpush
