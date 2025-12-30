@@ -48,20 +48,45 @@ class PosProduk extends Model
     {
         return 'slug';
     }
+    /**
+     * Generate slug from merk nama + last 3 digits of IMEI
+     */
+    protected static function generateSlug($model)
+    {
+        $merkNama = '';
+        if ($model->pos_produk_merk_id) {
+            $merk = PosProdukMerk::find($model->pos_produk_merk_id);
+            $merkNama = $merk ? Str::slug($merk->nama) : 'produk';
+        } else {
+            $merkNama = 'produk';
+        }
 
+        $imeiSuffix = $model->imei ? substr($model->imei, -3) : rand(100, 999);
+        $baseSlug = $merkNama . '-' . $imeiSuffix;
+        
+        // Make slug unique by adding counter if needed
+        $slug = $baseSlug;
+        $counter = 1;
+        while (self::where('slug', $slug)->where('id', '!=', $model->id)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+        
+        return $slug;
+    }
     protected static function boot()
     {
         parent::boot();
 
         static::creating(function ($model) {
             if (empty($model->slug)) {
-                $model->slug = Str::slug($model->nama);
+                $model->slug = self::generateSlug($model);
             }
         });
 
         static::updating(function ($model) {
-            if ($model->isDirty('nama')) {
-                $model->slug = Str::slug($model->nama);
+            if ($model->isDirty('pos_produk_merk_id') || $model->isDirty('imei')) {
+                $model->slug = self::generateSlug($model);
             }
         });
 
