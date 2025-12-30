@@ -120,4 +120,45 @@ class PosProdukMerkController extends Controller
 
         return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil dihapus');
     }
+
+    /**
+     * Quick store product name from AJAX modal (for product forms)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function quickStore(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $ownerId = $user->owner ? $user->owner->id : null;
+
+            $validatedData = $request->validate([
+                'nama' => 'required|string|max:255',
+            ]);
+
+            $merk = PosProdukMerk::create([
+                'owner_id' => $ownerId,
+                'nama' => $validatedData['nama'],
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product Name created successfully!',
+                'data' => $merk
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create product name: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
