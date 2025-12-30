@@ -14,7 +14,11 @@ class PosProduk extends Model
 
     protected $fillable = [
         'owner_id',
+        'pos_toko_id',
+        'pos_produk_nama_id',
         'pos_produk_merk_id',
+        'pos_produk_tipe_id',
+        'product_type',
         'nama',
         'slug',
         'deskripsi',
@@ -77,9 +81,24 @@ class PosProduk extends Model
         return $this->belongsTo(Owner::class);
     }
 
+    public function toko()
+    {
+        return $this->belongsTo(PosToko::class, 'pos_toko_id');
+    }
+
+    public function nama()
+    {
+        return $this->belongsTo(PosProdukNama::class, 'pos_produk_nama_id');
+    }
+
     public function merk()
     {
         return $this->belongsTo(PosProdukMerk::class, 'pos_produk_merk_id');
+    }
+
+    public function tipe()
+    {
+        return $this->belongsTo(PosProdukTipe::class, 'pos_produk_tipe_id');
     }
 
     public function stok()
