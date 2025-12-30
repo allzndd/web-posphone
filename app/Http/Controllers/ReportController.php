@@ -284,6 +284,7 @@ class ReportController extends Controller
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $storeId = $request->get('store_id');
+        $merkId = $request->get('merk_id');
 
         // Determine date range
         if ($period == 'week') {
@@ -304,12 +305,18 @@ class ReportController extends Controller
         }
 
         // ==================== SALES DATA (Revenue) ====================
-        $salesQuery = PosTransaksi::with(['items.produk', 'toko'])
+        $salesQuery = PosTransaksi::with(['items.produk.merk', 'toko'])
             ->where('is_transaksi_masuk', 1)
             ->whereBetween('created_at', [$start, $end]);
         
         if ($storeId) {
             $salesQuery->where('pos_toko_id', $storeId);
+        }
+        
+        if ($merkId) {
+            $salesQuery->whereHas('items.produk', function($q) use ($merkId) {
+                $q->where('pos_produk_merk_id', $merkId);
+            });
         }
         
         $salesTransactions = $salesQuery->get();
@@ -405,6 +412,9 @@ class ReportController extends Controller
         // Get stores for filter
         $stores = PosToko::where('owner_id', $ownerId)->get();
         
+        // Get product names/merks for filter
+        $merks = \App\Models\PosProdukMerk::where('owner_id', $ownerId)->orderBy('nama')->get();
+        
         // Cash Balance per Outlet
         $cashBalancePerOutlet = [];
         
@@ -481,7 +491,9 @@ class ReportController extends Controller
             'startDate',
             'endDate',
             'storeId',
-            'stores'
+            'merkId',
+            'stores',
+            'merks'
         ));
     }
 
@@ -682,13 +694,14 @@ class ReportController extends Controller
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $storeId = $request->get('store_id');
+        $merkId = $request->get('merk_id');
 
         // Get owner_id from logged in user
         $owner = Owner::where('pengguna_id', auth()->user()->id)->first();
         $ownerId = $owner ? $owner->id : 0;
 
         // Base query for transactions
-        $transactionQuery = PosTransaksi::with(['items.produk', 'toko'])
+        $transactionQuery = PosTransaksi::with(['items.produk.merk', 'toko'])
             ->whereHas('toko', function($q) use ($ownerId) {
                 $q->where('owner_id', $ownerId);
             });
@@ -708,6 +721,12 @@ class ReportController extends Controller
 
         if ($storeId) {
             $transactionQuery->where('pos_toko_id', $storeId);
+        }
+
+        if ($merkId) {
+            $transactionQuery->whereHas('items.produk', function($q) use ($merkId) {
+                $q->where('pos_produk_merk_id', $merkId);
+            });
         }
 
         $transactions = $transactionQuery->get();
