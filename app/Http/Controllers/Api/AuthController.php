@@ -31,7 +31,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'slug' => \Illuminate\Support\Str::slug($request->nama . '-' . time()),
-                'role_id' => 1, // Default role ID, sesuaikan jika perlu
+                'role_id' => 2, // Owner role
                 'email_is_verified' => false,
             ]);
 
