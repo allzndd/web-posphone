@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Brand')
+@section('title', 'Edit Product Name')
 
 @push('style')
 <!-- Page-specific styles -->
@@ -13,8 +13,8 @@
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
             <div>
-                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Edit Brand</h4>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Update brand information</p>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Edit Product Name</h4>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Update product name information</p>
             </div>
             <a href="{{ route('pos-produk-merk.index') }}" 
                class="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
@@ -36,7 +36,7 @@
                 <!-- Brand Name Field -->
                 <div>
                     <label for="nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Brand Name <span class="text-red-500">*</span>
+                        Product Name <span class="text-red-500">*</span>
                     </label>
                     <input 
                         type="text" 
@@ -50,29 +50,7 @@
                     @error('nama')
                         <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                     @enderror
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Enter the product brand name (e.g., Apple, Samsung, Oppo, Vivo)</p>
-                </div>
-
-                <!-- Brand Info -->
-                <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 p-4">
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Slug</p>
-                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->slug }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Total Products</p>
-                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->produk_count }} products</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Created</p>
-                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->created_at->format('d M Y H:i') }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-gray-600">Last Updated</p>
-                            <p class="mt-1 text-sm font-medium text-navy-700 dark:text-white">{{ $merk->updated_at->format('d M Y H:i') }}</p>
-                        </div>
-                    </div>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Enter the product name (e.g., Apple, Samsung, Oppo, Vivo)</p>
                 </div>
 
                 <!-- Warning Box if products exist -->
@@ -107,7 +85,7 @@
                         <path fill="none" d="M0 0h24v24H0z"></path>
                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
                     </svg>
-                    Delete Brand
+                    Delete Product Name
                 </button>
 
                 <div class="flex items-center gap-3">
@@ -117,11 +95,7 @@
                     </a>
                     <button type="submit" 
                             class="flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
-                        </svg>
-                        Update Brand
+                        Update Product Name
                     </button>
                 </div>
             </div>

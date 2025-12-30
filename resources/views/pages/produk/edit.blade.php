@@ -26,9 +26,34 @@
             </a>
         </div>
 
+        <!-- Product Type Tabs -->
+        <div class="mb-6 border-b border-gray-200 dark:border-white/10">
+            <nav class="flex gap-4">
+                <button type="button" onclick="switchProductType('electronic')" id="tab-electronic" class="product-type-tab {{ $produk->product_type === 'electronic' ? 'active border-b-2 border-brand-500 text-brand-500 dark:text-brand-400' : 'border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500' }} px-4 py-3 text-sm font-bold transition-colors">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Electronic / HP
+                    </div>
+                </button>
+                <button type="button" onclick="switchProductType('accessories')" id="tab-accessories" class="product-type-tab {{ $produk->product_type === 'accessories' ? 'active border-b-2 border-brand-500 text-brand-500 dark:text-brand-400' : 'border-b-2 border-transparent text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500' }} px-4 py-3 text-sm font-bold transition-colors">
+                    <div class="flex items-center gap-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        Accessories
+                    </div>
+                </button>
+            </nav>
+        </div>
+
         <form action="{{ route('produk.update', $produk) }}" method="POST">
             @csrf
             @method('PUT')
+            
+            <!-- Hidden Product Type Input -->
+            <input type="hidden" name="product_type" id="product_type" value="{{ old('product_type', $produk->product_type ?? 'electronic') }}">
             
             <!-- Product Info Badge -->
             <div class="mb-6 rounded-xl bg-lightPrimary dark:bg-navy-700 p-4">
@@ -62,78 +87,80 @@
                 <h5 class="mb-4 text-lg font-bold text-navy-700 dark:text-white border-l-4 border-brand-500 pl-3">Basic Information</h5>
                 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    
-                    <!-- Product Name -->
-                    <div class="md:col-span-2">
-                        <label for="nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            Product Name <span class="text-red-500">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="nama"
-                            name="nama" 
-                            value="{{ old('nama', $produk->nama) }}"
-                            placeholder="Enter product name"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('nama') !border-red-500 @enderror"
-                        >
-                        @error('nama')
-                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                        @enderror
-                    </div>
 
-                    <!-- Brand Selection -->
+                    <!-- Product Name Selection (previously Brand) -->
                     <div>
                         <label for="pos_produk_merk_id" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            Brand <span class="text-red-500">*</span>
+                            Product Name <span class="text-red-500">*</span>
                         </label>
-                        <div class="relative">
-                            <select 
-                                id="pos_produk_merk_id"
-                                name="pos_produk_merk_id" 
-                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_produk_merk_id') !border-red-500 @enderror appearance-none"
-                            >
-                                <option value="">Select Brand</option>
-                                @foreach($merks as $merk)
-                                    <option value="{{ $merk->id }}" {{ old('pos_produk_merk_id', $produk->pos_produk_merk_id) == $merk->id ? 'selected' : '' }}>
-                                        {{ $merk->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill="none" d="M0 0h24v24H0z"></path>
-                                    <path d="M7 10l5 5 5-5z"></path>
-                                </svg>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <input 
+                                    type="text" 
+                                    id="productNameSearch"
+                                    placeholder="Search Product Name..."
+                                    value="{{ old('pos_produk_merk_id') ? $merks->find(old('pos_produk_merk_id'))->nama : ($produk->merk ? $produk->merk->nama : '') }}"
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                                >
+                                <select 
+                                    id="pos_produk_merk_id"
+                                    name="pos_produk_merk_id" 
+                                    class="hidden w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_produk_merk_id') !border-red-500 @enderror"
+                                >
+                                    <option value="">Select Product Name</option>
+                                    @foreach($merks as $merk)
+                                        <option value="{{ $merk->id }}" {{ old('pos_produk_merk_id', $produk->pos_produk_merk_id) == $merk->id ? 'selected' : '' }}>
+                                            {{ $merk->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div id="productNameDropdown" class="absolute z-50 mt-1 w-full hidden bg-white dark:bg-navy-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                    <div id="productNameList" class="py-1"></div>
+                                </div>
                             </div>
+                            <button type="button" onclick="openProductNameModal()" class="flex items-center gap-1 rounded-xl bg-green-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-green-600 active:bg-green-700 dark:bg-green-400 dark:hover:bg-green-300 whitespace-nowrap">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill="none" d="M0 0h24v24H0z"></path>
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                                </svg>
+                                New
+                            </button>
                         </div>
                         @error('pos_produk_merk_id')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Select or add a new product name</p>
                     </div>
 
                     <!-- Description -->
                     <div class="md:col-span-2">
-                        <label for="deskripsi" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            Description
-                        </label>
-                        <textarea 
-                            id="deskripsi"
-                            name="deskripsi" 
-                            rows="3"
-                            placeholder="Enter product description"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 resize-none @error('deskripsi') !border-red-500 @enderror"
-                        >{{ old('deskripsi', $produk->deskripsi) }}</textarea>
-                        @error('deskripsi')
-                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <button type="button" onclick="toggleSection('description')" class="mb-2 flex items-center gap-2 text-sm font-bold text-navy-700 dark:text-white hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
+                            <svg id="description-icon" class="h-4 w-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            Description (Optional)
+                        </button>
+                        <div id="description-section" class="hidden">
+                            <textarea 
+                                id="deskripsi"
+                                name="deskripsi" 
+                                rows="3"
+                                placeholder="Enter product description"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 resize-none @error('deskripsi') !border-red-500 @enderror"
+                            >{{ old('deskripsi', $produk->deskripsi) }}</textarea>
+                            @error('deskripsi')
+                                <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                 </div>
             </div>
 
-            <!-- Section 2: Specifications -->
-            <div class="mb-8">
+            <!-- Section 2: Specifications (Electronic Only) -->
+            <div class="mb-8" id="specifications-section" style="display: {{ ($produk->product_type ?? 'electronic') === 'electronic' ? 'block' : 'none' }};">
                 <h5 class="mb-4 text-lg font-bold text-navy-700 dark:text-white border-l-4 border-blue-500 pl-3">Specifications</h5>
+                <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">This section only for electronic/phone products</p>
                 
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     
@@ -206,7 +233,7 @@
                     <!-- IMEI -->
                     <div>
                         <label for="imei" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            IMEI Number
+                            IMEI Number <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -214,29 +241,36 @@
                             name="imei" 
                             value="{{ old('imei', $produk->imei) }}"
                             placeholder="Enter IMEI number"
+                            required
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('imei') !border-red-500 @enderror"
                         >
                         @error('imei')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Used for generating product slug (last 3 digits)</p>
                     </div>
 
                     <!-- Accessories -->
                     <div class="md:col-span-2">
-                        <label for="aksesoris" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            Accessories
-                        </label>
-                        <input 
-                            type="text" 
-                            id="aksesoris"
-                            name="aksesoris" 
-                            value="{{ old('aksesoris', $produk->aksesoris) }}"
-                            placeholder="e.g., Charger, Earphones, Case"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('aksesoris') !border-red-500 @enderror"
-                        >
-                        @error('aksesoris')
-                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <button type="button" onclick="toggleSection('accessories')" class="mb-2 flex items-center gap-2 text-sm font-bold text-navy-700 dark:text-white hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
+                            <svg id="accessories-icon" class="h-4 w-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                            Accessories (Optional)
+                        </button>
+                        <div id="accessories-section" class="hidden">
+                            <input 
+                                type="text" 
+                                id="aksesoris"
+                                name="aksesoris" 
+                                value="{{ old('aksesoris', $produk->aksesoris) }}"
+                                placeholder="e.g., Charger, Earphones, Case"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('aksesoris') !border-red-500 @enderror"
+                            >
+                            @error('aksesoris')
+                                <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                 </div>
@@ -359,13 +393,59 @@
         </form>
     </div>
 </div>
+
+<!-- Quick Add Product Name Modal -->
+<div id="quickAddProductNameModal" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white dark:bg-navy-800 rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-white/10 px-6 py-4 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Quick Add Product Name</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Add a new product name quickly</p>
+        </div>
+        
+        <form id="quickProductNameForm" class="p-6">
+            <div id="quickProductNameErrors" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <ul class="text-sm text-red-600 dark:text-red-400 list-disc list-inside"></ul>
+            </div>
+
+            <!-- Product Name -->
+            <div class="mb-4">
+                <label for="quick_product_name" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                    Product Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="quick_product_name"
+                    name="nama" 
+                    placeholder="e.g., iPhone, Samsung Galaxy, Xiaomi"
+                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                >
+            </div>
+
+            <div class="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-white/10">
+                <button type="button" onclick="closeProductNameModal()" class="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                    Cancel
+                </button>
+                <button type="submit" id="submitQuickProductName" class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300">
+                    Create Product Name
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
+const csrfToken = '{{ csrf_token() }}';
+let productNames = @json($merks);
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus on name field
-    document.getElementById('nama').focus();
+    // Initialize searchable dropdown
+    initProductNameSearch();
+    
+    // Auto-focus on search field
+    document.getElementById('productNameSearch').focus();
     
     const currency = '{{ get_currency() }}';
     
@@ -552,6 +632,185 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('deleteForm').submit();
         }
     });
+});
+
+// Toggle collapsible sections
+function toggleSection(sectionName) {
+    const section = document.getElementById(sectionName + '-section');
+    const icon = document.getElementById(sectionName + '-icon');
+    
+    if (section.classList.contains('hidden')) {
+        section.classList.remove('hidden');
+        icon.style.transform = 'rotate(90deg)';
+    } else {
+        section.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+// Switch Product Type Tabs
+function switchProductType(type) {
+    // Update hidden input
+    document.getElementById('product_type').value = type;
+    
+    // Update tab styles
+    const tabs = document.querySelectorAll('.product-type-tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+        tab.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    });
+    
+    const activeTab = document.getElementById('tab-' + type);
+    activeTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    activeTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+    
+    // Show/hide specifications section
+    const specificationsSection = document.getElementById('specifications-section');
+    if (type === 'electronic') {
+        specificationsSection.style.display = 'block';
+    } else {
+        specificationsSection.style.display = 'none';
+    }
+}
+
+// Initialize Product Name Searchable Dropdown
+function initProductNameSearch() {
+    const searchInput = document.getElementById('productNameSearch');
+    const dropdown = document.getElementById('productNameDropdown');
+    const dropdownList = document.getElementById('productNameList');
+    const hiddenSelect = document.getElementById('pos_produk_merk_id');
+    
+    // Show dropdown on focus
+    searchInput.addEventListener('focus', function() {
+        renderProductNameList();
+        dropdown.classList.remove('hidden');
+    });
+    
+    // Filter on input
+    searchInput.addEventListener('input', function() {
+        renderProductNameList(this.value.toLowerCase());
+    });
+    
+    // Hide dropdown on click outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    
+    // Render list
+    function renderProductNameList(filter = '') {
+        const filtered = productNames.filter(item => 
+            item.nama.toLowerCase().includes(filter)
+        );
+        
+        if (filtered.length === 0) {
+            dropdownList.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">No product names found</div>';
+            return;
+        }
+        
+        dropdownList.innerHTML = filtered.map(item => `
+            <div class="px-4 py-2 hover:bg-lightPrimary dark:hover:bg-navy-700 cursor-pointer text-sm text-navy-700 dark:text-white transition-colors" 
+                 onclick="selectProductName(${item.id}, '${item.nama.replace(/'/g, "\\'")}')">
+                ${item.nama}
+            </div>
+        `).join('');
+    }
+}
+
+function selectProductName(id, nama) {
+    document.getElementById('productNameSearch').value = nama;
+    document.getElementById('pos_produk_merk_id').value = id;
+    document.getElementById('productNameDropdown').classList.add('hidden');
+}
+
+// Quick Add Product Name Modal Functions
+function openProductNameModal() {
+    document.getElementById('quickAddProductNameModal').classList.remove('hidden');
+    document.getElementById('quick_product_name').focus();
+    document.getElementById('quickProductNameForm').reset();
+    document.getElementById('quickProductNameErrors').classList.add('hidden');
+}
+
+function closeProductNameModal() {
+    document.getElementById('quickAddProductNameModal').classList.add('hidden');
+    document.getElementById('quickProductNameForm').reset();
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeProductNameModal();
+    }
+});
+
+// Submit Quick Product Name
+document.getElementById('quickProductNameForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitQuickProductName');
+    const errorDiv = document.getElementById('quickProductNameErrors');
+    const errorList = errorDiv.querySelector('ul');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+    errorDiv.classList.add('hidden');
+    
+    const formData = {
+        nama: document.getElementById('quick_product_name').value
+    };
+    
+    try {
+        const response = await fetch('{{ route("pos-produk-merk.quick-store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Add to productNames array
+            productNames.push(data.data);
+            
+            // Add to hidden select and set as selected
+            const option = new Option(data.data.nama, data.data.id, true, true);
+            document.getElementById('pos_produk_merk_id').add(option);
+            
+            // Update search input with newly created product name
+            document.getElementById('productNameSearch').value = data.data.nama;
+            
+            closeProductNameModal();
+        } else {
+            // Show validation errors
+            errorList.innerHTML = '';
+            if (data.errors) {
+                Object.values(data.errors).forEach(errorArray => {
+                    errorArray.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        errorList.appendChild(li);
+                    });
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = data.message || 'An error occurred';
+                errorList.appendChild(li);
+            }
+            errorDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        errorList.innerHTML = '<li>Network error. Please try again.</li>';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Product Name';
+    }
 });
 </script>
 @endpush

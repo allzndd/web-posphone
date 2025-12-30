@@ -13,8 +13,8 @@
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
             <div>
-                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Create New Brand</h4>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Add a new product brand</p>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Create New Product Name</h4>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Add a new product name</p>
             </div>
             <a href="{{ route('pos-produk-merk.index') }}" 
                class="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
@@ -35,7 +35,7 @@
                 <!-- Brand Name Field -->
                 <div>
                     <label for="nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Brand Name <span class="text-red-500">*</span>
+                        Product Name <span class="text-red-500">*</span>
                     </label>
                     <input 
                         type="text" 
@@ -51,25 +51,6 @@
                     @enderror
                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Enter the product brand name (e.g., Apple, Samsung, Oppo, Vivo)</p>
                 </div>
-
-                <!-- Info Box -->
-                <div class="rounded-xl border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-900/20 p-4">
-                    <div class="flex items-start gap-3">
-                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500 dark:bg-blue-600">
-                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg">
-                                <path fill="none" d="M0 0h24v24H0z"></path>
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-blue-900 dark:text-blue-300">About Brands</p>
-                            <p class="mt-1 text-xs text-blue-800 dark:text-blue-400">
-                                Brands help categorize your products by manufacturer. You can assign products to these brands when adding new inventory items.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
             <!-- Action Buttons -->
@@ -80,11 +61,7 @@
                 </a>
                 <button type="submit" 
                         class="flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="none" d="M0 0h24v24H0z"></path>
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
-                    </svg>
-                    Save Brand
+                    Save Product Name
                 </button>
             </div>
         </form>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Product Brands')
+@section('title', 'Product Name')
 
 @push('style')
 <!-- Page-specific styles -->
@@ -8,12 +8,12 @@
 
 @section('main')
 <div class="mt-3 px-[11px] pr-[10px]">
-    <!-- Product Brands Table Card -->
+    <!-- Product Name Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
         <div class="flex items-center justify-between p-6 pb-4">
             <div>
-                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Product Brands</h4>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Product Name</h4>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {{ $merks->total() }} total brands
                 </p>
@@ -35,11 +35,7 @@
                 <!-- Add New Button -->
                 <a href="{{ route('pos-produk-merk.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="none" d="M0 0h24v24H0z"></path>
-                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
-                    </svg>
-                    Add New Brand
+                    Add New Product Name
                 </a>
             </div>
         </div>
@@ -50,7 +46,7 @@
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Brand Name</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Products Count</p>

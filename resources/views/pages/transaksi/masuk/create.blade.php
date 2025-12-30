@@ -145,7 +145,33 @@
                 </div>
             </div>
 
-            <!-- Section 2: Payment Details -->
+            <!-- Section 2: Transaction Items -->
+            <div class="mb-8">
+                <div class="mb-4 flex items-center justify-between">
+                    <h5 class="text-lg font-bold text-navy-700 dark:text-white border-l-4 border-purple-500 pl-3">Transaction Items</h5>
+                    <button type="button" onclick="addItem()" class="flex items-center gap-2 rounded-xl bg-purple-500 px-4 py-2 text-sm font-bold text-white transition duration-200 hover:bg-purple-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Item
+                    </button>
+                </div>
+
+                <!-- Items Container -->
+                <div id="items-container" class="space-y-4">
+                    <!-- Items will be added here dynamically -->
+                </div>
+
+                <!-- Total Summary -->
+                <div class="mt-6 rounded-xl bg-lightPrimary dark:bg-navy-900 p-4">
+                    <div class="flex items-center justify-between text-lg font-bold">
+                        <span class="text-navy-700 dark:text-white">Grand Total:</span>
+                        <span id="grand-total" class="text-green-600 dark:text-green-400">{{ get_currency_symbol() }} 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Payment Details -->
             <div class="mb-8">
                 <h5 class="mb-4 text-lg font-bold text-navy-700 dark:text-white border-l-4 border-blue-500 pl-3">Payment Details</h5>
                 
@@ -165,12 +191,12 @@
                                 id="total_harga"
                                 name="total_harga" 
                                 value="{{ old('total_harga') }}"
-                                inputmode="numeric"
+                                readonly
                                 placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
-                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('total_harga') !border-red-500 @enderror"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900/50 pl-12 pr-4 py-3 text-sm font-semibold text-navy-700 dark:text-white outline-none"
                             >
                         </div>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Auto-calculated from items</p>
                         @error('total_harga')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -263,94 +289,144 @@
 
 @push('scripts')
 <script>
+const products = @json($produks);
+const services = @json($services);
+const currencySymbol = '{{ get_currency_symbol() }}';
+const currency = '{{ get_currency() }}';
+let itemCounter = 0;
+
+function formatNumber(num) {
+    if (currency === 'IDR') {
+        return parseInt(num).toLocaleString('id-ID');
+    } else {
+        return parseFloat(num).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+}
+
+function addItem() {
+    itemCounter++;
+    const container = document.getElementById('items-container');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'item-row border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-navy-900';
+    itemDiv.id = `item-${itemCounter}`;
+    
+    itemDiv.innerHTML = `
+        <div class="flex items-start gap-3">
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-6 gap-3">
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Type</label>
+                    <select name="items[${itemCounter}][type]" class="item-type w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleTypeChange(${itemCounter})">
+                        <option value="">Select</option>
+                        <option value="product">Product</option>
+                        <option value="service">Service</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Item</label>
+                    <select name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" class="item-select w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleItemChange(${itemCounter})" disabled>
+                        <option value="">Select Item</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Qty</label>
+                    <input type="number" name="items[${itemCounter}][quantity]" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="1" min="1" onchange="calculateSubtotal(${itemCounter})">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Unit Price</label>
+                    <input type="number" name="items[${itemCounter}][harga_satuan]" id="unit-price-${itemCounter}" class="item-price w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="0" step="0.01" onchange="calculateSubtotal(${itemCounter})">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Subtotal</label>
+                    <input type="text" id="subtotal-display-${itemCounter}" class="item-subtotal w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900 px-3 py-2 text-sm font-semibold text-green-600 dark:text-green-400" readonly value="${currencySymbol} 0">
+                    <input type="hidden" name="items[${itemCounter}][subtotal]" id="subtotal-value-${itemCounter}" value="0">
+                </div>
+            </div>
+            <button type="button" onclick="removeItem(${itemCounter})" class="mt-6 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(itemDiv);
+}
+
+function handleTypeChange(itemId) {
+    const typeSelect = document.querySelector(`#item-${itemId} .item-type`);
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const type = typeSelect.value;
+    
+    itemSelect.innerHTML = '<option value="">Select Item</option>';
+    itemSelect.disabled = !type;
+    
+    if (type === 'product') {
+        products.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''}`;
+            option.dataset.price = product.harga_jual;
+            itemSelect.appendChild(option);
+        });
+    } else if (type === 'service') {
+        services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.id;
+            option.textContent = service.nama;
+            option.dataset.price = service.harga;
+            itemSelect.appendChild(option);
+        });
+    }
+}
+
+function handleItemChange(itemId) {
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+    
+    if (selectedOption && selectedOption.dataset.price) {
+        priceInput.value = selectedOption.dataset.price;
+        calculateSubtotal(itemId);
+    }
+}
+
+function calculateSubtotal(itemId) {
+    const qtyInput = document.querySelector(`#item-${itemId} .item-qty`);
+    const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const subtotalDisplay = document.getElementById(`subtotal-display-${itemId}`);
+    const subtotalValue = document.getElementById(`subtotal-value-${itemId}`);
+    
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const subtotal = qty * price;
+    
+    subtotalDisplay.value = `${currencySymbol} ${formatNumber(subtotal)}`;
+    subtotalValue.value = subtotal;
+    
+    calculateGrandTotal();
+}
+
+function calculateGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('[id^="subtotal-value-"]').forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('grand-total').textContent = `${currencySymbol} ${formatNumber(total)}`;
+    document.getElementById('total_harga').value = total;
+}
+
+function removeItem(itemId) {
+    const item = document.getElementById(`item-${itemId}`);
+    if (item) {
+        item.remove();
+        calculateGrandTotal();
+    }
+}
+
+// Initialize - add first item on page load
 document.addEventListener('DOMContentLoaded', function() {
-    function formatCurrency(input) {
-        let value = input.value.replace(/[^0-9]/g, '');
-        if (value) {
-            const currency = '{{ get_currency() }}';
-            if (currency === 'IDR') {
-                input.value = parseInt(value).toLocaleString('id-ID');
-            } else {
-                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
-        }
-    }
-    
-    function unformatCurrency(value) {
-        return value.replace(/[^0-9]/g, '');
-    }
-    
-    const priceInput = document.querySelector('#total_harga');
-    if (priceInput) {
-        priceInput.addEventListener('input', function(e) {
-            let cursorPos = this.selectionStart;
-            let oldValue = this.value;
-            const currency = '{{ get_currency() }}';
-            
-            let cleanValue;
-            if (currency === 'USD' || currency === 'MYR') {
-                cleanValue = this.value.replace(/[^0-9.]/g, '');
-                
-                let parts = cleanValue.split('.');
-                if (parts.length > 2) {
-                    cleanValue = parts[0] + '.' + parts.slice(1).join('');
-                }
-                if (parts.length === 2 && parts[1].length > 2) {
-                    cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
-                }
-                
-                this.value = cleanValue;
-            } else {
-                cleanValue = this.value.replace(/[^0-9]/g, '');
-                
-                if (!cleanValue) {
-                    this.value = '';
-                    return;
-                }
-                
-                this.value = parseInt(cleanValue).toLocaleString('id-ID');
-            }
-            
-            if (this.value.length !== oldValue.length) {
-                let diff = this.value.length - oldValue.length;
-                this.setSelectionRange(cursorPos + diff, cursorPos + diff);
-            } else {
-                this.setSelectionRange(cursorPos, cursorPos);
-            }
-        });
-        
-        priceInput.addEventListener('blur', function() {
-            if (this.value) {
-                const currency = '{{ get_currency() }}';
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    let num = parseFloat(this.value);
-                    if (!isNaN(num)) {
-                        this.value = num.toFixed(2);
-                    }
-                } else {
-                    let cleanValue = this.value.replace(/[^0-9]/g, '');
-                    if (cleanValue) {
-                        this.value = parseInt(cleanValue).toLocaleString('id-ID');
-                    }
-                }
-            }
-        });
-        
-        priceInput.closest('form').addEventListener('submit', function() {
-            if (priceInput.value) {
-                const currency = '{{ get_currency() }}';
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    let cleanValue = priceInput.value.replace(/[^0-9.]/g, '');
-                    priceInput.value = parseFloat(cleanValue).toFixed(2);
-                } else {
-                    let cleanValue = priceInput.value.replace(/[^0-9]/g, '');
-                    priceInput.value = cleanValue;
-                }
-            }
-        });
-    }
+    addItem();
 });
 </script>
 @endpush

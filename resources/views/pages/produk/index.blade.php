@@ -53,7 +53,10 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Brand</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">SKU/Model</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Type</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Storage</p>
@@ -76,16 +79,31 @@
                     @forelse ($produk as $item)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('produk.edit', $item) }}">
                         <td class="py-4">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->nama }}</p>
-                        </td>
-                        <td class="py-4">
                             @if($item->merk)
-                                <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
-                                    {{ $item->merk->nama }}
-                                </span>
+                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->merk->nama }}</p>
                             @else
                                 <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800/30 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                                    No Brand
+                                    No Product Name
+                                </span>
+                            @endif
+                        </td>
+                        <td class="py-4">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->nama ?? '-' }}</p>
+                        </td>
+                        <td class="py-4">
+                            @if($item->product_type === 'electronic')
+                                <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
+                                    <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
+                                    </svg>
+                                    Electronic/HP
+                                </span>
+                            @else
+                                <span class="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-medium text-purple-800 dark:text-purple-300">
+                                    <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Accessories
                                 </span>
                             @endif
                         </td>
@@ -136,7 +154,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="py-12 text-center">
+                        <td colspan="8" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>

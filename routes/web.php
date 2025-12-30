@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ManageProfilController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -95,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('produk', \App\Http\Controllers\ProdukController::class);
         
         // Product Brands (pos_produk_merk)
+        Route::post('api/pos-produk-merk/quick-store', [\App\Http\Controllers\PosProdukMerkController::class, 'quickStore'])->name('pos-produk-merk.quick-store');
         Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
         
         // Stock Management (pos_produk_stok)
@@ -115,9 +117,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('chat-analisis/ask', [\App\Http\Controllers\ChatAnalysisController::class, 'ask'])->name('chat.ask');
     });
 
-    // API Routes for AJAX
-    // Route::get('api/products/search', [\App\Http\Controllers\Api\ProductController::class, 'search'])->name('products.search');
-    // Route::get('api/produk/search', [\App\Http\Controllers\Api\ProdukController::class, 'search'])->name('produk.search');
+    // API Routes for AJAX (accessible by OWNER & ADMIN)
+    Route::middleware(['role:OWNER,ADMIN'])->group(function () {
+        Route::post('api/produk/quick-store', [\App\Http\Controllers\ProdukController::class, 'quickStore'])->name('produk.quick-store');
+    });
 
     // Superadmin Only - Dashboard Superadmin
     Route::middleware(['role:SUPERADMIN'])->group(function () {
@@ -134,5 +137,8 @@ Route::middleware(['auth'])->group(function () {
         
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
+
+                // Manage Profile - Contact Admin
+                Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');
     });
 });
