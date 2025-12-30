@@ -141,7 +141,33 @@
                 </div>
             </div>
 
-            <!-- Section 2: Party Information -->
+            <!-- Section 2: Transaction Items -->
+            <div class="mb-8">
+                <div class="mb-4 flex items-center justify-between">
+                    <h5 class="text-lg font-bold text-navy-700 dark:text-white border-l-4 border-purple-500 pl-3">Transaction Items</h5>
+                    <button type="button" onclick="addItem()" class="flex items-center gap-2 rounded-xl bg-purple-500 px-4 py-2 text-sm font-bold text-white transition duration-200 hover:bg-purple-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Item
+                    </button>
+                </div>
+
+                <!-- Items Container -->
+                <div id="items-container" class="space-y-4">
+                    <!-- Items will be added here dynamically -->
+                </div>
+
+                <!-- Total Summary -->
+                <div class="mt-6 rounded-xl bg-lightPrimary dark:bg-navy-900 p-4">
+                    <div class="flex items-center justify-between text-lg font-bold">
+                        <span class="text-navy-700 dark:text-white">Grand Total:</span>
+                        <span id="grand-total" class="text-brand-500 dark:text-brand-400">{{ get_currency_symbol() }} 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Party Information -->
             <div class="mb-8">
                 <h5 class="mb-4 text-lg font-bold text-navy-700 dark:text-white border-l-4 border-blue-500 pl-3">Party Information</h5>
                 
@@ -325,3 +351,166 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+const products = @json($produks ?? []);
+const services = @json($services ?? []);
+const currencySymbol = '{{ get_currency_symbol() }}';
+const currency = '{{ get_currency() }}';
+let itemCounter = 0;
+
+function formatNumber(num) {
+    if (currency === 'IDR') {
+        return parseInt(num).toLocaleString('id-ID');
+    } else {
+        return parseFloat(num).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+}
+
+function getTransactionType() {
+    const typeSelect = document.getElementById('is_transaksi_masuk');
+    return typeSelect ? typeSelect.value : '1';
+}
+
+function addItem() {
+    itemCounter++;
+    const container = document.getElementById('items-container');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'item-row border border-gray-200 dark:border-white/10 rounded-xl p-4 bg-white dark:bg-navy-900';
+    itemDiv.id = `item-${itemCounter}`;
+    
+    itemDiv.innerHTML = `
+        <div class="flex items-start gap-3">
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-6 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-navy-700 dark:text-white mb-1">Type</label>
+                    <select name="items[${itemCounter}][type]" class="item-type w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-3 py-2 text-sm" onchange="handleTypeChange(${itemCounter})" required>
+                        <option value="">Select</option>
+                        <option value="product">Product</option>
+                        <option value="service">Service</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-navy-700 dark:text-white mb-1">Item</label>
+                    <select id="item-select-${itemCounter}" name="items[${itemCounter}][item_id]" class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-3 py-2 text-sm" onchange="handleItemChange(${itemCounter})" disabled required>
+                        <option value="">Select Item</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-navy-700 dark:text-white mb-1">Quantity</label>
+                    <input type="number" name="items[${itemCounter}][quantity]" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-3 py-2 text-sm" min="1" step="1" value="1" oninput="calculateSubtotal(${itemCounter})" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-navy-700 dark:text-white mb-1">Unit Price</label>
+                    <input type="number" id="unit-price-${itemCounter}" name="items[${itemCounter}][harga_satuan]" class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-3 py-2 text-sm" min="0" step="0.01" oninput="calculateSubtotal(${itemCounter})" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-navy-700 dark:text-white mb-1">Subtotal</label>
+                    <input type="text" id="subtotal-display-${itemCounter}" class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900/50 px-3 py-2 text-sm font-bold" readonly>
+                    <input type="hidden" id="subtotal-value-${itemCounter}" name="items[${itemCounter}][subtotal]">
+                </div>
+            </div>
+            <button type="button" onclick="removeItem(${itemCounter})" class="mt-6 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(itemDiv);
+}
+
+function handleTypeChange(itemId) {
+    const typeSelect = document.querySelector(`#item-${itemId} .item-type`);
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const type = typeSelect.value;
+    const transactionType = getTransactionType();
+    
+    itemSelect.innerHTML = '<option value="">Select Item</option>';
+    itemSelect.disabled = !type;
+    
+    if (type === 'product') {
+        products.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''}`;
+            // Use harga_jual for incoming (sales), harga_beli for outgoing (purchase)
+            option.dataset.price = transactionType === '1' ? product.harga_jual : (product.harga_beli || product.harga_jual);
+            itemSelect.appendChild(option);
+        });
+    } else if (type === 'service') {
+        services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.id;
+            option.textContent = service.nama;
+            option.dataset.price = service.harga;
+            itemSelect.appendChild(option);
+        });
+    }
+}
+
+function handleItemChange(itemId) {
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+    
+    if (selectedOption && selectedOption.dataset.price) {
+        priceInput.value = selectedOption.dataset.price;
+        calculateSubtotal(itemId);
+    }
+}
+
+function calculateSubtotal(itemId) {
+    const qtyInput = document.querySelector(`#item-${itemId} .item-qty`);
+    const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const subtotalDisplay = document.getElementById(`subtotal-display-${itemId}`);
+    const subtotalValue = document.getElementById(`subtotal-value-${itemId}`);
+    
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const subtotal = qty * price;
+    
+    subtotalDisplay.value = `${currencySymbol} ${formatNumber(subtotal)}`;
+    subtotalValue.value = subtotal;
+    
+    calculateGrandTotal();
+}
+
+function calculateGrandTotal() {
+    let total = 0;
+    document.querySelectorAll('[id^="subtotal-value-"]').forEach(input => {
+        total += parseFloat(input.value) || 0;
+    });
+    
+    document.getElementById('grand-total').textContent = `${currencySymbol} ${formatNumber(total)}`;
+    document.getElementById('total_harga').value = total;
+}
+
+function removeItem(itemId) {
+    const item = document.getElementById(`item-${itemId}`);
+    if (item) {
+        item.remove();
+        calculateGrandTotal();
+    }
+}
+
+// Watch for transaction type changes to update prices
+document.getElementById('is_transaksi_masuk')?.addEventListener('change', function() {
+    // Recalculate all product prices when transaction type changes
+    document.querySelectorAll('.item-row').forEach(row => {
+        const itemId = row.id.replace('item-', '');
+        const typeSelect = row.querySelector('.item-type');
+        if (typeSelect && typeSelect.value === 'product') {
+            handleTypeChange(itemId);
+        }
+    });
+});
+
+// Initialize - add first item on page load
+document.addEventListener('DOMContentLoaded', function() {
+    addItem();
+});
+</script>
+@endpush
