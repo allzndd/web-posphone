@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AllProductController;
 use App\Http\Controllers\Api\ProductBrandController;
 use App\Http\Controllers\Api\StockManagementController;
 use App\Http\Controllers\Api\StockHistoryController;
+use App\Http\Controllers\Api\NewProductController;
 use App\Models\Langganan;
 
 /*
@@ -48,6 +49,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [AllProductController::class, 'update']);
         Route::delete('/{id}', [AllProductController::class, 'destroy']);
     });
+
+    // New Product (mirrors web "New Product" form)
+    Route::post('/new-product', [NewProductController::class, 'store']);
 
     // Product Brands Routes
     Route::prefix('product-brands')->group(function () {
