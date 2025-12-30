@@ -96,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('produk', \App\Http\Controllers\ProdukController::class);
         
         // Product Brands (pos_produk_merk)
+        Route::post('api/pos-produk-merk/quick-store', [\App\Http\Controllers\PosProdukMerkController::class, 'quickStore'])->name('pos-produk-merk.quick-store');
         Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
         
         // Stock Management (pos_produk_stok)
