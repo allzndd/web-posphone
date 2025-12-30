@@ -68,7 +68,7 @@ class ProdukController extends Controller
             'harga_jual' => 'required|numeric|min:0',
             'cost_names.*' => 'nullable|string',
             'cost_amounts.*' => 'nullable|numeric',
-            'imei' => 'nullable|string|max:255',
+            'imei' => 'required|string|max:255',
             'aksesoris' => 'nullable|string|max:45',
         ]);
 
@@ -175,7 +175,7 @@ class ProdukController extends Controller
             'harga_jual' => 'required|numeric|min:0',
             'cost_names.*' => 'nullable|string',
             'cost_amounts.*' => 'nullable|numeric',
-            'imei' => 'nullable|string|max:255',
+            'imei' => 'required|string|max:255',
             'aksesoris' => 'nullable|string|max:45',
         ]);
 
