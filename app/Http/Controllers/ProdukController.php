@@ -57,8 +57,9 @@ class ProdukController extends Controller
         $ownerId = $user->owner ? $user->owner->id : null;
 
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'nama' => 'nullable|string|max:255',
             'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
+            'product_type' => 'required|string|in:electronic,accessories',
             'deskripsi' => 'nullable|string|max:255',
             'warna' => 'nullable|string|max:255',
             'penyimpanan' => 'nullable|string|max:255',
@@ -85,6 +86,7 @@ class ProdukController extends Controller
         $produk = PosProduk::create([
             'owner_id' => $ownerId,
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
+            'product_type' => $request->product_type,
             'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
             'warna' => $request->warna,
@@ -162,8 +164,9 @@ class ProdukController extends Controller
     public function update(Request $request, PosProduk $produk)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'nama' => 'nullable|string|max:255',
             'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
+            'product_type' => 'required|string|in:electronic,accessories',
             'deskripsi' => 'nullable|string|max:255',
             'warna' => 'nullable|string|max:255',
             'penyimpanan' => 'nullable|string|max:255',
@@ -189,6 +192,7 @@ class ProdukController extends Controller
 
         $produk->update([
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
+            'product_type' => $request->product_type,
             'nama' => $request->nama,
             'deskripsi' => $request->deskripsi,
             'warna' => $request->warna,
@@ -216,4 +220,94 @@ class ProdukController extends Controller
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
     }
+
+    /**
+     * Quick store product from AJAX modal (for transaction forms)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function quickStore(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $ownerId = $user->owner ? $user->owner->id : null;
+
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
+                'harga_beli' => 'required|numeric|min:0',
+                'harga_jual' => 'required|numeric|min:0',
+                'warna' => 'nullable|string|max:255',
+                'penyimpanan' => 'nullable|string|max:255',
+                'battery_health' => 'nullable|string|max:255',
+                'imei' => 'nullable|string|max:255',
+            ]);
+
+            $produk = PosProduk::create([
+                'owner_id' => $ownerId,
+                'pos_produk_merk_id' => $request->pos_produk_merk_id,
+                'nama' => $request->nama,
+                'harga_beli' => $request->harga_beli,
+                'harga_jual' => $request->harga_jual,
+                'warna' => $request->warna,
+                'penyimpanan' => $request->penyimpanan,
+                'battery_health' => $request->battery_health,
+                'imei' => $request->imei,
+            ]);
+
+            // Automatically create stock entry for all stores with quantity 1
+            $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
+            foreach ($toko as $store) {
+                \App\Models\ProdukStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_toko_id' => $store->id,
+                    'pos_produk_id' => $produk->id,
+                    'stok' => 1,
+                ]);
+
+                // Create log stok (stock history) for initial stock
+                \App\Models\LogStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_produk_id' => $produk->id,
+                    'pos_toko_id' => $store->id,
+                    'stok_sebelum' => 0,
+                    'stok_sesudah' => 1,
+                    'perubahan' => 1,
+                    'tipe' => 'masuk',
+                    'referensi' => 'Produk Baru (Quick Add): ' . $produk->nama,
+                    'keterangan' => 'Stok awal produk baru dari transaksi',
+                    'pos_pengguna_id' => $user->id,
+                ]);
+            }
+
+            // Load relationship for response
+            $produk->load('merk');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product created successfully',
+                'data' => [
+                    'id' => $produk->id,
+                    'nama' => $produk->nama,
+                    'merk_nama' => $produk->merk->nama ?? '',
+                    'harga_beli' => $produk->harga_beli,
+                    'harga_jual' => $produk->harga_jual,
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create product: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
