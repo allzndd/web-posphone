@@ -204,7 +204,7 @@
                     <!-- IMEI -->
                     <div>
                         <label for="imei" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            IMEI Number
+                            IMEI Number <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -212,11 +212,13 @@
                             name="imei" 
                             value="{{ old('imei') }}"
                             placeholder="Enter IMEI number"
+                            required
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('imei') !border-red-500 @enderror"
                         >
                         @error('imei')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                         @enderror
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Used for generating product slug (last 3 digits)</p>
                     </div>
 
                     <!-- Accessories -->
