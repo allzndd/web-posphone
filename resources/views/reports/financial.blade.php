@@ -203,6 +203,12 @@
                             <option value="{{ $store->id }}" {{ $storeId == $store->id ? 'selected' : '' }}>{{ $store->nama }}</option>
                         @endforeach
                     </select>
+                    <select name="merk_id" onchange="this.form.submit()" class="rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700">
+                        <option value="">Semua Product Name</option>
+                        @foreach($merks as $merk)
+                            <option value="{{ $merk->id }}" {{ $merkId == $merk->id ? 'selected' : '' }}>{{ $merk->nama }}</option>
+                        @endforeach
+                    </select>
                     <button id="filterButton" type="submit" class="linear rounded-xl bg-brand-500 px-4 py-2 text-sm font-medium text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700" style="display: {{ $period == 'custom' ? 'block' : 'none' }};">
                         Filter
                     </button>
