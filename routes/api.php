@@ -10,6 +10,9 @@ use App\Http\Controllers\Api\ProductBrandController;
 use App\Http\Controllers\Api\StockManagementController;
 use App\Http\Controllers\Api\StockHistoryController;
 use App\Http\Controllers\Api\NewProductController;
+use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\IncomingTransactionController;
+use App\Http\Controllers\Api\OutgoingTransactionController;
 use App\Models\Langganan;
 
 /*
@@ -76,6 +79,35 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/summary', [StockHistoryController::class, 'summary']);
         Route::get('/{id}', [StockHistoryController::class, 'show']);
         Route::get('/product/{productId}', [StockHistoryController::class, 'byProduct']);
+    });
+
+    // Service Routes
+    Route::prefix('services')->group(function () {
+        Route::get('/', [ServiceController::class, 'index']);
+        Route::post('/', [ServiceController::class, 'store']);
+        Route::get('/{id}', [ServiceController::class, 'show']);
+        Route::put('/{id}', [ServiceController::class, 'update']);
+        Route::delete('/{id}', [ServiceController::class, 'destroy']);
+    });
+
+    // Incoming Transactions Routes (Sales)
+    Route::prefix('transactions/incoming')->group(function () {
+        Route::get('/', [IncomingTransactionController::class, 'index']);
+        Route::post('/', [IncomingTransactionController::class, 'store']);
+        Route::get('/summary', [IncomingTransactionController::class, 'summary']);
+        Route::get('/{id}', [IncomingTransactionController::class, 'show']);
+        Route::put('/{id}', [IncomingTransactionController::class, 'update']);
+        Route::delete('/{id}', [IncomingTransactionController::class, 'destroy']);
+    });
+
+    // Outgoing Transactions Routes (Purchases)
+    Route::prefix('transactions/outgoing')->group(function () {
+        Route::get('/', [OutgoingTransactionController::class, 'index']);
+        Route::post('/', [OutgoingTransactionController::class, 'store']);
+        Route::get('/summary', [OutgoingTransactionController::class, 'summary']);
+        Route::get('/{id}', [OutgoingTransactionController::class, 'show']);
+        Route::put('/{id}', [OutgoingTransactionController::class, 'update']);
+        Route::delete('/{id}', [OutgoingTransactionController::class, 'destroy']);
     });
 });
 
