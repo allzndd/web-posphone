@@ -13,6 +13,14 @@ use App\Http\Controllers\Api\NewProductController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\IncomingTransactionController;
 use App\Http\Controllers\Api\OutgoingTransactionController;
+use App\Http\Controllers\Api\AllTransactionController;
+use App\Http\Controllers\Api\SemuaLaporanController;
+use App\Http\Controllers\Api\LaporanPenjualanController;
+use App\Http\Controllers\Api\LaporanTukarTambahController;
+use App\Http\Controllers\Api\LaporanProdukController;
+use App\Http\Controllers\Api\LaporanStokController;
+use App\Http\Controllers\Api\LaporanPelangganController;
+use App\Http\Controllers\Api\RingkasanKeuanganController;
 use App\Models\Langganan;
 
 /*
@@ -88,6 +96,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [ServiceController::class, 'show']);
         Route::put('/{id}', [ServiceController::class, 'update']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
+    });
+
+    // Reports API Routes
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [SemuaLaporanController::class, 'index']);
+        Route::get('/sales', [LaporanPenjualanController::class, 'index']);
+        Route::get('/trade-in', [LaporanTukarTambahController::class, 'index']);
+        Route::get('/products', [LaporanProdukController::class, 'index']);
+        Route::get('/stock', [LaporanStokController::class, 'index']);
+        Route::get('/customers', [LaporanPelangganController::class, 'index']);
+        Route::get('/financial', [RingkasanKeuanganController::class, 'index']);
+    });
+
+    // All Transactions Routes
+    Route::prefix('transactions')->group(function () {
+        Route::get('/', [AllTransactionController::class, 'index']);
+        Route::get('/summary', [AllTransactionController::class, 'summary']);
+        Route::get('/{id}', [AllTransactionController::class, 'show'])->whereNumber('id');
     });
 
     // Incoming Transactions Routes (Sales)
