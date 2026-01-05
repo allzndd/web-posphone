@@ -31,7 +31,7 @@ class StockManagementController extends Controller
             
             $query = ProdukStok::where('owner_id', $ownerId)
                 ->with(['produk.merk', 'toko'])
-                ->orderBy('created_at', 'desc');
+                ->orderBy('id', 'desc');
 
             // Filter by store
             if ($request->filled('pos_toko_id')) {

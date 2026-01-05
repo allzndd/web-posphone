@@ -16,7 +16,7 @@ class ProdukStokController extends Controller
     {
         $perPage = $request->get('per_page', 10);
         
-        $stok = ProdukStok::with(['produk', 'toko'])
+        $stok = ProdukStok::with(['produk.merk', 'toko'])
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
@@ -28,7 +28,7 @@ class ProdukStokController extends Controller
      */
     public function create()
     {
-        $produk = PosProduk::orderBy('nama')->get();
+        $produk = PosProduk::with(['merk'])->get()->sortBy('display_name');
         $toko = PosToko::orderBy('nama')->get();
 
         return view('pages.produk-stok.create', compact('produk', 'toko'));
@@ -82,7 +82,7 @@ class ProdukStokController extends Controller
      */
     public function edit(ProdukStok $produkStok)
     {
-        $produk = PosProduk::orderBy('nama')->get();
+        $produk = PosProduk::with(['merk'])->get()->sortBy('display_name');
         $toko = PosToko::orderBy('nama')->get();
 
         return view('pages.produk-stok.edit', compact('produkStok', 'produk', 'toko'));

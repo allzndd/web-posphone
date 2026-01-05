@@ -83,11 +83,32 @@ class ProdukController extends Controller
             }
         }
 
+        // Auto-generate nama if not provided
+        $nama = $request->nama;
+        if (empty($nama)) {
+            $merk = PosProdukMerk::find($request->pos_produk_merk_id);
+            $namaParts = [];
+            
+            if ($merk && $merk->nama) {
+                $namaParts[] = $merk->nama;
+            }
+            
+            if (!empty($request->warna)) {
+                $namaParts[] = $request->warna;
+            }
+            
+            if (!empty($request->penyimpanan)) {
+                $namaParts[] = $request->penyimpanan . 'GB';
+            }
+            
+            $nama = !empty($namaParts) ? implode(' ', $namaParts) : 'Produk Baru';
+        }
+
         $produk = PosProduk::create([
             'owner_id' => $ownerId,
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
             'product_type' => $request->product_type,
-            'nama' => $request->nama,
+            'nama' => $nama,
             'deskripsi' => $request->deskripsi,
             'warna' => $request->warna,
             'penyimpanan' => $request->penyimpanan,
@@ -190,10 +211,31 @@ class ProdukController extends Controller
             }
         }
 
+        // Auto-generate nama if not provided
+        $nama = $request->nama;
+        if (empty($nama)) {
+            $merk = PosProdukMerk::find($request->pos_produk_merk_id);
+            $namaParts = [];
+            
+            if ($merk && $merk->nama) {
+                $namaParts[] = $merk->nama;
+            }
+            
+            if (!empty($request->warna)) {
+                $namaParts[] = $request->warna;
+            }
+            
+            if (!empty($request->penyimpanan)) {
+                $namaParts[] = $request->penyimpanan . 'GB';
+            }
+            
+            $nama = !empty($namaParts) ? implode(' ', $namaParts) : 'Produk';
+        }
+
         $produk->update([
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
             'product_type' => $request->product_type,
-            'nama' => $request->nama,
+            'nama' => $nama,
             'deskripsi' => $request->deskripsi,
             'warna' => $request->warna,
             'penyimpanan' => $request->penyimpanan,

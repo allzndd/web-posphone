@@ -88,7 +88,9 @@
                             @endif
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->nama ?? '-' }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->merk->nama ?? '-' }} {{ $item->warna ?? '' }}
+                            </p>
                         </td>
                         <td class="py-4">
                             @if($item->product_type === 'electronic')

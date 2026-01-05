@@ -69,7 +69,7 @@
                         <!-- Product -->
                         <td class="py-4">
                             <div>
-                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->produk->nama ?? '-' }}</p>
+                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->produk->display_name ?? 'Unknown Product' }}</p>
                             </div>
                         </td>
                         

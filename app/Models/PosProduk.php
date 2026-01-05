@@ -40,6 +40,43 @@ class PosProduk extends Model
         'updated_at' => 'datetime',
     ];
 
+    // Accessors
+    /**
+     * Generate display name for the product
+     */
+    public function getDisplayNameAttribute()
+    {
+        // If direct nama field exists, use it
+        if (!empty($this->nama)) {
+            return $this->nama;
+        }
+        
+        // Fallback: generate from merk + specs
+        $parts = [];
+        
+        if ($this->merk && $this->merk->nama) {
+            $parts[] = $this->merk->nama;
+        }
+        
+        if (!empty($this->warna)) {
+            $parts[] = $this->warna;
+        }
+        
+        if (!empty($this->penyimpanan)) {
+            $parts[] = $this->penyimpanan . 'GB';
+        }
+        
+        return !empty($parts) ? implode(' ', $parts) : 'Unknown Product';
+    }
+
+    /**
+     * Generate product code/identifier
+     */
+    public function getKodeAttribute()
+    {
+        return $this->slug ?: ('P' . str_pad($this->id, 4, '0', STR_PAD_LEFT));
+    }
+
     // Auto-generate slug from nama
     /**
      * Get the route key for the model.
@@ -109,11 +146,6 @@ class PosProduk extends Model
     public function toko()
     {
         return $this->belongsTo(PosToko::class, 'pos_toko_id');
-    }
-
-    public function nama()
-    {
-        return $this->belongsTo(PosProdukNama::class, 'pos_produk_nama_id');
     }
 
     public function merk()

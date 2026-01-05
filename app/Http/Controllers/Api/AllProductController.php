@@ -141,7 +141,7 @@ class AllProductController extends Controller
         try {
             $validated = $request->validate([
                 'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
-                'nama' => 'required|string|max:255',
+                'nama' => 'nullable|string|max:255',
                 'deskripsi' => 'nullable|string',
                 'warna' => 'nullable|string|max:100',
                 'penyimpanan' => 'nullable|string|max:50',
@@ -163,35 +163,32 @@ class AllProductController extends Controller
                 ], 403);
             }
 
+            // Auto-generate nama if not provided
+            $nama = $validated['nama'] ?? null;
+            if (empty($nama)) {
+                $merk = \App\Models\PosProdukMerk::find($validated['pos_produk_merk_id']);
+                $namaParts = [];
+                
+                if ($merk && $merk->nama) {
+                    $namaParts[] = $merk->nama;
+                }
+                
+                if (!empty($validated['warna'])) {
+                    $namaParts[] = $validated['warna'];
+                }
+                
+                if (!empty($validated['penyimpanan'])) {
+                    $namaParts[] = $validated['penyimpanan'] . 'GB';
+                }
+                
+                $nama = !empty($namaParts) ? implode(' ', $namaParts) : 'Produk Baru';
+            }
+            
+            $validated['nama'] = $nama;
             $validated['owner_id'] = $ownerId;
             $validated['slug'] = Str::slug($validated['nama'] . '-' . time());
 
             $product = PosProduk::create($validated);
-
-            // Create initial stock for all stores
-            $stores = \App\Models\PosToko::where('owner_id', $ownerId)->get();
-            foreach ($stores as $store) {
-                \App\Models\ProdukStok::create([
-                    'owner_id' => $ownerId,
-                    'pos_toko_id' => $store->id,
-                    'pos_produk_id' => $product->id,
-                    'stok' => 1,
-                ]);
-
-                // Create log stok (stock history)
-                \App\Models\LogStok::create([
-                    'owner_id' => $ownerId,
-                    'pos_produk_id' => $product->id,
-                    'pos_toko_id' => $store->id,
-                    'stok_sebelum' => 0,
-                    'stok_sesudah' => 1,
-                    'perubahan' => 1,
-                    'tipe' => 'masuk',
-                    'referensi' => 'Produk Baru: ' . $product->nama,
-                    'keterangan' => 'Stok awal produk baru',
-                    'pos_pengguna_id' => $user->id,
-                ]);
-            }
 
             return response()->json([
                 'success' => true,

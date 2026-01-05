@@ -38,7 +38,7 @@
                         <option value="">Select Product</option>
                         @foreach($produk as $item)
                             <option value="{{ $item->id }}" {{ old('pos_produk_id') == $item->id ? 'selected' : '' }}>
-                                {{ $item->nama }} - {{ $item->kode }}
+                                {{ $item->display_name }}
                             </option>
                         @endforeach
                     </select>

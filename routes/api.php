@@ -39,6 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/suppliers/{id}', [SupplierController::class, 'update']);
     Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy']);
 
+    // Stores/Tokos API Routes
+    Route::get('/stores', [\App\Http\Controllers\Api\StoreController::class, 'index']);
+    Route::get('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'show']);
+
     // ========== PRODUCT MENU API ROUTES ==========
     
     // All Products Routes
