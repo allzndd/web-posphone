@@ -90,13 +90,23 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         try {
+            $user = $request->user();
+            $ownerId = $user->owner ? $user->owner->id : null;
+
+            if (!$ownerId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner tidak ditemukan',
+                ], 403);
+            }
+
             $request->validate([
                 'nama' => 'required|string|max:255',
                 'alamat' => 'required|string',
             ]);
 
             $store = PosToko::create([
-                'owner_id' => auth()->id(),
+                'owner_id' => $ownerId,
                 'nama' => $request->nama,
                 'alamat' => $request->alamat,
             ]);
@@ -121,8 +131,18 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $user = $request->user();
+            $ownerId = $user->owner ? $user->owner->id : null;
+
+            if (!$ownerId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner tidak ditemukan',
+                ], 403);
+            }
+
             $store = PosToko::where('id', $id)
-                ->where('owner_id', auth()->id())
+                ->where('owner_id', $ownerId)
                 ->first();
 
             if (!$store) {
@@ -160,11 +180,21 @@ class StoreController extends Controller
     /**
      * Delete a store
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            $user = $request->user();
+            $ownerId = $user->owner ? $user->owner->id : null;
+
+            if (!$ownerId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Owner tidak ditemukan',
+                ], 403);
+            }
+
             $store = PosToko::where('id', $id)
-                ->where('owner_id', auth()->id())
+                ->where('owner_id', $ownerId)
                 ->first();
 
             if (!$store) {
