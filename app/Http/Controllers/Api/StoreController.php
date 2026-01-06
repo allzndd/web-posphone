@@ -83,4 +83,111 @@ class StoreController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Create a new store
+     */
+    public function store(Request $request)
+    {
+        try {
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'alamat' => 'required|string',
+            ]);
+
+            $store = PosToko::create([
+                'owner_id' => auth()->id(),
+                'nama' => $request->nama,
+                'alamat' => $request->alamat,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $store,
+                'message' => 'Store created successfully',
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update an existing store
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $store = PosToko::where('id', $id)
+                ->where('owner_id', auth()->id())
+                ->first();
+
+            if (!$store) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Store not found or you do not have permission to update it',
+                ], 404);
+            }
+
+            $request->validate([
+                'nama' => 'required|string|max:255',
+                'alamat' => 'required|string',
+            ]);
+
+            $store->update([
+                'nama' => $request->nama,
+                'alamat' => $request->alamat,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $store,
+                'message' => 'Store updated successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a store
+     */
+    public function destroy($id)
+    {
+        try {
+            $store = PosToko::where('id', $id)
+                ->where('owner_id', auth()->id())
+                ->first();
+
+            if (!$store) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Store not found or you do not have permission to delete it',
+                ], 404);
+            }
+
+            $store->delete();
+
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'message' => 'Store deleted successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

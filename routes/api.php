@@ -52,7 +52,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Stores/Tokos API Routes
     Route::get('/stores', [\App\Http\Controllers\Api\StoreController::class, 'index']);
+    Route::post('/stores', [\App\Http\Controllers\Api\StoreController::class, 'store']);
     Route::get('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'show']);
+    Route::put('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'update']);
+    Route::delete('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'destroy']);
 
     // ========== PRODUCT MENU API ROUTES ==========
     
