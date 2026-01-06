@@ -24,10 +24,20 @@ class StoreController extends Controller
                 ], 403);
             }
 
-            $stores = PosToko::where('owner_id', $ownerId)
+            $query = PosToko::where('owner_id', $ownerId)
                 ->select('id', 'nama', 'alamat', 'created_at')
-                ->orderBy('nama')
-                ->get();
+                ->orderBy('nama');
+
+            // Search by store name or address
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('nama', 'like', '%' . $search . '%')
+                      ->orWhere('alamat', 'like', '%' . $search . '%');
+                });
+            }
+
+            $stores = $query->get();
 
             return response()->json([
                 'success' => true,
