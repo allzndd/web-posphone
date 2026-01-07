@@ -14,7 +14,6 @@ class PosService extends Model
     protected $fillable = [
         'owner_id',
         'pos_toko_id',
-        'pos_pelanggan_id',
         'nama',
         'keterangan',
         'harga',
@@ -24,7 +23,6 @@ class PosService extends Model
     protected $casts = [
         'owner_id' => 'integer',
         'pos_toko_id' => 'integer',
-        'pos_pelanggan_id' => 'integer',
         'harga' => 'decimal:2',
         'durasi' => 'integer',
         'created_at' => 'datetime',
@@ -45,14 +43,6 @@ class PosService extends Model
     public function toko()
     {
         return $this->belongsTo(PosToko::class, 'pos_toko_id');
-    }
-
-    /**
-     * Get the customer.
-     */
-    public function pelanggan()
-    {
-        return $this->belongsTo(PosPelanggan::class, 'pos_pelanggan_id');
     }
 
     /**

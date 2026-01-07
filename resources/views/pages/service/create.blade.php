@@ -60,25 +60,6 @@
                     @enderror
                 </div>
 
-                <!-- Customer (Optional) -->
-                <div>
-                    <label class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Customer <span class="text-gray-400 text-xs">(Optional)</span>
-                    </label>
-                    <select name="pos_pelanggan_id"
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 @error('pos_pelanggan_id') border-red-500 @enderror">
-                        <option value="">Select Customer</option>
-                        @foreach($pelanggans as $pelanggan)
-                            <option value="{{ $pelanggan->id }}" {{ old('pos_pelanggan_id') == $pelanggan->id ? 'selected' : '' }}>
-                                {{ $pelanggan->nama }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('pos_pelanggan_id')
-                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
                 <!-- Price -->
                 <div>
                     <label class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">

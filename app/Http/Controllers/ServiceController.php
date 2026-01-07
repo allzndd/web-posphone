@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\PosService;
 use App\Models\PosToko;
-use App\Models\PosPelanggan;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -16,7 +15,7 @@ class ServiceController extends Controller
     {
         $perPage = $request->get('per_page', 10);
         
-        $query = PosService::with(['toko', 'pelanggan'])
+        $query = PosService::with(['toko'])
             ->orderBy('created_at', 'desc');
 
         // Search by name
@@ -41,9 +40,8 @@ class ServiceController extends Controller
     public function create()
     {
         $tokos = PosToko::orderBy('nama')->get();
-        $pelanggans = PosPelanggan::orderBy('nama')->get();
 
-        return view('pages.service.create', compact('tokos', 'pelanggans'));
+        return view('pages.service.create', compact('tokos'));
     }
 
     /**
@@ -53,7 +51,6 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'pos_toko_id' => 'required|exists:pos_toko,id',
-            'pos_pelanggan_id' => 'nullable|exists:pos_pelanggan,id',
             'nama' => 'required|string|max:45',
             'keterangan' => 'nullable|string|max:45',
             'harga' => 'required|numeric|min:0',
@@ -75,9 +72,8 @@ class ServiceController extends Controller
     public function edit(PosService $service)
     {
         $tokos = PosToko::orderBy('nama')->get();
-        $pelanggans = PosPelanggan::orderBy('nama')->get();
 
-        return view('pages.service.edit', compact('service', 'tokos', 'pelanggans'));
+        return view('pages.service.edit', compact('service', 'tokos'));
     }
 
     /**
@@ -87,7 +83,6 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'pos_toko_id' => 'required|exists:pos_toko,id',
-            'pos_pelanggan_id' => 'nullable|exists:pos_pelanggan,id',
             'nama' => 'required|string|max:45',
             'keterangan' => 'nullable|string|max:45',
             'harga' => 'required|numeric|min:0',

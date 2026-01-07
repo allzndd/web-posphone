@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\StockManagementController;
 use App\Http\Controllers\Api\StockHistoryController;
 use App\Http\Controllers\Api\NewProductController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\IncomingTransactionController;
 use App\Http\Controllers\Api\OutgoingTransactionController;
 use App\Http\Controllers\Api\AllTransactionController;
@@ -56,6 +57,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'show']);
     Route::put('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'update']);
     Route::delete('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'destroy']);
+
+    // Customers API Routes
+    Route::get('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'index']);
+    Route::post('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'store']);
+    Route::get('/customers/stats', [\App\Http\Controllers\Api\CustomerController::class, 'stats']);
+    Route::get('/customers/{id}', [\App\Http\Controllers\Api\CustomerController::class, 'show']);
+    Route::put('/customers/{id}', [\App\Http\Controllers\Api\CustomerController::class, 'update']);
+    Route::delete('/customers/{id}', [\App\Http\Controllers\Api\CustomerController::class, 'destroy']);
 
     // ========== PRODUCT MENU API ROUTES ==========
     
