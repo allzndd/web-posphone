@@ -358,7 +358,7 @@
                             @endif
                         </div>
                     </div>
-                    <a href="{{ route('produk.edit', $product->id) }}" class="w-full flex items-center justify-center px-3 py-2 bg-brand-500 text-white rounded-lg text-xs font-medium hover:bg-brand-600 transition-colors">
+                    <a href="{{ route('produk-stok.index') }}" class="w-full flex items-center justify-center px-3 py-2 bg-brand-500 text-white rounded-lg text-xs font-medium hover:bg-brand-600 transition-colors">
                         <i class="fas fa-plus mr-2"></i> Tambah Stok
                     </a>
                 </div>
