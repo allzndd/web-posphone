@@ -55,12 +55,29 @@ class TransaksiController extends Controller
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
         $suppliers = PosSupplier::where('owner_id', $ownerId)->get();
 
-        // Generate invoice number
+        // Generate invoice number based on last invoice, not ID
         $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
             ->orderBy('id', 'desc')
             ->first();
         
-        $invoiceNumber = 'INV-' . date('Ymd') . '-' . str_pad(($lastTransaksi ? $lastTransaksi->id + 1 : 1), 4, '0', STR_PAD_LEFT);
+        $dateStr = date('Ymd');
+        $nextNumber = 1;
+        
+        if ($lastTransaksi && $lastTransaksi->invoice) {
+            // Parse last invoice: INV-YYYYMMDD-XXXX
+            $parts = explode('-', $lastTransaksi->invoice);
+            if (count($parts) === 3) {
+                $lastDate = $parts[1];
+                $lastNumber = intval($parts[2]);
+                
+                // If same date, increment. Otherwise start from 1
+                if ($lastDate === $dateStr) {
+                    $nextNumber = $lastNumber + 1;
+                }
+            }
+        }
+        
+        $invoiceNumber = 'INV-' . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         return view('pages.transaksi.create', compact('tokos', 'pelanggans', 'suppliers', 'invoiceNumber'));
     }
@@ -237,12 +254,29 @@ class TransaksiController extends Controller
         $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
         $services = PosService::where('owner_id', $ownerId)->get();
 
-        // Generate invoice number
+        // Generate invoice number based on last invoice, not ID
         $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
             ->orderBy('id', 'desc')
             ->first();
         
-        $invoiceNumber = 'INV-' . date('Ymd') . '-' . str_pad(($lastTransaksi ? $lastTransaksi->id + 1 : 1), 4, '0', STR_PAD_LEFT);
+        $dateStr = date('Ymd');
+        $nextNumber = 1;
+        
+        if ($lastTransaksi && $lastTransaksi->invoice) {
+            // Parse last invoice: INV-YYYYMMDD-XXXX
+            $parts = explode('-', $lastTransaksi->invoice);
+            if (count($parts) === 3) {
+                $lastDate = $parts[1];
+                $lastNumber = intval($parts[2]);
+                
+                // If same date, increment. Otherwise start from 1
+                if ($lastDate === $dateStr) {
+                    $nextNumber = $lastNumber + 1;
+                }
+            }
+        }
+        
+        $invoiceNumber = 'INV-' . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         return view('pages.transaksi.masuk.create', compact('tokos', 'pelanggans', 'produks', 'services', 'invoiceNumber'));
     }
@@ -405,12 +439,29 @@ class TransaksiController extends Controller
         $services = PosService::where('owner_id', $ownerId)->get();
         $merks = \App\Models\PosProdukMerk::where('owner_id', $ownerId)->get();
 
-        // Generate invoice number
+        // Generate invoice number based on last invoice, not ID
         $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
             ->orderBy('id', 'desc')
             ->first();
         
-        $invoiceNumber = 'INV-' . date('Ymd') . '-' . str_pad(($lastTransaksi ? $lastTransaksi->id + 1 : 1), 4, '0', STR_PAD_LEFT);
+        $dateStr = date('Ymd');
+        $nextNumber = 1;
+        
+        if ($lastTransaksi && $lastTransaksi->invoice) {
+            // Parse last invoice: INV-YYYYMMDD-XXXX
+            $parts = explode('-', $lastTransaksi->invoice);
+            if (count($parts) === 3) {
+                $lastDate = $parts[1];
+                $lastNumber = intval($parts[2]);
+                
+                // If same date, increment. Otherwise start from 1
+                if ($lastDate === $dateStr) {
+                    $nextNumber = $lastNumber + 1;
+                }
+            }
+        }
+        
+        $invoiceNumber = 'INV-' . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         return view('pages.transaksi.keluar.create', compact('tokos', 'suppliers', 'produks', 'services', 'merks', 'invoiceNumber'));
     }

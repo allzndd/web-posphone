@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\LaporanProdukController;
 use App\Http\Controllers\Api\LaporanStokController;
 use App\Http\Controllers\Api\LaporanPelangganController;
 use App\Http\Controllers\Api\RingkasanKeuanganController;
+use App\Http\Controllers\Api\TradeInController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Models\Langganan;
 
 /*
@@ -43,6 +45,15 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
+    
+    // Dashboard API Routes
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'getStats']);
+        Route::get('/sales-chart', [DashboardController::class, 'getSalesChart']);
+        Route::get('/top-products', [DashboardController::class, 'getTopProducts']);
+        Route::get('/low-stock', [DashboardController::class, 'getLowStock']);
+        Route::get('/recent-transactions', [DashboardController::class, 'getRecentTransactions']);
+    });
     
     // Supplier API Routes
     Route::get('/suppliers', [SupplierController::class, 'index']);
@@ -114,12 +125,30 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
     });
 
+    // Trade-In Routes
+    Route::prefix('trade-in')->group(function () {
+        Route::get('/customers', [TradeInController::class, 'getCustomers']);
+        Route::get('/products', [TradeInController::class, 'getProducts']);
+        Route::get('/', [TradeInController::class, 'index']);
+        Route::post('/', [TradeInController::class, 'store']);
+        Route::get('/{id}', [TradeInController::class, 'show']);
+        Route::put('/{id}', [TradeInController::class, 'update']);
+        Route::delete('/{id}', [TradeInController::class, 'destroy']);
+    });
+
     // Reports API Routes
     Route::prefix('reports')->group(function () {
         Route::get('/', [SemuaLaporanController::class, 'index']);
         Route::get('/sales', [LaporanPenjualanController::class, 'index']);
+        Route::get('/sales/export', [LaporanPenjualanController::class, 'exportExcel']);
+        Route::get('/stores', [LaporanPenjualanController::class, 'getStores']);
         Route::get('/trade-in', [LaporanTukarTambahController::class, 'index']);
+        Route::get('/trade-in/stores', [LaporanTukarTambahController::class, 'getStores']);
+        Route::get('/trade-in/export', [LaporanTukarTambahController::class, 'exportExcel']);
         Route::get('/products', [LaporanProdukController::class, 'index']);
+        Route::get('/products/summary', [LaporanProdukController::class, 'getSummary']);
+        Route::get('/products/stores', [LaporanProdukController::class, 'getStores']);
+        Route::get('/products/export', [LaporanProdukController::class, 'exportExcel']);
         Route::get('/stock', [LaporanStokController::class, 'index']);
         Route::get('/customers', [LaporanPelangganController::class, 'index']);
         Route::get('/financial', [RingkasanKeuanganController::class, 'index']);
