@@ -331,7 +331,7 @@ class ReportController extends Controller
             foreach ($transaction->items as $item) {
                 $produk = $item->produk;
                 $quantity = $item->quantity ?? 1;
-                $revenue = $item->harga * $quantity;
+                $revenue = $item->harga_satuan * $quantity;
                 $hpp = ($produk->harga_beli ?? 0) * $quantity;
                 $grossProfit = $revenue - $hpp;
                 $grossMargin = $revenue > 0 ? ($grossProfit / $revenue) * 100 : 0;

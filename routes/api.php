@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\LaporanPelangganController;
 use App\Http\Controllers\Api\RingkasanKeuanganController;
 use App\Http\Controllers\Api\TradeInController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserManagementController;
 use App\Models\Langganan;
 
 /*
@@ -45,6 +46,15 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
+    
+    // User Management Routes (Owner only)
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserManagementController::class, 'index']);
+        Route::post('/', [UserManagementController::class, 'store']);
+        Route::get('/{id}', [UserManagementController::class, 'show']);
+        Route::put('/{id}', [UserManagementController::class, 'update']);
+        Route::delete('/{id}', [UserManagementController::class, 'destroy']);
+    });
     
     // Dashboard API Routes
     Route::prefix('dashboard')->group(function () {
@@ -150,8 +160,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/products/stores', [LaporanProdukController::class, 'getStores']);
         Route::get('/products/export', [LaporanProdukController::class, 'exportExcel']);
         Route::get('/stock', [LaporanStokController::class, 'index']);
+        Route::get('/stock/export', [LaporanStokController::class, 'exportExcel']);
         Route::get('/customers', [LaporanPelangganController::class, 'index']);
+        Route::get('/customers/summary', [LaporanPelangganController::class, 'getSummary']);
+        Route::get('/customers/export', [LaporanPelangganController::class, 'exportExcel']);
         Route::get('/financial', [RingkasanKeuanganController::class, 'index']);
+        Route::get('/financial/summary', [RingkasanKeuanganController::class, 'getSummary']);
+        Route::get('/financial/export', [RingkasanKeuanganController::class, 'exportExcel']);
+        Route::get('/financial/detail-per-item', [RingkasanKeuanganController::class, 'getDetailPerItem']);
+        Route::get('/financial/operating-expenses', [RingkasanKeuanganController::class, 'getOperatingExpenses']);
     });
 
     // All Transactions Routes
