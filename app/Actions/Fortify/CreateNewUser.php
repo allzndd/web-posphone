@@ -3,10 +3,12 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Models\Owner;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use Illuminate\Support\Str;
 
 class CreateNewUser implements CreatesNewUsers
 {
@@ -31,10 +33,21 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
-            'name' => $input['name'],
+        // Create user dengan semua field yang diperlukan
+        $user = User::create([
+            'nama' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
+            'slug' => Str::slug($input['name'] . '-' . time()),
+            'role_id' => 2, // Role Owner
+            'email_is_verified' => 1, // Email verified by default
         ]);
+
+        // Create owner record untuk user tersebut
+        Owner::create([
+            'pengguna_id' => $user->id,
+        ]);
+
+        return $user;
     }
 }
