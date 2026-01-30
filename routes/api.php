@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\IncomingTransactionController;
 use App\Http\Controllers\Api\OutgoingTransactionController;
 use App\Http\Controllers\Api\AllTransactionController;
+use App\Http\Controllers\Api\HistoryTransactionController;
 use App\Http\Controllers\Api\SemuaLaporanController;
 use App\Http\Controllers\Api\LaporanPenjualanController;
 use App\Http\Controllers\Api\LaporanTukarTambahController;
@@ -203,6 +204,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [OutgoingTransactionController::class, 'show']);
         Route::put('/{id}', [OutgoingTransactionController::class, 'update']);
         Route::delete('/{id}', [OutgoingTransactionController::class, 'destroy']);
+    });
+
+    // History Transactions Routes (All transactions history)
+    Route::prefix('transactions/history')->group(function () {
+        Route::get('/', [HistoryTransactionController::class, 'index']);
+        Route::get('/summary', [HistoryTransactionController::class, 'summary']);
+        Route::get('/{id}', [HistoryTransactionController::class, 'show'])->whereNumber('id');
     });
 });
 

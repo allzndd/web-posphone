@@ -104,7 +104,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
         
         // Stock Management (pos_produk_stok)
-        Route::patch('produk-stok/{produkStok}/update-inline', [\App\Http\Controllers\ProdukStokController::class, 'updateInline'])->name('produk-stok.update-inline');
         Route::resource('produk-stok', \App\Http\Controllers\ProdukStokController::class);
         
         // Stock History (pos_log_stok)

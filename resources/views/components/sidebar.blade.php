@@ -332,15 +332,6 @@
             <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('transaksi*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
-                        <a href="{{ route('transaksi.index') }}" class="w-full">
-                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
-                                <p class="leading-1 flex text-sm {{ Request::is('transaksi') && !Request::is('transaksi/masuk*') && !Request::is('transaksi/keluar*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    All Transactions
-                                </p>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('transaksi.masuk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('transaksi/masuk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
@@ -354,6 +345,15 @@
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('transaksi/keluar*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                                     Outgoing Transactions
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('transaksi.index') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('transaksi') && !Request::is('transaksi/masuk*') && !Request::is('transaksi/keluar*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    History Transaction
                                 </p>
                             </div>
                         </a>

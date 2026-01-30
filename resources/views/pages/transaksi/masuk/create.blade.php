@@ -296,6 +296,72 @@ const services = @json($services);
 const currencySymbol = '{{ get_currency_symbol() }}';
 const currency = '{{ get_currency() }}';
 let itemCounter = 0;
+let selectedTokoId = null;
+
+// Check if there are products available
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen to store selection change
+    const tokoSelect = document.getElementById('pos_toko_id');
+    tokoSelect.addEventListener('change', function() {
+        selectedTokoId = this.value;
+        updateAllProductDropdowns();
+        
+        // Show/hide warning based on available products
+        checkProductAvailability();
+    });
+    
+    // Initial check
+    if (tokoSelect.value) {
+        selectedTokoId = tokoSelect.value;
+        checkProductAvailability();
+    }
+});
+
+function checkProductAvailability() {
+    const existingAlert = document.querySelector('.stock-warning-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    if (!selectedTokoId) {
+        return; // No store selected yet
+    }
+    
+    const availableProducts = products.filter(p => {
+        const stok = p.stok_per_toko?.[selectedTokoId] || 0;
+        return stok > 0;
+    });
+    
+    if (availableProducts.length === 0) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'stock-warning-alert mb-6 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 p-4';
+        alertDiv.innerHTML = `
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <h6 class="text-sm font-bold text-orange-900 dark:text-orange-300">No Products Available in This Store</h6>
+                    <p class="mt-1 text-sm text-orange-700 dark:text-orange-400">
+                        All products are out of stock in the selected store. Please restock or select a different store.
+                    </p>
+                </div>
+            </div>
+        `;
+        const form = document.getElementById('transaksiForm');
+        form.parentNode.insertBefore(alertDiv, form);
+    }
+}
+
+function updateAllProductDropdowns() {
+    // Update all existing item dropdowns
+    document.querySelectorAll('.item-type').forEach(select => {
+        const itemId = select.closest('[id^="item-"]').id.replace('item-', '');
+        if (select.value === 'product') {
+            handleTypeChange(itemId);
+        }
+    });
+}
 
 function formatNumber(num) {
     if (currency === 'IDR') {
@@ -328,10 +394,11 @@ function addItem() {
                     <select name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" class="item-select w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleItemChange(${itemCounter})" disabled>
                         <option value="">Select Item</option>
                     </select>
+                    <span id="stock-info-${itemCounter}" class="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden"></span>
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Qty</label>
-                    <input type="number" name="items[${itemCounter}][quantity]" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="1" min="1" onchange="calculateSubtotal(${itemCounter})">
+                    <input type="number" name="items[${itemCounter}][quantity]" id="qty-input-${itemCounter}" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="1" min="1" onchange="calculateSubtotal(${itemCounter})">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Unit Price</label>
@@ -357,17 +424,52 @@ function addItem() {
 function handleTypeChange(itemId) {
     const typeSelect = document.querySelector(`#item-${itemId} .item-type`);
     const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const stockInfo = document.getElementById(`stock-info-${itemId}`);
     const type = typeSelect.value;
     
     itemSelect.innerHTML = '<option value="">Select Item</option>';
     itemSelect.disabled = !type;
+    if (stockInfo) stockInfo.classList.add('hidden');
     
     if (type === 'product') {
-        products.forEach(product => {
+        // Check if store is selected first
+        if (!selectedTokoId) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Please select a store first';
+            option.disabled = true;
+            itemSelect.appendChild(option);
+            return;
+        }
+        
+        // Filter products by selected store stock
+        const availableProducts = products.filter(product => {
+            const stok = product.stok_per_toko?.[selectedTokoId] || 0;
+            return stok > 0;
+        });
+        
+        if (availableProducts.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No products with available stock in this store';
+            option.disabled = true;
+            itemSelect.appendChild(option);
+            return;
+        }
+        
+        availableProducts.forEach(product => {
             const option = document.createElement('option');
             option.value = product.id;
-            option.textContent = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''}`;
+            
+            // Get stock for selected store
+            const stok = product.stok_per_toko?.[selectedTokoId] || 0;
+            
+            // Display product name with stock info
+            const displayText = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''} (Stock: ${stok})`;
+            option.textContent = displayText;
             option.dataset.price = product.harga_jual;
+            option.dataset.stock = stok;
+            
             itemSelect.appendChild(option);
         });
     } else if (type === 'service') {
@@ -384,10 +486,41 @@ function handleTypeChange(itemId) {
 function handleItemChange(itemId) {
     const itemSelect = document.getElementById(`item-select-${itemId}`);
     const priceInput = document.getElementById(`unit-price-${itemId}`);
+    const qtyInput = document.getElementById(`qty-input-${itemId}`);
+    const stockInfo = document.getElementById(`stock-info-${itemId}`);
     const selectedOption = itemSelect.options[itemSelect.selectedIndex];
     
     if (selectedOption && selectedOption.dataset.price) {
         priceInput.value = selectedOption.dataset.price;
+        
+        // Show stock info for products
+        if (selectedOption.dataset.stock !== undefined) {
+            const stock = parseInt(selectedOption.dataset.stock);
+            if (stockInfo) {
+                stockInfo.textContent = `Available stock: ${stock} units`;
+                stockInfo.classList.remove('hidden');
+                stockInfo.classList.remove('text-red-500', 'text-green-500', 'text-orange-500');
+                
+                if (stock <= 0) {
+                    stockInfo.textContent = 'OUT OF STOCK';
+                    stockInfo.classList.add('text-red-500');
+                } else if (stock <= 10) {
+                    stockInfo.classList.add('text-orange-500');
+                } else {
+                    stockInfo.classList.add('text-green-500');
+                }
+            }
+            
+            // Set max quantity to available stock
+            qtyInput.max = stock;
+            if (parseInt(qtyInput.value) > stock) {
+                qtyInput.value = stock;
+            }
+        } else if (stockInfo) {
+            stockInfo.classList.add('hidden');
+            qtyInput.removeAttribute('max');
+        }
+        
         calculateSubtotal(itemId);
     }
 }
@@ -445,6 +578,34 @@ document.addEventListener('DOMContentLoaded', function() {
         const itemsContainer = document.getElementById('items-container');
         if (itemsContainer.children.length === 0) {
             alert('Please add at least one item to the transaction');
+            return;
+        }
+        
+        // Validate product stock for each item
+        let stockError = false;
+        document.querySelectorAll('.item-select').forEach(select => {
+            const selectedOption = select.options[select.selectedIndex];
+            if (selectedOption && selectedOption.dataset.stock !== undefined) {
+                const stock = parseInt(selectedOption.dataset.stock);
+                const itemId = select.id.replace('item-select-', '');
+                const qtyInput = document.getElementById(`qty-input-${itemId}`);
+                const qty = parseInt(qtyInput.value) || 0;
+                
+                if (stock <= 0) {
+                    alert(`Cannot add ${selectedOption.textContent.split(' (Stock:')[0]} - Product is out of stock!`);
+                    stockError = true;
+                    return;
+                }
+                
+                if (qty > stock) {
+                    alert(`Insufficient stock for ${selectedOption.textContent.split(' (Stock:')[0]}! Available: ${stock}, Requested: ${qty}`);
+                    stockError = true;
+                    return;
+                }
+            }
+        });
+        
+        if (stockError) {
             return;
         }
         

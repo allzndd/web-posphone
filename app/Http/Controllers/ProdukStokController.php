@@ -16,7 +16,11 @@ class ProdukStokController extends Controller
     {
         $perPage = $request->get('per_page', 10);
         
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+        
         $stok = ProdukStok::with(['produk.merk', 'toko'])
+            ->where('owner_id', $ownerId)
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
@@ -28,8 +32,16 @@ class ProdukStokController extends Controller
      */
     public function create()
     {
-        $produk = PosProduk::with(['merk'])->get()->sortBy('display_name');
-        $toko = PosToko::orderBy('nama')->get();
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+        
+        $produk = PosProduk::where('owner_id', $ownerId)
+            ->with(['merk'])
+            ->get()
+            ->sortBy('display_name');
+        $toko = PosToko::where('owner_id', $ownerId)
+            ->orderBy('nama')
+            ->get();
 
         return view('pages.produk-stok.create', compact('produk', 'toko'));
     }
@@ -82,8 +94,16 @@ class ProdukStokController extends Controller
      */
     public function edit(ProdukStok $produkStok)
     {
-        $produk = PosProduk::with(['merk'])->get()->sortBy('display_name');
-        $toko = PosToko::orderBy('nama')->get();
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+        
+        $produk = PosProduk::where('owner_id', $ownerId)
+            ->with(['merk'])
+            ->get()
+            ->sortBy('display_name');
+        $toko = PosToko::where('owner_id', $ownerId)
+            ->orderBy('nama')
+            ->get();
 
         return view('pages.produk-stok.edit', compact('produkStok', 'produk', 'toko'));
     }
@@ -124,42 +144,6 @@ class ProdukStokController extends Controller
 
         return redirect()->route('produk-stok.index')
             ->with('success', 'Product stock updated successfully');
-    }
-
-    /**
-     * Update stock inline from index page.
-     */
-    public function updateInline(Request $request, ProdukStok $produkStok)
-    {
-        $validated = $request->validate([
-            'stok' => 'required|integer|min:0',
-        ]);
-
-        $stokLama = $produkStok->stok;
-        $stokBaru = $validated['stok'];
-        $perubahan = $stokBaru - $stokLama;
-
-        $produkStok->update($validated);
-
-        // Create log stok if there's a change
-        if ($perubahan != 0) {
-            $user = auth()->user();
-            \App\Models\LogStok::create([
-                'owner_id' => $produkStok->owner_id,
-                'pos_produk_id' => $produkStok->pos_produk_id,
-                'pos_toko_id' => $produkStok->pos_toko_id,
-                'stok_sebelum' => $stokLama,
-                'stok_sesudah' => $stokBaru,
-                'perubahan' => $perubahan,
-                'tipe' => $perubahan > 0 ? 'masuk' : 'keluar',
-                'referensi' => 'Adjustment',
-                'keterangan' => 'Penyesuaian stok via increment/decrement',
-                'pos_pengguna_id' => $user->id,
-            ]);
-        }
-
-        return redirect()->route('produk-stok.index')
-            ->with('success', 'Stock updated successfully');
     }
 
     /**

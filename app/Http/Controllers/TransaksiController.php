@@ -313,7 +313,20 @@ class TransaksiController extends Controller
 
         $tokos = PosToko::where('owner_id', $ownerId)->get();
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
-        $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
+        
+        // Load products with stock per store
+        $produks = PosProduk::where('owner_id', $ownerId)
+            ->with(['merk', 'stok' => function($query) use ($ownerId) {
+                $query->where('owner_id', $ownerId)
+                    ->select('pos_produk_id', 'pos_toko_id', 'stok');
+            }])
+            ->get()
+            ->map(function($produk) {
+                // Create stock array per store [toko_id => stok]
+                $produk->stok_per_toko = $produk->stok->pluck('stok', 'pos_toko_id')->toArray();
+                return $produk;
+            });
+        
         $services = PosService::where('owner_id', $ownerId)->get();
 
         // Invoice akan di-generate otomatis saat submit untuk menghindari duplicate
@@ -367,6 +380,29 @@ class TransaksiController extends Controller
 
                 $pos_produk_id = $itemData['type'] === 'product' ? $itemData['item_id'] : null;
                 $pos_service_id = $itemData['type'] === 'service' ? $itemData['item_id'] : null;
+                
+                // Validate stock for products (incoming = sales, stock should decrease)
+                if ($pos_produk_id) {
+                    $quantity = $itemData['quantity'] ?? 1;
+                    
+                    // Get available stock for this product IN THE SELECTED STORE
+                    $stokData = \App\Models\ProdukStok::where('owner_id', $ownerId)
+                        ->where('pos_toko_id', $request->pos_toko_id)
+                        ->where('pos_produk_id', $pos_produk_id)
+                        ->first();
+                    
+                    $availableStock = $stokData ? $stokData->stok : 0;
+                    
+                    if ($availableStock < $quantity) {
+                        $produk = PosProduk::find($pos_produk_id);
+                        $productName = $produk ? $produk->nama : 'Product ID ' . $pos_produk_id;
+                        
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Insufficient stock for {$productName} in the selected store. Available: {$availableStock}, Requested: {$quantity}"
+                        ], 422);
+                    }
+                }
                 
                 // Create transaction item
                 PosTransaksiItem::create([

@@ -2,21 +2,7 @@
 
 @section('title', 'Product Stock')
 
-@push('style')
-<style>
-    .editable-stock {
-        transition: all 0.2s;
-    }
-    .editable-stock:hover {
-        background-color: rgba(59, 130, 246, 0.1);
-        border-radius: 0.375rem;
-    }
-    .stock-input {
-        width: 100px;
-        text-align: center;
-    }
-</style>
-@endpush
+
 
 @section('main')
 <div class="mt-3 px-[11px] pr-[10px]">
@@ -78,32 +64,11 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->toko->nama ?? '-' }}</p>
                         </td>
                         
-                        <!-- Stock (Editable) -->
+                        <!-- Stock (Read-only) -->
                         <td class="py-4 text-center">
-                            <form action="{{ route('produk-stok.update-inline', $item->id) }}" method="POST" class="inline-block update-stock-form">
-                                @csrf
-                                @method('PATCH')
-                                <div class="flex items-center justify-center gap-2">
-                                    <button type="button" onclick="decrementStock(this)" class="flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                                        </svg>
-                                    </button>
-                                    
-                                    <input type="number" 
-                                           name="stok" 
-                                           value="{{ $item->stok }}" 
-                                           class="stock-input rounded-lg border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-3 py-2 text-sm font-bold text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400"
-                                           min="0"
-                                           onchange="this.form.submit()">
-                                    
-                                    <button type="button" onclick="incrementStock(this)" class="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-500/20 dark:text-green-300 dark:hover:bg-green-500/30 transition">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
+                            <span class="inline-block px-4 py-2 text-sm font-bold text-navy-700 dark:text-white rounded-lg bg-lightPrimary dark:bg-navy-900">
+                                {{ $item->stok }}
+                            </span>
                         </td>
                         
                         <!-- Actions -->
@@ -221,21 +186,4 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-    function incrementStock(button) {
-        const input = button.parentElement.querySelector('input[name="stok"]');
-        input.value = parseInt(input.value) + 1;
-        input.form.submit();
-    }
 
-    function decrementStock(button) {
-        const input = button.parentElement.querySelector('input[name="stok"]');
-        const currentValue = parseInt(input.value);
-        if (currentValue > 0) {
-            input.value = currentValue - 1;
-            input.form.submit();
-        }
-    }
-</script>
-@endpush

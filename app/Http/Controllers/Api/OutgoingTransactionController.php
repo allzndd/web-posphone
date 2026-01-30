@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PosTransaksi;
 use App\Models\PosTransaksiItem;
+use App\Traits\UpdatesStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OutgoingTransactionController extends Controller
 {
+    use UpdatesStock;
     /**
      * Display a listing of outgoing transactions (purchases)
      */
@@ -138,10 +140,15 @@ class OutgoingTransactionController extends Controller
                 ], 403);
             }
 
+            // Auto-generate invoice if not provided
+            $invoice = $request->invoice;
+            if (empty($invoice)) {
+                $invoice = $this->generateInvoiceNumber($ownerId, false);
+            }
+
             $validated = $request->validate([
                 'pos_toko_id' => 'required|exists:pos_toko,id',
                 'pos_supplier_id' => 'nullable|exists:pos_supplier,id',
-                'invoice' => 'required|string|unique:pos_transaksi,invoice',
                 'total_harga' => 'required|numeric|min:0',
                 'keterangan' => 'nullable|string',
                 'status' => 'required|in:pending,completed,cancelled',
@@ -164,14 +171,14 @@ class OutgoingTransactionController extends Controller
                 'pos_toko_id' => $validated['pos_toko_id'],
                 'pos_supplier_id' => $validated['pos_supplier_id'] ?? null,
                 'is_transaksi_masuk' => 0,
-                'invoice' => $validated['invoice'],
+                'invoice' => $invoice,
                 'total_harga' => $validated['total_harga'],
                 'keterangan' => $validated['keterangan'] ?? null,
                 'status' => $validated['status'],
                 'metode_pembayaran' => $validated['metode_pembayaran'],
             ]);
 
-            // Create transaction items
+            // Create transaction items and update stock
             foreach ($validated['items'] as $item) {
                 PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaction->id,
@@ -185,6 +192,20 @@ class OutgoingTransactionController extends Controller
                     'garansi_expires_at' => $item['garansi_expires_at'] ?? null,
                     'pajak' => $item['pajak'] ?? 0,
                 ]);
+
+                // Update stock for products (not services)
+                // Outgoing transaction (purchase) = stock in (add stock)
+                if (!empty($item['pos_produk_id'])) {
+                    $this->updateProductStock(
+                        $ownerId,
+                        $validated['pos_toko_id'],
+                        $item['pos_produk_id'],
+                        $item['quantity'], // Positive for purchase
+                        'masuk',
+                        $invoice,
+                        'Pembelian produk dari supplier via API'
+                    );
+                }
             }
 
             $transaction->load(['toko', 'supplier', 'items.produk', 'items.service']);
@@ -396,5 +417,47 @@ class OutgoingTransactionController extends Controller
                 'message' => 'Gagal mengambil summary transaksi keluar: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Generate unique invoice number with retry mechanism
+     */
+    private function generateInvoiceNumber($ownerId, $isMasuk = true)
+    {
+        $maxRetries = 10;
+        $attempt = 0;
+
+        while ($attempt < $maxRetries) {
+            $prefix = $isMasuk ? 'INV-IN-' : 'INV-OUT-';
+            $date = now()->format('Ymd');
+            
+            // Get last invoice number for today
+            $lastInvoice = PosTransaksi::where('owner_id', $ownerId)
+                ->where('is_transaksi_masuk', $isMasuk ? 1 : 0)
+                ->where('invoice', 'like', $prefix . $date . '%')
+                ->orderBy('invoice', 'desc')
+                ->first();
+
+            if ($lastInvoice) {
+                // Extract number from last invoice
+                $lastNumber = (int) substr($lastInvoice->invoice, -4);
+                $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            } else {
+                $newNumber = '0001';
+            }
+
+            $invoice = $prefix . $date . '-' . $newNumber;
+
+            // Check if invoice is unique
+            $exists = PosTransaksi::where('invoice', $invoice)->exists();
+            if (!$exists) {
+                return $invoice;
+            }
+
+            $attempt++;
+        }
+
+        // Fallback: use timestamp if all retries failed
+        return $prefix . $date . '-' . now()->timestamp;
     }
 }
