@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\RingkasanKeuanganController;
 use App\Http\Controllers\Api\TradeInController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserManagementController;
+use App\Http\Controllers\Api\ChatbotController;
 use App\Models\Langganan;
 
 /*
@@ -41,6 +42,11 @@ use App\Models\Langganan;
 // Auth Routes (Public)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::prefix('chatbot')->group(function () {
+    Route::post('/message', [ChatbotController::class, 'chat']);
+    Route::get('/info', [ChatbotController::class, 'info']);
+});
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
