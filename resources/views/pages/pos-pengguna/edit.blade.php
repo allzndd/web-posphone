@@ -153,9 +153,9 @@
                         <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                     @enderror
                     <div class="mt-2">
-                        <a href="{{ route('pos-role.create') }}" target="_blank" class="text-xs text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-300">
+                        <button type="button" onclick="openRoleModal()" class="text-xs text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-300">
                             + Add New Role
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -225,6 +225,69 @@
             @method('DELETE')
         </form>
     </div>
+
+    <!-- Modal Add New Role -->
+    <div id="roleModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-50">
+        <div class="w-full max-w-md rounded-[20px] bg-white dark:bg-navy-800 shadow-3xl p-6">
+            <div class="mb-4 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
+                <h5 class="text-lg font-bold text-navy-700 dark:text-white">Add New Role</h5>
+                <button type="button" onclick="closeRoleModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="roleForm">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label for="role_nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                            Role Name <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="role_nama"
+                            name="nama"
+                            placeholder="Enter role name"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                            required
+                        >
+                        <p id="role_nama_error" class="mt-2 text-sm text-red-500 dark:text-red-400 hidden"></p>
+                    </div>
+
+                    <div>
+                        <label for="role_deskripsi" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                            Description
+                        </label>
+                        <textarea 
+                            id="role_deskripsi"
+                            name="deskripsi"
+                            rows="3"
+                            placeholder="Enter role description"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeRoleModal()" 
+                            class="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                        </svg>
+                        <span id="submitBtnText">Save Role</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -241,6 +304,91 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('deleteForm').submit();
         }
     });
+});
+
+// Modal functions
+function openRoleModal() {
+    document.getElementById('roleModal').classList.remove('hidden');
+    document.getElementById('roleModal').classList.add('flex');
+    document.getElementById('role_nama').focus();
+}
+
+function closeRoleModal() {
+    document.getElementById('roleModal').classList.add('hidden');
+    document.getElementById('roleModal').classList.remove('flex');
+    document.getElementById('roleForm').reset();
+    document.getElementById('role_nama_error').classList.add('hidden');
+}
+
+// Handle form submission
+document.getElementById('roleForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const submitBtnText = document.getElementById('submitBtnText');
+    const originalText = submitBtnText.textContent;
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtnText.textContent = 'Saving...';
+    
+    // Hide previous errors
+    document.getElementById('role_nama_error').classList.add('hidden');
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('{{ route("pos-role.store") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+        
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server tidak mengembalikan JSON response');
+        }
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Add new option to select
+            const select = document.getElementById('pos_role_id');
+            const option = new Option(data.role.nama, data.role.id, true, true);
+            select.add(option);
+            
+            // Close modal and reset form
+            closeRoleModal();
+        } else {
+            // Show validation errors
+            if (data.errors && data.errors.nama) {
+                const errorElement = document.getElementById('role_nama_error');
+                errorElement.textContent = data.errors.nama[0];
+                errorElement.classList.remove('hidden');
+            } else {
+                alert(data.message || 'Terjadi kesalahan saat menyimpan role');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menyimpan role');
+    } finally {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtnText.textContent = originalText;
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('roleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRoleModal();
+    }
 });
 </script>
 @endpush
