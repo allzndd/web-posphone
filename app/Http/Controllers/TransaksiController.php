@@ -17,6 +17,68 @@ use Illuminate\Support\Facades\DB;
 class TransaksiController extends Controller
 {
     use UpdatesStock;
+    
+    /**
+     * Generate unique invoice number with retry mechanism
+     * 
+     * @param int $ownerId
+     * @param bool $isMasuk (true for incoming/sales, false for outgoing/purchases)
+     * @return string
+     */
+    private function generateInvoiceNumber($ownerId, $isMasuk = true)
+    {
+        $maxRetries = 10;
+        $attempt = 0;
+        
+        while ($attempt < $maxRetries) {
+            // Use different prefix for incoming vs outgoing
+            $prefix = $isMasuk ? 'INV-IN-' : 'INV-OUT-';
+            
+            // Get last transaction of this type only
+            $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
+                ->where('is_transaksi_masuk', $isMasuk ? 1 : 0)
+                ->where('invoice', 'like', $prefix . '%')
+                ->orderBy('id', 'desc')
+                ->first();
+            
+            $dateStr = date('Ymd');
+            $nextNumber = 1;
+            
+            if ($lastTransaksi && $lastTransaksi->invoice) {
+                // Parse last invoice: INV-IN-YYYYMMDD-XXXX or INV-OUT-YYYYMMDD-XXXX
+                $parts = explode('-', $lastTransaksi->invoice);
+                if (count($parts) === 4) {
+                    $lastDate = $parts[2];
+                    $lastNumber = intval($parts[3]);
+                    
+                    // If same date, increment. Otherwise start from 1
+                    if ($lastDate === $dateStr) {
+                        $nextNumber = $lastNumber + 1;
+                    }
+                }
+            }
+            
+            $invoiceNumber = $prefix . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            
+            // Check if invoice exists (race condition protection)
+            $exists = PosTransaksi::where('owner_id', $ownerId)
+                ->where('invoice', $invoiceNumber)
+                ->exists();
+            
+            if (!$exists) {
+                return $invoiceNumber;
+            }
+            
+            $attempt++;
+            // Small delay to reduce collision
+            usleep(100000); // 0.1 second
+        }
+        
+        // Fallback: use timestamp if all retries failed
+        $prefix = $isMasuk ? 'INV-IN-' : 'INV-OUT-';
+        return $prefix . date('Ymd-His') . '-' . rand(1000, 9999);
+    }
+    
     /**
      * Display a listing of the resource.
      *
@@ -254,29 +316,8 @@ class TransaksiController extends Controller
         $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
         $services = PosService::where('owner_id', $ownerId)->get();
 
-        // Generate invoice number based on last invoice, not ID
-        $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        $dateStr = date('Ymd');
-        $nextNumber = 1;
-        
-        if ($lastTransaksi && $lastTransaksi->invoice) {
-            // Parse last invoice: INV-YYYYMMDD-XXXX
-            $parts = explode('-', $lastTransaksi->invoice);
-            if (count($parts) === 3) {
-                $lastDate = $parts[1];
-                $lastNumber = intval($parts[2]);
-                
-                // If same date, increment. Otherwise start from 1
-                if ($lastDate === $dateStr) {
-                    $nextNumber = $lastNumber + 1;
-                }
-            }
-        }
-        
-        $invoiceNumber = 'INV-' . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        // Invoice akan di-generate otomatis saat submit untuk menghindari duplicate
+        $invoiceNumber = '';
 
         return view('pages.transaksi.masuk.create', compact('tokos', 'pelanggans', 'produks', 'services', 'invoiceNumber'));
     }
@@ -285,6 +326,14 @@ class TransaksiController extends Controller
     {
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Auto-generate invoice if empty or not provided
+        $invoice = $request->invoice;
+        if (empty($invoice)) {
+            $invoice = $this->generateInvoiceNumber($ownerId, true);
+        }
+
+        $request->merge(['invoice' => $invoice]);
 
         $request->validate([
             'pos_toko_id' => 'required',
@@ -301,7 +350,7 @@ class TransaksiController extends Controller
             'pos_toko_id' => $request->pos_toko_id,
             'pos_pelanggan_id' => $request->pos_pelanggan_id,
             'is_transaksi_masuk' => 1,
-            'invoice' => $request->invoice,
+            'invoice' => $invoice,
             'total_harga' => $request->total_harga,
             'keterangan' => $request->keterangan,
             'status' => $request->status,
@@ -350,7 +399,31 @@ class TransaksiController extends Controller
             }
         }
 
+        // Check if request is AJAX
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Incoming transaction has been successfully created',
+                'data' => $transaksi,
+                'print_url' => route('transaksi.masuk.print', $transaksi->id),
+                'redirect_url' => route('transaksi.masuk.index'),
+            ]);
+        }
+
         return redirect()->route('transaksi.masuk.index')->with('success', 'Transaksi masuk berhasil ditambahkan');
+    }
+
+    public function printMasuk($id)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 1)
+            ->with(['items.produk.merk', 'items.service', 'toko', 'pelanggan'])
+            ->findOrFail($id);
+
+        return view('pages.transaksi.masuk.print', compact('transaksi'));
     }
 
     public function editMasuk($id)
@@ -404,6 +477,20 @@ class TransaksiController extends Controller
         return redirect()->route('transaksi.masuk.index')->with('success', 'Transaksi masuk berhasil diperbarui');
     }
 
+    public function destroyMasuk($id)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 1)
+            ->findOrFail($id);
+
+        $transaksi->delete();
+
+        return redirect()->route('transaksi.masuk.index')->with('success', 'Incoming transaction deleted successfully');
+    }
+
     // ============================================
     // OUTGOING TRANSACTIONS (PURCHASES) - is_transaksi_masuk = 0
     // ============================================
@@ -439,29 +526,8 @@ class TransaksiController extends Controller
         $services = PosService::where('owner_id', $ownerId)->get();
         $merks = \App\Models\PosProdukMerk::where('owner_id', $ownerId)->get();
 
-        // Generate invoice number based on last invoice, not ID
-        $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        $dateStr = date('Ymd');
-        $nextNumber = 1;
-        
-        if ($lastTransaksi && $lastTransaksi->invoice) {
-            // Parse last invoice: INV-YYYYMMDD-XXXX
-            $parts = explode('-', $lastTransaksi->invoice);
-            if (count($parts) === 3) {
-                $lastDate = $parts[1];
-                $lastNumber = intval($parts[2]);
-                
-                // If same date, increment. Otherwise start from 1
-                if ($lastDate === $dateStr) {
-                    $nextNumber = $lastNumber + 1;
-                }
-            }
-        }
-        
-        $invoiceNumber = 'INV-' . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        // Invoice akan di-generate otomatis saat submit untuk menghindari duplicate
+        $invoiceNumber = '';
 
         return view('pages.transaksi.keluar.create', compact('tokos', 'suppliers', 'produks', 'services', 'merks', 'invoiceNumber'));
     }
@@ -470,6 +536,14 @@ class TransaksiController extends Controller
     {
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Auto-generate invoice if empty or not provided
+        $invoice = $request->invoice;
+        if (empty($invoice)) {
+            $invoice = $this->generateInvoiceNumber($ownerId, false);
+        }
+
+        $request->merge(['invoice' => $invoice]);
 
         $request->validate([
             'pos_toko_id' => 'required',
@@ -486,7 +560,7 @@ class TransaksiController extends Controller
             'pos_toko_id' => $request->pos_toko_id,
             'pos_supplier_id' => $request->pos_supplier_id,
             'is_transaksi_masuk' => 0,
-            'invoice' => $request->invoice,
+            'invoice' => $invoice,
             'total_harga' => $request->total_harga,
             'keterangan' => $request->keterangan,
             'status' => $request->status,
@@ -535,7 +609,31 @@ class TransaksiController extends Controller
             }
         }
 
-        return redirect()->route('transaksi.keluar.index')->with('success', 'Transaksi keluar berhasil ditambahkan');
+        // Check if request is AJAX
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Outgoing transaction has been successfully created',
+                'data' => $transaksi,
+                'print_url' => route('transaksi.keluar.print', $transaksi->id),
+                'redirect_url' => route('transaksi.keluar.index'),
+            ]);
+        }
+
+        return redirect()->route('transaksi.keluar.index')->with('success', 'Outgoing transaction has been successfully created');
+    }
+
+    public function printKeluar($id)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->with(['items.produk.merk', 'items.service', 'toko', 'supplier'])
+            ->findOrFail($id);
+
+        return view('pages.transaksi.keluar.print', compact('transaksi'));
     }
 
     public function editKeluar($id)
@@ -587,6 +685,20 @@ class TransaksiController extends Controller
         ]);
 
         return redirect()->route('transaksi.keluar.index')->with('success', 'Transaksi keluar berhasil diperbarui');
+    }
+
+    public function destroyKeluar($id)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->findOrFail($id);
+
+        $transaksi->delete();
+
+        return redirect()->route('transaksi.keluar.index')->with('success', 'Outgoing transaction deleted successfully');
     }
 
     /**

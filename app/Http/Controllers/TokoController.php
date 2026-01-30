@@ -47,11 +47,20 @@ class TokoController extends Controller
             'alamat' => 'nullable|string',
         ]);
 
-        PosToko::create([
+        $toko = PosToko::create([
             'owner_id' => $ownerId,
             'nama' => $request->nama,
             'alamat' => $request->alamat,
         ]);
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Toko berhasil ditambahkan',
+                'toko' => $toko
+            ], 200);
+        }
 
         return redirect()->route('toko.index')->with('success', 'Toko berhasil ditambahkan');
     }
@@ -88,9 +97,10 @@ class TokoController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
-        $toko = PosToko::where('owner_id', $ownerId)
-            ->where('id', $id)
-            ->firstOrFail();
+        // Verify ownership
+        if ($toko->owner_id !== $ownerId) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -113,9 +123,10 @@ class TokoController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
-        $toko = PosToko::where('owner_id', $ownerId)
-            ->where('id', $id)
-            ->firstOrFail();
+        // Verify ownership
+        if ($toko->owner_id !== $ownerId) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $toko->delete();
 

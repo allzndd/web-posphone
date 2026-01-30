@@ -26,7 +26,7 @@
             </a>
         </div>
 
-        <form action="{{ route('transaksi.masuk.store') }}" method="POST">
+        <form id="transaksiForm" action="{{ route('transaksi.masuk.store') }}" method="POST">
             @csrf
             <input type="hidden" name="is_transaksi_masuk" value="1">
             
@@ -39,15 +39,16 @@
                     <!-- Invoice Number -->
                     <div>
                         <label for="invoice" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            Invoice Number <span class="text-red-500">*</span>
+                            Invoice Number <span class="text-gray-400 font-normal text-xs">(Auto-generated)</span>
                         </label>
                         <input 
                             type="text" 
                             id="invoice"
                             name="invoice" 
                             value="{{ old('invoice', $invoiceNumber) }}"
+                            placeholder="Will be auto-generated (INV-IN-YYYYMMDD-XXXX)"
                             readonly
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900/50 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900/50 px-4 py-3 text-sm text-gray-500 dark:text-gray-400 outline-none cursor-not-allowed"
                         >
                         @error('invoice')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
@@ -273,12 +274,13 @@
                     Cancel
                 </a>
                 <button type="submit" 
+                        id="submitBtn"
                         class="flex items-center gap-2 rounded-xl bg-green-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-green-600 active:bg-green-700 dark:bg-green-400 dark:hover:bg-green-300 dark:active:bg-green-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
                         <path fill="none" d="M0 0h24v24H0z"></path>
                         <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
                     </svg>
-                    Create Income
+                    <span id="submitBtnText">Create Income</span>
                 </button>
             </div>
 
@@ -427,6 +429,59 @@ function removeItem(itemId) {
 // Initialize - add first item on page load
 document.addEventListener('DOMContentLoaded', function() {
     addItem();
+    
+    // Handle form submission with AJAX
+    const form = document.getElementById('transaksiForm');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        // Check if at least one item exists
+        const itemsContainer = document.getElementById('items-container');
+        if (itemsContainer.children.length === 0) {
+            alert('Please add at least one item to the transaction');
+            return;
+        }
+        
+        // Disable submit button
+        const submitBtn = document.getElementById('submitBtn');
+        const submitBtnText = document.getElementById('submitBtnText');
+        submitBtn.disabled = true;
+        submitBtnText.textContent = 'Processing...';
+        
+        // Prepare form data
+        const formData = new FormData(form);
+        
+        // Submit form via AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect to print page
+                window.location.href = data.print_url || data.redirect_url;
+            } else {
+                throw new Error(data.message || 'Failed to create transaction');
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + (error.message || 'An error occurred while creating the transaction'));
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtnText.textContent = 'Create Income';
+        });
+    });
 });
 </script>
 @endpush

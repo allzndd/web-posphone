@@ -104,7 +104,7 @@ class PosPenggunaController extends Controller
 
         $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:pos_pengguna,email,' . $id,
+            'email' => 'required|email|unique:pos_pengguna,email,' . $pengguna->id,
             'password' => 'nullable|string|min:6',
             'pos_role_id' => 'required|exists:pos_role,id',
             'pos_toko_id' => 'nullable|exists:pos_toko,id',

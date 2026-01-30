@@ -39,6 +39,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeMasuk'])->name('store');
             Route::get('/{id}/edit', [\App\Http\Controllers\TransaksiController::class, 'editMasuk'])->name('edit');
             Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateMasuk'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\TransaksiController::class, 'destroyMasuk'])->name('destroy');
+            Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printMasuk'])->name('print');
         });
         
         // Outgoing Transactions (Purchases) - Must come before resource route
@@ -48,6 +50,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeKeluar'])->name('store');
             Route::get('/{id}/edit', [\App\Http\Controllers\TransaksiController::class, 'editKeluar'])->name('edit');
             Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateKeluar'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\TransaksiController::class, 'destroyKeluar'])->name('destroy');
+            Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printKeluar'])->name('print');
         });
         
         // Transactions (pos_transaksi) - General resource route
