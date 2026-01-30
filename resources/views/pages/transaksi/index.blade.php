@@ -90,9 +90,6 @@
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
                         </th>
-                        <th class="py-3 text-center">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
-                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -156,7 +153,7 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="py-4">
+                        <!-- <td class="py-4">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('transaksi.edit', $item->id) }}" 
                                    class="flex items-center justify-center rounded-lg bg-lightPrimary p-2 text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
@@ -166,7 +163,7 @@
                                     </svg>
                                 </a>
                             </div>
-                        </td>
+                        </td> -->
                     </tr>
                     @empty
                     <tr>
