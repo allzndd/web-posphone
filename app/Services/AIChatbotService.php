@@ -282,8 +282,9 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
     private function getStoreProducts(?int $ownerId = null, ?int $tokoId = null): array
     {
         if ($tokoId) {
-            // Get product IDs dari toko first
+            // Get product IDs dari toko dengan stok > 0
             $productIds = \App\Models\PosProdukStok::where('pos_toko_id', $tokoId)
+                ->where('stok', '>', 0)
                 ->pluck('pos_produk_id')
                 ->unique();
             
