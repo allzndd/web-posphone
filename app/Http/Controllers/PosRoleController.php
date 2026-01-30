@@ -42,14 +42,24 @@ class PosRoleController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
-        $request->validate([
+        // Validate request
+        $validated = $request->validate([
             'nama' => 'required|string|max:255',
         ]);
 
-        PosRole::create([
+        $role = PosRole::create([
             'owner_id' => $ownerId,
-            'nama' => $request->nama,
+            'nama' => $validated['nama'],
         ]);
+
+        // Return JSON for AJAX requests
+        if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'role' => $role,
+                'message' => 'Role berhasil ditambahkan'
+            ], 201);
+        }
 
         return redirect()->route('pos-role.index')->with('success', 'Role berhasil ditambahkan');
     }
