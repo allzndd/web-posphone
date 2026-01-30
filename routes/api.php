@@ -24,12 +24,8 @@ use App\Http\Controllers\Api\LaporanPelangganController;
 use App\Http\Controllers\Api\RingkasanKeuanganController;
 use App\Http\Controllers\Api\TradeInController;
 use App\Http\Controllers\Api\DashboardController;
-<<<<<<< Updated upstream
 use App\Http\Controllers\Api\UserManagementController;
-use App\Http\Controllers\Api\ChatbotController;
-=======
 use App\Http\Controllers\ChatbotController;
->>>>>>> Stashed changes
 use App\Models\Langganan;
 
 /*
@@ -47,10 +43,7 @@ use App\Models\Langganan;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-<<<<<<< Updated upstream
-=======
 // AI Chatbot Routes (Public - bisa diakses tanpa auth untuk testing)
->>>>>>> Stashed changes
 Route::prefix('chatbot')->group(function () {
     Route::post('/message', [ChatbotController::class, 'chat']);
     Route::get('/info', [ChatbotController::class, 'info']);
