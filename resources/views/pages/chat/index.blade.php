@@ -7,18 +7,21 @@
   .chat-container { 
     display: flex; 
     flex-direction: column; 
-    height: calc(100vh - 220px); 
+    height: calc(100vh - 100px); 
     overflow: hidden; 
   }
   .chat-suggestions { 
-    padding: 16px 20px; 
-    background: #F4F7FE; 
-    border-bottom: 1px solid #E9ECEF; 
+    padding: 12px 20px; 
+    background: #ffffff; 
+    border-top: 1px solid #E9ECEF; 
     flex-shrink: 0; 
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   .chat-suggestions .btn { 
-    margin: 0 6px 6px 0; 
-    font-size: 0.85rem; 
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
   .btn-brand-outline {
     background: transparent;
@@ -102,6 +105,19 @@
     border-radius: 8px;
     overflow: hidden;
   }
+  .chat-answer {
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    max-width: 100%;
+  }
+  .chat-answer table {
+    margin: 0;
+    min-width: 100%;
+    border-collapse: collapse;
+  }
   .chat-answer table thead {
     background: #422AFB;
     color: #ffffff;
@@ -136,24 +152,23 @@
 @endpush
 
 @section('main')
-<div class="p-4 md:p-6">
-    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <div class="bg-gradient-to-r from-brand-500 to-brand-400 px-6 py-4">
-            <h4 class="text-xl font-bold text-white flex items-center">
-                <i class="fas fa-robot mr-3"></i> Asisten Analisis Toko
-            </h4>
-        </div>
+<style>
+  /* Hide footer for chat page only */
+  body:has([data-page="chat"]) footer,
+  body:has([data-page="chat"]) .p-3:has(footer) {
+    display: none !important;
+  }
+</style>
+<div class="h-full" data-page="chat">
+    <div class="bg-white h-full overflow-hidden">
         <div class="chat-container">
-            <div class="chat-suggestions">
-                <button type="button" class="btn btn-brand-outline sugg">Omzet bulan ini</button>
-                <button type="button" class="btn btn-brand-outline sugg">Produk terlaris minggu ini</button>
-                <button type="button" class="btn btn-brand-outline sugg">Jumlah transaksi hari ini</button>
-                <button type="button" class="btn btn-brand-outline sugg">Profit tahun ini</button>
-                <button type="button" class="btn btn-brand-outline sugg">Stok produk "iPhone"</button>
-                <button type="button" class="btn btn-brand-outline sugg">Rekomendasi stok iPhone bulan depan</button>
-                <button type="button" class="btn btn-brand-outline sugg">Customer favorit</button>
-            </div>
             <div id="chat-log" class="chat-log"></div>
+            <div class="chat-suggestions">
+                <button type="button" class="btn btn-brand-outline sugg">Produk terlaris</button>
+                <button type="button" class="btn btn-brand-outline sugg">Toko yang paling banyak penjualan</button>
+                <button type="button" class="btn btn-brand-outline sugg">Total penjualan hari ini</button>
+                <button type="button" class="btn btn-brand-outline sugg">Cek stok produk</button>
+            </div>
             <div class="chat-input-bar">
                 <form id="chat-form">
                     <div class="flex gap-2">
@@ -165,9 +180,6 @@
                         <button class="px-6 py-3 bg-brand-500 text-white rounded-xl font-medium hover:bg-brand-600 transition-colors" type="submit">
                             <span class="btn-send-text"><i class="fas fa-paper-plane mr-2"></i>Kirim</span>
                             <span class="btn-send-spinner"><i class="fas fa-spinner fa-spin mr-2"></i>Mengirim…</span>
-                        </button>
-                        <button class="px-4 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors" id="chat-clear" type="button" title="Bersihkan riwayat">
-                            <i class="fas fa-broom"></i>
                         </button>
                     </div>
                 </form>
@@ -184,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const input = document.getElementById('chat-input');
   const log = document.getElementById('chat-log');
   const suggestions = document.querySelectorAll('.sugg');
-  const clearBtn = document.getElementById('chat-clear');
 
   function el(tag, className, html){
     const e = document.createElement(tag);
@@ -236,9 +247,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const textEl = el('div', 'chat-text');
     textEl.innerHTML = formatText(text || '');
     bubble.appendChild(textEl);
-    const timeEl = el('div', 'chat-time');
-    timeEl.textContent = nowTime();
-    bubble.appendChild(timeEl);
     if (opts.data) {
       const table = appendTable(opts.data);
       if (table) {
@@ -247,6 +255,9 @@ document.addEventListener('DOMContentLoaded', function(){
         bubble.appendChild(answerWrap);
       }
     }
+    const timeEl = el('div', 'chat-time');
+    timeEl.textContent = nowTime();
+    bubble.appendChild(timeEl);
     if(who === 'me'){
       row.appendChild(bubble);
       row.appendChild(avatar);
@@ -277,28 +288,26 @@ document.addEventListener('DOMContentLoaded', function(){
     input.value = '';
     setSending(true);
     try{
-      const res = await fetch("{{ route('chat.ask') }}", {
+      const response = await fetch('{{ route('chat.ask') }}', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json'
         },
-        credentials: 'same-origin',
         body: JSON.stringify({ message })
       });
-      const contentType = res.headers.get('content-type') || '';
-      if(!res.ok){
-        const text = await res.text();
-        appendBubble('Gagal memproses (status ' + res.status + ').', 'bot');
-      } else if (contentType.includes('application/json')){
-        const data = await res.json();
-        if(data && data.ok){
-          appendBubble(data.answer || '', 'bot', { data: data.data || null });
-        } else {
-          appendBubble(data.error || 'Terjadi kesalahan saat memproses pertanyaan.', 'bot');
-        }
+      
+      if (!response.ok) {
+        appendBubble('Gagal memproses (status ' + response.status + ').', 'bot');
+        return;
+      }
+      
+      const json = await response.json();
+      if (json.ok) {
+        appendBubble(json.answer || 'Tidak ada respons.', 'bot', { data: json.data });
       } else {
-        appendBubble('Respon tidak dikenali oleh sistem.', 'bot');
+        appendBubble(json.error || 'Terjadi kesalahan.', 'bot');
       }
     }catch(err){
       appendBubble('Gagal terhubung ke server.', 'bot');
@@ -320,24 +329,22 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  // Clear chat
-  clearBtn.addEventListener('click', function(){
-    log.innerHTML = '';
-    showWelcome();
-  });
-
   // Initial welcome message from bot
   function showWelcome(){
     const welcome = [
-      'Halo! Saya asisten analisis toko. Saya bisa bantu jawab pertanyaan seputar penjualan dan produk.',
+      'Halo! Saya asisten AI PosPhone yang siap membantu Anda. 🤖',
       '',
-      'Contoh pertanyaan:',
-      '- omzet bulan ini',
-      '- jumlah transaksi hari ini',
-      '- produk terlaris minggu ini',
-      '- stok produk "iPhone"',
-      '- penjualan "iPhone" bulan ini',
-      '- profit tahun ini'
+      'Saya bisa membantu Anda untuk:',
+      '- Cek produk terlaris',
+      '- Lihat penjualan hari ini',
+      '- Cek stok produk',
+      '- Mencari produk',
+      '- Cek harga produk',
+      '- Daftar toko',
+      '- Toko dengan penjualan terbanyak',
+      '- Produk di toko tertentu',
+      '',
+      'Silahkan tanyakan apa saja! 😊'
     ].join('\n');
     appendBubble(welcome, 'bot');
   }
