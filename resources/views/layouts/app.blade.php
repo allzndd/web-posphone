@@ -240,6 +240,9 @@
     <!-- SweetAlert2 for confirmations -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Table Action Dropdown Class -->
+    <script src="{{ asset('js/table-action-dropdown.js') }}"></script>
+
     @stack('scripts')
 
     <!-- Template JS File -->
