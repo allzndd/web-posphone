@@ -148,6 +148,9 @@
   .sending .btn-send-spinner { 
     display: inline-block; 
   }
+  #chat-log .chat-row:first-child {
+    margin-top: 60px;
+  }
 </style>
 @endpush
 
@@ -340,7 +343,6 @@ document.addEventListener('DOMContentLoaded', function(){
       '- Cek stok produk',
       '- Mencari produk',
       '- Cek harga produk',
-      '- Daftar toko',
       '- Toko dengan penjualan terbanyak',
       '- Produk di toko tertentu',
       '',
