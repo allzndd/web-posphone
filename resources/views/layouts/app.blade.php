@@ -107,6 +107,7 @@
             font-family: 'DM Sans', sans-serif;
             -webkit-font-smoothing: antialiased;
             letter-spacing: -0.5px;
+            zoom: 90%;
         }
         
         /* Remove underline from all links - Horizon style */

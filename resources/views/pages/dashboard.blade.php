@@ -108,15 +108,15 @@
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
                              class="absolute right-0 mt-2 w-[120px] rounded-xl !bg-white dark:!bg-navy-700 shadow-xl shadow-shadow-500 dark:shadow-none border border-gray-200 dark:border-white/10 py-1 z-10">
-                            <a href="{{ route('home', ['period' => 'week']) }}" 
+                            <a href="{{ route('dashboard', ['period' => 'week']) }}" 
                                class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'week' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
                                 Mingguan
                             </a>
-                            <a href="{{ route('home', ['period' => 'monthly']) }}" 
+                            <a href="{{ route('dashboard', ['period' => 'monthly']) }}" 
                                class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'monthly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
                                 Bulanan
                             </a>
-                            <a href="{{ route('home', ['period' => 'yearly']) }}" 
+                            <a href="{{ route('dashboard', ['period' => 'yearly']) }}" 
                                class="block px-4 py-2 text-sm !text-navy-700 dark:!text-white hover:!bg-lightPrimary dark:hover:!bg-navy-800 {{ $period === 'yearly' ? '!bg-lightPrimary dark:!bg-navy-800 font-bold' : '' }}">
                                 Tahunan
                             </a>

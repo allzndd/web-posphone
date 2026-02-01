@@ -20,17 +20,17 @@
         @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
         <!-- Dashboard -->
         <li class="relative mb-3 flex hover:cursor-pointer">
-            <a href="{{ route('home') }}" class="w-full">
+            <a href="{{ route('dashboard') }}" class="w-full">
                 <div class="my-[3px] flex cursor-pointer items-center px-8">
-                    <span class="{{ Request::is('home') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                    <span class="{{ Request::is('dashboard') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"></path></svg>
                     </span>
-                    <p class="leading-1 ml-4 flex {{ Request::is('home') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                    <p class="leading-1 ml-4 flex {{ Request::is('dashboard') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                         Dashboard
                     </p>
                 </div>
             </a>
-            @if(Request::is('home'))
+            @if(Request::is('dashboard'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
@@ -196,7 +196,7 @@
                             </div>
                         </a>
                     </li>
-                    <!-- <li class="relative mb-2 flex hover:cursor-pointer">
+                    <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('produk.create') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('produk/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
@@ -204,7 +204,7 @@
                                 </p>
                             </div>
                         </a>
-                    </li> -->
+                    </li>
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('pos-produk-merk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
@@ -488,7 +488,7 @@
                             </div>
                         </a>
                     </li>
-                    <li class="relative mb-2 flex hover:cursor-pointer">
+                    {{-- <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('produk.create') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('produk/create') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
@@ -496,7 +496,7 @@
                                 </p>
                             </div>
                         </a>
-                    </li>
+                    </li> --}}
                 </ul>
             </div>
         </li>

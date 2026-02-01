@@ -29,7 +29,7 @@ class FortifyServiceProvider extends ServiceProvider
                     return redirect()->route('dashboard-superadmin');
                 }
                 
-                return redirect()->intended(route('home'));
+                return redirect()->intended(route('dashboard'));
             }
         });
     }

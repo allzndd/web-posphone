@@ -15,12 +15,15 @@ use App\Http\Controllers\ManageProfilController;
 */
 // Landing Page
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
     return view('landing_page.index');
 })->name('landing');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('home', [\App\Http\Controllers\DashboardController::class, 'index'])->name('home');
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::redirect('home', '/dashboard');
     Route::get('dashboard-general-dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
     
     // Download Reports (accessible by all authenticated users)
