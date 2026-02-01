@@ -35,15 +35,15 @@ class ProdukController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
+    // public function create()
+    // {
+    //     $user = Auth::user();
+    //     $ownerId = $user->owner ? $user->owner->id : null;
 
-        $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
+    //     $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
 
-        return view('pages.produk.create', compact('merks'));
-    }
+    //     return view('pages.produk.create', compact('merks'));
+    // }
 
     /**
      * Store a newly created resource in storage.
