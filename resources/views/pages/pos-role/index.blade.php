@@ -3,7 +3,8 @@
 @section('title', 'User Roles')
 
 @push('style')
-<!-- Page-specific styles -->
+<!-- Load reusable table components CSS -->
+<link rel="stylesheet" href="{{ asset('css/table-components.css') }}">
 @endpush
 
 @section('main')
@@ -49,6 +50,9 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
+                        <th class="py-3 text-left col-no">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">No</p>
+                        </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Role Name</p>
                         </th>
@@ -58,7 +62,7 @@
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Created</p>
                         </th>
-                        <th class="py-3 text-center">
+                        <th class="py-3 text-center col-actions">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
                         </th>
                     </tr>
@@ -66,6 +70,9 @@
                 <tbody>
                     @forelse ($roles as $role)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-role.edit', $role) }}">
+                        <td class="py-4 col-no">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $loop->iteration }}</p>
+                        </td>
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $role->nama }}</p>
                         </td>
@@ -79,38 +86,19 @@
                                 {{ $role->created_at->format('d M Y') }}
                             </p>
                         </td>
-                        <td class="py-4" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center gap-2">
-                                <!-- Edit Button -->
-                                <a href="{{ route('pos-role.edit', $role) }}" 
-                                   class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
-                                   title="Edit">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                        <td class="py-4 col-actions" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center">
+                                <button class="btn-actions-menu relative" data-role-id="{{ $role->id }}" data-role-name="{{ $role->nama }}" data-role-edit="{{ route('pos-role.edit', $role) }}" data-role-destroy="{{ route('pos-role.destroy', $role) }}">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
-                                </a>
-                                
-                                <!-- Delete Button -->
-                                <form action="{{ route('pos-role.destroy', $role) }}" method="POST" class="inline-block" 
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus role ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
-                                            title="Delete">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill="none" d="M0 0h24v24H0z"></path>
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                                        </svg>
-                                    </button>
-                                </form>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="py-12 text-center">
+                        <td colspan="5" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -126,88 +114,98 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 dark:border-white/10 px-6 py-4 gap-4">
-            <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
-                <form method="GET" action="{{ route('pos-role.index') }}" id="perPageForm" class="inline-block">
-                    <input type="hidden" name="nama" value="{{ request('nama') }}">
-                    <select name="per_page" onchange="this.form.submit()" 
-                            class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 [&>option]:!bg-white [&>option]:dark:!bg-navy-800 [&>option]:!text-navy-700 [&>option]:dark:!text-white">
-                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                        <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page', 10) == 100 ? 'selected' : '' }}>100</option>
-                    </select>
-                </form>
-                <span class="text-sm text-gray-600 dark:text-gray-400">
-                    Showing {{ $roles->firstItem() ?? 0 }} to {{ $roles->lastItem() ?? 0 }} of {{ $roles->total() }} results
-                </span>
-            </div>
-            <div class="flex items-center gap-1">
-                {{-- Previous Button --}}
-                @if ($roles->onFirstPage())
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
-                        </svg>
+        <div class="border-t border-gray-200 dark:border-white/10 px-6 py-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <!-- Items Per Page & Info -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
+                    <form method="GET" action="{{ route('pos-role.index') }}" class="inline-block">
+                        @if(request('nama'))
+                            <input type="hidden" name="nama" value="{{ request('nama') }}">
+                        @endif
+                        <select name="per_page" onchange="this.form.submit()" 
+                                class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
+                            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
+                        </select>
+                    </form>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                        Showing {{ $roles->firstItem() ?? 0 }} to {{ $roles->lastItem() ?? 0 }} of {{ $roles->total() }}
                     </span>
-                @else
-                    <a href="{{ $roles->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
-                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
-                        </svg>
-                    </a>
-                @endif
+                </div>
 
-                {{-- Page Numbers --}}
-                @foreach ($roles->getUrlRange(max(1, $roles->currentPage() - 2), min($roles->lastPage(), $roles->currentPage() + 2)) as $page => $url)
-                    @if ($page == $roles->currentPage())
-                        <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
-                            {{ $page }}
-                        </span>
+                <!-- Pagination Buttons -->
+                <div class="flex items-center gap-1">
+                    @if ($roles->onFirstPage())
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
                     @else
-                        <a href="{{ $url }}&per_page={{ request('per_page', 10) }}" 
-                           class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                            {{ $page }}
-                        </a>
+                        <a href="{{ $roles->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">◀</a>
                     @endif
-                @endforeach
 
-                {{-- Next Button --}}
-                @if ($roles->hasMorePages())
-                    <a href="{{ $roles->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
-                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
-                        </svg>
-                    </a>
-                @else
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
-                        </svg>
-                    </span>
-                @endif
+                    @for ($page = max(1, $roles->currentPage() - 2); $page <= min($roles->lastPage(), $roles->currentPage() + 2); $page++)
+                        @if ($page == $roles->currentPage())
+                            <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
+                                {{ $page }}
+                            </span>
+                        @else
+                            <a href="{{ $roles->url($page) }}&per_page={{ request('per_page', 10) }}" 
+                               class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">
+                                {{ $page }}
+                            </a>
+                        @endif
+                    @endfor
+
+                    @if ($roles->hasMorePages())
+                        <a href="{{ $roles->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">▶</a>
+                    @else
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Action Dropdown - Inline -->
+<div id="actionDropdown" class="actions-dropdown">
+    <button id="editMenuItem" class="actions-dropdown-item edit">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+        </svg>
+        <span>Edit</span>
+    </button>
+    <button id="deleteMenuItem" class="actions-dropdown-item delete">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+        </svg>
+        <span>Delete</span>
+    </button>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Make table rows clickable
-    document.querySelectorAll('tr[data-href]').forEach(function(row) {
-        row.addEventListener('click', function() {
-            window.location.href = this.dataset.href;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the reusable dropdown component
+        new TableActionDropdown({
+            dropdownSelector: '#actionDropdown',
+            buttonSelector: '.btn-actions-menu',
+            editMenuSelector: '#editMenuItem',
+            deleteMenuSelector: '#deleteMenuItem',
+            zoomFactor: 0.9,
+            confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus role ini?'
+        });
+
+        // Make table rows clickable
+        document.querySelectorAll('tr[data-href]').forEach(function(row) {
+            row.addEventListener('click', function() {
+                window.location.href = this.dataset.href;
+            });
         });
     });
-});
 </script>
 @endpush
