@@ -68,7 +68,7 @@ class ProdukController extends Controller
             'harga_jual' => 'required|numeric|min:0',
             'cost_names.*' => 'nullable|string',
             'cost_amounts.*' => 'nullable|numeric',
-            'imei' => 'required|string|max:255',
+            'imei' => $request->product_type === 'electronic' ? 'required|string|max:255' : 'nullable|string|max:255',
             'aksesoris' => 'nullable|string|max:45',
         ]);
 
@@ -196,7 +196,7 @@ class ProdukController extends Controller
             'harga_jual' => 'required|numeric|min:0',
             'cost_names.*' => 'nullable|string',
             'cost_amounts.*' => 'nullable|numeric',
-            'imei' => 'required|string|max:255',
+            'imei' => $request->product_type === 'electronic' ? 'required|string|max:255' : 'nullable|string|max:255',
             'aksesoris' => 'nullable|string|max:45',
         ]);
 
@@ -278,18 +278,20 @@ class ProdukController extends Controller
             $request->validate([
                 'nama' => 'required|string|max:255',
                 'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
+                'product_type' => 'required|in:electronic,accessories',
                 'harga_beli' => 'required|numeric|min:0',
                 'harga_jual' => 'required|numeric|min:0',
                 'warna' => 'nullable|string|max:255',
                 'penyimpanan' => 'nullable|string|max:255',
                 'battery_health' => 'nullable|string|max:255',
-                'imei' => 'nullable|string|max:255',
+                'imei' => $request->product_type === 'electronic' ? 'required|string|max:255' : 'nullable|string|max:255',
             ]);
 
             $produk = PosProduk::create([
                 'owner_id' => $ownerId,
                 'pos_produk_merk_id' => $request->pos_produk_merk_id,
                 'nama' => $request->nama,
+                'product_type' => $request->product_type,
                 'harga_beli' => $request->harga_beli,
                 'harga_jual' => $request->harga_jual,
                 'warna' => $request->warna,

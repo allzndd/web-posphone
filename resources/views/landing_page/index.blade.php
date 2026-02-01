@@ -386,9 +386,9 @@
                 </div>
 
                 <!-- CTA Button -->
-                <button class="bg-[#3b82f6] hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50">
+                <a href="{{ route('login') }}" class="bg-[#3b82f6] hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 inline-block text-center">
                     Coba Gratis
-                </button>
+                </a>
             </div>
         </div>
     </nav>
@@ -442,12 +442,12 @@
 
                 <!-- CTA Buttons -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-                    <button class="group bg-[#3b82f6] hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 flex items-center space-x-3">
+                    <a href="{{ route('login') }}" class="group bg-[#3b82f6] hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 flex items-center space-x-3">
                         <span>Mulai Gratis 14 Hari</span>
                         <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                         </svg>
-                    </button>
+                    </a>
                     
                     <button class="group glass-effect bg-white/5 hover:bg-white/10 text-white px-10 py-5 rounded-2xl font-bold text-lg border-2 border-white/20 hover:border-white/40 transition-all duration-300 flex items-center space-x-3">
                         <span>Lihat Demo</span>

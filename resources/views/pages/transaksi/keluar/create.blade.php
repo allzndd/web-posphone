@@ -288,10 +288,13 @@
 </div>
 
 <!-- Quick Add Product Modal -->
-<div id="quickAddProductModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-navy-800 rounded-[20px] max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-            <h4 class="text-xl font-bold text-navy-700 dark:text-white">Quick Add Product</h4>
+<div id="quickAddProductModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-[999] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-navy-800 rounded-[20px] max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-white/10">
+            <div>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Quick Add Product</h4>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Add a new product to your inventory</p>
+            </div>
             <button onclick="closeProductModal()" 
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,95 +302,157 @@
                 </svg>
             </button>
         </div>
+
+        <!-- Product Type Tabs -->
+        <div class="mb-6 border-b border-gray-200 dark:border-white/10">
+            <nav class="flex gap-4">
+                <button type="button" onclick="switchModalProductType('electronic')" id="modal-tab-electronic" class="modal-product-type-tab active border-b-2 border-brand-500 px-4 py-3 text-sm font-bold text-brand-500 dark:text-brand-400 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        Electronic / HP
+                    </div>
+                </button>
+                <button type="button" onclick="switchModalProductType('accessories')" id="modal-tab-accessories" class="modal-product-type-tab border-b-2 border-transparent px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                        </svg>
+                        Accessories
+                    </div>
+                </button>
+            </nav>
+        </div>
         
         <form id="quickProductForm" onsubmit="submitQuickProduct(event)">
-            <div class="space-y-4">
-                <!-- Product Name -->
+            <!-- Hidden Product Type Input -->
+            <input type="hidden" name="product_type" id="modal_product_type" value="electronic">
+
+            <div class="space-y-5">
+                <!-- Basic Information Section -->
                 <div>
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                        Product Name <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="quick_nama" required
-                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                           placeholder="e.g. iPhone 13 Pro Max">
-                </div>
+                    <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-brand-500 pl-3">Basic Information</h5>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Product Name with Searchable Dropdown -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Product Name <span class="text-red-500">*</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <div class="flex-1 relative">
+                                    <input type="text" 
+                                           id="quick_productNameSearch"
+                                           placeholder="Search or type product name..."
+                                           autocomplete="off"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                    <select id="quick_pos_produk_merk_id" name="pos_produk_merk_id" required class="hidden">
+                                        <option value="">Select Product Name</option>
+                                        @foreach($merks ?? [] as $merk)
+                                            <option value="{{ $merk->id }}">{{ $merk->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                    <!-- Dropdown List -->
+                                    <div id="quick_productNameDropdown" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-navy-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                        <div id="quick_productNameList"></div>
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        onclick="openModalProductNameModal()"
+                                        class="rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
+                                    + New
+                                </button>
+                            </div>
+                        </div>
 
-                <!-- Brand -->
-                <div>
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                        Brand <span class="text-red-500">*</span>
-                    </label>
-                    <select id="quick_merk" required
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                        <option value="">Select Brand</option>
-                        @foreach($merks ?? [] as $merk)
-                            <option value="{{ $merk->id }}">{{ $merk->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Purchase Price -->
-                    <div>
-                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                            Purchase Price <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" id="quick_harga_beli" step="0.01" min="0" required
-                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                               placeholder="0">
-                    </div>
-
-                    <!-- Selling Price -->
-                    <div>
-                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                            Selling Price <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" id="quick_harga_jual" step="0.01" min="0" required
-                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                               placeholder="0">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Color -->
-                    <div>
-                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                            Color
-                        </label>
-                        <input type="text" id="quick_warna"
-                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                               placeholder="e.g. Sierra Blue">
-                    </div>
-
-                    <!-- Storage -->
-                    <div>
-                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                            Storage
-                        </label>
-                        <input type="text" id="quick_penyimpanan"
-                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                               placeholder="e.g. 256GB">
+                        <!-- Description -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Description <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <textarea id="quick_deskripsi"
+                                      name="deskripsi"
+                                      rows="3"
+                                      placeholder="Enter product description..."
+                                      class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 resize-none"></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Battery Health -->
-                <div>
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                        Battery Health
-                    </label>
-                    <input type="text" id="quick_battery_health"
-                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                           placeholder="e.g. 85% or Good">
+                <!-- Specifications Section (Electronic Only) -->
+                <div id="modal-specifications-section">
+                    <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-blue-500 pl-3">Specifications</h5>
+                    <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">This section only for electronic/phone products</p>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Color -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Color <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input type="text" id="quick_warna"
+                                   placeholder="e.g. Sierra Blue"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+
+                        <!-- Storage -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Storage <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input type="text" id="quick_penyimpanan"
+                                   placeholder="e.g. 256GB"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+
+                        <!-- Battery Health -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Battery Health <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input type="text" id="quick_battery_health"
+                                   placeholder="e.g. 85% or Good"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+
+                        <!-- IMEI -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                IMEI Number <span id="modal-imei-required-marker" class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="quick_imei"
+                                   placeholder="Enter IMEI number"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+                    </div>
                 </div>
 
-                <!-- IMEI -->
+                <!-- Pricing Section -->
                 <div>
-                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                        IMEI
-                    </label>
-                    <input type="text" id="quick_imei"
-                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
-                           placeholder="15-digit IMEI">
+                    <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-green-500 pl-3">Pricing Information</h5>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Purchase Price -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Purchase Price <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" id="quick_harga_beli" step="0.01" min="0" required
+                                   placeholder="0"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+
+                        <!-- Selling Price -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                Selling Price <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" id="quick_harga_jual" step="0.01" min="0" required
+                                   placeholder="0"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Error Messages -->
@@ -396,7 +461,7 @@
                 </div>
             </div>
             
-            <div class="flex gap-3 mt-6">
+            <div class="flex gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
                 <button type="button" onclick="closeProductModal()"
                         class="flex-1 rounded-xl bg-gray-100 px-4 py-3 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
                     Cancel
@@ -407,6 +472,45 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     Create Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Quick Add Product Name Modal (for modal) -->
+<div id="quickAddModalProductNameModal" class="hidden fixed inset-0 z-[1000] flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white dark:bg-navy-800 rounded-2xl shadow-2xl w-full max-w-md mx-4">
+        <div class="bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-white/10 px-6 py-4 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Quick Add Product Name</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Add a new product name quickly</p>
+        </div>
+        
+        <form id="quickModalProductNameForm" class="p-6">
+            <div id="quickModalProductNameErrors" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <ul class="text-sm text-red-600 dark:text-red-400 list-disc list-inside"></ul>
+            </div>
+
+            <div class="mb-4">
+                <label for="quick_modal_product_name" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                    Product Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="quick_modal_product_name"
+                    name="nama"
+                    required
+                    placeholder="e.g. iPhone, Samsung, Charger..."
+                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500"
+                >
+            </div>
+
+            <div class="flex gap-3 justify-end pt-4 border-t border-gray-200 dark:border-white/10">
+                <button type="button" onclick="closeModalProductNameModal()" class="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                    Cancel
+                </button>
+                <button type="submit" id="submitQuickModalProductName" class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600">
+                    Create Product Name
                 </button>
             </div>
         </form>
@@ -543,12 +647,122 @@ function removeItem(itemId) {
     }
 }
 
+// ============= QUICK ADD PRODUCT MODAL FUNCTIONS =============
+
+// Switch Product Type in Modal
+function switchModalProductType(type) {
+    document.getElementById('modal_product_type').value = type;
+    console.log('Modal Product Type changed to:', type); // Debug log
+    
+    const tabs = document.querySelectorAll('.modal-product-type-tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+        tab.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    });
+    
+    const activeTab = document.getElementById('modal-tab-' + type);
+    activeTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    activeTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+    
+    const specificationsSection = document.getElementById('modal-specifications-section');
+    const imeiField = document.getElementById('quick_imei');
+    const imeiMarker = document.getElementById('modal-imei-required-marker');
+    
+    if (type === 'electronic') {
+        specificationsSection.classList.remove('hidden');
+        imeiField.required = true;
+        if (imeiMarker) imeiMarker.classList.remove('hidden');
+    } else {
+        specificationsSection.classList.add('hidden');
+        imeiField.required = false;
+        if (imeiMarker) imeiMarker.classList.add('hidden');
+        imeiField.value = '';
+        document.getElementById('quick_warna').value = '';
+        document.getElementById('quick_penyimpanan').value = '';
+        document.getElementById('quick_battery_health').value = '';
+    }
+}
+
+// Initialize Modal Product Name Search
+let modalProductNames = @json($merks ?? []);
+
+function initModalProductNameSearch() {
+    const searchInput = document.getElementById('quick_productNameSearch');
+    const dropdown = document.getElementById('quick_productNameDropdown');
+    const dropdownList = document.getElementById('quick_productNameList');
+    const hiddenSelect = document.getElementById('quick_pos_produk_merk_id');
+    
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('focus', function() {
+        renderModalProductNameList();
+        dropdown.classList.remove('hidden');
+    });
+    
+    searchInput.addEventListener('input', function() {
+        renderModalProductNameList(this.value.toLowerCase());
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+    
+    function renderModalProductNameList(filter = '') {
+        const filtered = modalProductNames.filter(item => 
+            item.nama.toLowerCase().includes(filter)
+        );
+        
+        if (filtered.length === 0) {
+            dropdownList.innerHTML = '<div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">No product names found</div>';
+            return;
+        }
+        
+        dropdownList.innerHTML = filtered.map(item => `
+            <div class="px-4 py-2 hover:bg-lightPrimary dark:hover:bg-navy-700 cursor-pointer text-sm text-navy-700 dark:text-white transition-colors" 
+                 onclick="selectModalProductName(${item.id}, '${item.nama.replace(/'/g, "\\'")}')"
+            >
+                ${item.nama}
+            </div>
+        `).join('');
+    }
+}
+
+function selectModalProductName(id, nama) {
+    document.getElementById('quick_productNameSearch').value = nama;
+    document.getElementById('quick_pos_produk_merk_id').value = id;
+    document.getElementById('quick_productNameDropdown').classList.add('hidden');
+}
+
 // Quick Add Product Modal Functions
 function openProductModal(itemId) {
     currentItemIdForModal = itemId;
     document.getElementById('quickAddProductModal').classList.remove('hidden');
-    document.getElementById('quickProductForm').reset();
     document.getElementById('quickProductErrors').classList.add('hidden');
+    
+    // Reset form fields first
+    document.getElementById('quickProductForm').reset();
+    
+    // Then set defaults and tabs (after reset to prevent reset from overriding)
+    document.getElementById('modal_product_type').value = 'electronic';
+    document.getElementById('quick_imei').required = true;
+    document.getElementById('modal-imei-required-marker').classList.remove('hidden');
+    document.getElementById('modal-specifications-section').classList.remove('hidden');
+    
+    // Reset tab styles to electronic (active state)
+    const tabs = document.querySelectorAll('.modal-product-type-tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+        tab.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    });
+    
+    const electronicTab = document.getElementById('modal-tab-electronic');
+    electronicTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    electronicTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+    
+    // Initialize search
+    initModalProductNameSearch();
 }
 
 function closeProductModal() {
@@ -564,14 +778,22 @@ function submitQuickProduct(event) {
     const submitBtn = document.getElementById('quickProductSubmitBtn');
     const errorDiv = document.getElementById('quickProductErrors');
     
-    // Disable button
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating...';
     errorDiv.classList.add('hidden');
     
+    // Get product name from search input or generate from merk
+    const searchInput = document.getElementById('quick_productNameSearch').value;
+    const merkId = document.getElementById('quick_pos_produk_merk_id').value;
+    const productType = document.getElementById('modal_product_type').value;
+    
+    console.log('Submitting product with type:', productType); // Debug log
+    
     const formData = {
-        nama: document.getElementById('quick_nama').value,
-        pos_produk_merk_id: document.getElementById('quick_merk').value,
+        nama: searchInput,
+        pos_produk_merk_id: merkId,
+        product_type: productType,
+        deskripsi: document.getElementById('quick_deskripsi').value,
         harga_beli: document.getElementById('quick_harga_beli').value,
         harga_jual: document.getElementById('quick_harga_jual').value,
         warna: document.getElementById('quick_warna').value,
@@ -616,9 +838,6 @@ function submitQuickProduct(event) {
             }
             
             closeProductModal();
-            
-            // Show success notification
-            alert('Product created successfully!');
         } else {
             throw new Error(data.message || 'Failed to create product');
         }
@@ -628,7 +847,6 @@ function submitQuickProduct(event) {
         errorDiv.querySelector('p').textContent = error.message || 'An error occurred while creating the product';
     })
     .finally(() => {
-        // Re-enable button
         submitBtn.disabled = false;
         submitBtn.innerHTML = `
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -639,10 +857,92 @@ function submitQuickProduct(event) {
     });
 }
 
+// ============= PRODUCT NAME MODAL FUNCTIONS =============
+
+function openModalProductNameModal() {
+    document.getElementById('quickAddModalProductNameModal').classList.remove('hidden');
+    document.getElementById('quick_modal_product_name').focus();
+    document.getElementById('quickModalProductNameForm').reset();
+    document.getElementById('quickModalProductNameErrors').classList.add('hidden');
+}
+
+function closeModalProductNameModal() {
+    document.getElementById('quickAddModalProductNameModal').classList.add('hidden');
+    document.getElementById('quickModalProductNameForm').reset();
+}
+
+document.getElementById('quickModalProductNameForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitQuickModalProductName');
+    const errorDiv = document.getElementById('quickModalProductNameErrors');
+    const errorList = errorDiv.querySelector('ul');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+    errorDiv.classList.add('hidden');
+    
+    const formData = {
+        nama: document.getElementById('quick_modal_product_name').value
+    };
+    
+    try {
+        const response = await fetch('{{ route("pos-produk-merk.quick-store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Add to modalProductNames array
+            modalProductNames.push(data.data);
+            
+            // Add to hidden select
+            const option = new Option(data.data.nama, data.data.id, true, true);
+            document.getElementById('quick_pos_produk_merk_id').add(option);
+            
+            // Update search input
+            document.getElementById('quick_productNameSearch').value = data.data.nama;
+            
+            closeModalProductNameModal();
+        } else {
+            errorList.innerHTML = '';
+            if (data.errors) {
+                Object.values(data.errors).forEach(errorArray => {
+                    errorArray.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        errorList.appendChild(li);
+                    });
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = data.message || 'An error occurred';
+                errorList.appendChild(li);
+            }
+            errorDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        errorList.innerHTML = '<li>Network error. Please try again.</li>';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Product Name';
+    }
+});
+
 // Close modal on Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeProductModal();
+        closeModalProductNameModal();
     }
 });
 
