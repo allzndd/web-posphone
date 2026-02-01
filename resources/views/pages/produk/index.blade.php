@@ -33,14 +33,14 @@
                 </form>
                 
                 <!-- Add New Button -->
-                <a href="{{ route('produk.create') }}" 
+                {{-- <a href="{{ route('produk.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
                         <path fill="none" d="M0 0h24v24H0z"></path>
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
                     </svg>
                     Add New Product
-                </a>
+                </a> --}}
             </div>
         </div>
 
