@@ -16,7 +16,7 @@ class ChatAnalysisController extends Controller
 
     public function index()
     {
-        return view('chat.index');
+        return view('pages.chat.index');
     }
 
     public function ask(Request $request)
