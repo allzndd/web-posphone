@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\AnalyticsChatService;
+use App\Services\AIChatbotService;
 use Illuminate\Http\Request;
 
 class ChatAnalysisController extends Controller
 {
-    protected AnalyticsChatService $service;
+    protected AIChatbotService $chatbotService;
 
-    public function __construct(AnalyticsChatService $service)
+    public function __construct(AIChatbotService $chatbotService)
     {
-        $this->service = $service;
+        $this->chatbotService = $chatbotService;
     }
 
     public function index()
@@ -22,21 +22,35 @@ class ChatAnalysisController extends Controller
     public function ask(Request $request)
     {
         $data = $request->validate([
-            'message' => ['required', 'string', 'max:500']
+            'message' => ['required', 'string', 'max:1000']
         ]);
 
         try {
-            $result = $this->service->answer($data['message']);
+            // Get owner_id from authenticated user (same pattern as ProdukController)
+            $user = auth()->user();
+            $ownerId = $user->owner ? $user->owner->id : null;
+            
+            // Call AI Chatbot Service
+            $result = $this->chatbotService->chat($data['message'], $ownerId);
 
-            return response()->json([
-                'ok' => true,
-                'answer' => $result['answer'] ?? '',
-                'data' => $result['data'] ?? null,
-            ]);
+            if ($result['success']) {
+                return response()->json([
+                    'ok' => true,
+                    'answer' => $result['message'],
+                    'intent' => $result['intent'],
+                    'data' => $result['data'],
+                ]);
+            } else {
+                return response()->json([
+                    'ok' => false,
+                    'error' => $result['error'] ?? 'Terjadi kesalahan saat memproses pertanyaan.',
+                ], 500);
+            }
         } catch (\Throwable $e) {
             return response()->json([
                 'ok' => false,
                 'error' => 'Terjadi kesalahan saat memproses pertanyaan.',
+                'debug' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }
