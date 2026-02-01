@@ -133,8 +133,26 @@ Jawab HANYA dengan 1 kata kategori (contoh: TOP_PRODUCT)"
      */
     private function generateResponse(string $userMessage, string $intent, array $data): string
     {
-        if ($intent === 'UNKNOWN' || empty($data)) {
+        if ($intent === 'UNKNOWN') {
             return "Maaf, saya belum bisa membantu pertanyaan tersebut. Saya bisa membantu Anda untuk:\n- Cek produk terlaris\n- Lihat penjualan hari ini\n- Cek stok produk\n- Mencari produk\n- Cek harga produk";
+        }
+
+        // Handle empty data dengan pesan yang context-aware
+        if (empty($data)) {
+            switch ($intent) {
+                case 'STORE_PRODUCTS':
+                    return "Maaf, semua produk di toko yang Anda tanyakan saat ini sedang habis stok. Silahkan coba toko lain atau tanyakan produk terlaris kami.";
+                case 'STORE_STOCK':
+                    return "Maaf, toko yang Anda tanyakan tidak memiliki produk dengan stok tersedia. Silahkan coba toko lain.";
+                case 'LIST_STORES':
+                    return "Maaf, tidak ada data toko yang tersedia saat ini.";
+                case 'TOP_PRODUCT':
+                    return "Belum ada data penjualan produk. Silahkan coba pertanyaan lain.";
+                case 'TOP_STORE':
+                    return "Belum ada data penjualan toko. Silahkan coba pertanyaan lain.";
+                default:
+                    return "Maaf, data untuk pertanyaan Anda tidak tersedia saat ini.";
+            }
         }
 
         $dataContext = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
