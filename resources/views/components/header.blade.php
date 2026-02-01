@@ -8,7 +8,7 @@
     <!-- Left: Breadcrumb & Title -->
     <div class="ml-[6px] hidden xl:block">
         <div class="h-6 w-[224px] pt-1">
-            <a class="text-sm font-normal text-navy-700 dark:text-white dark:hover:text-white" href="{{ route('home') }}">
+            <a class="text-sm font-normal text-navy-700 dark:text-white dark:hover:text-white" href="{{ route('dashboard') }}">
                 Pages
                 <span class="mx-1 text-sm text-navy-700 hover:text-navy-700 dark:text-white"> / </span>
             </a>
