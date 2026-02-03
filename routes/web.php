@@ -111,11 +111,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('produk/bulk-destroy', [\App\Http\Controllers\ProdukController::class, 'bulkDestroy'])->name('produk.bulk-destroy');
         Route::resource('produk', \App\Http\Controllers\ProdukController::class);
         
-        // Product Brands (pos_produk_merk) - Custom bulk delete must come before resource
-        Route::delete('pos-produk-merk/bulk-destroy', [\App\Http\Controllers\PosProdukMerkController::class, 'bulkDestroy'])->name('pos-produk-merk.bulk-destroy');
-        Route::post('api/pos-produk-merk/quick-store', [\App\Http\Controllers\PosProdukMerkController::class, 'quickStore'])->name('pos-produk-merk.quick-store');
-        Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
-        
         // Stock Management (pos_produk_stok) - Custom bulk delete must come before resource
         Route::delete('produk-stok/bulk-destroy', [\App\Http\Controllers\ProdukStokController::class, 'bulkDestroy'])->name('produk-stok.bulk-destroy');
         Route::resource('produk-stok', \App\Http\Controllers\ProdukStokController::class);
@@ -136,7 +131,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('chat-analisis/ask', [\App\Http\Controllers\ChatAnalysisController::class, 'ask'])->name('chat.ask');
     });
 
-    // Data Master - Penyimpanan, Warna, RAM (OWNER & SUPERADMIN accessible)
+    // Data Master - Penyimpanan, Warna, RAM, Product Merk (OWNER & SUPERADMIN accessible)
     Route::middleware(['role:OWNER,SUPERADMIN'])->group(function () {
         Route::delete('pos-penyimpanan/bulk-destroy', [\App\Http\Controllers\PosPenyimpananController::class, 'bulkDestroy'])->name('pos-penyimpanan.bulk-destroy');
         Route::resource('pos-penyimpanan', \App\Http\Controllers\PosPenyimpananController::class);
@@ -144,6 +139,9 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('pos-warna', \App\Http\Controllers\PosWarnaController::class);
         Route::delete('pos-ram/bulk-destroy', [\App\Http\Controllers\PosRamController::class, 'bulkDestroy'])->name('pos-ram.bulk-destroy');
         Route::resource('pos-ram', \App\Http\Controllers\PosRamController::class);
+        Route::delete('pos-produk-merk/bulk-destroy', [\App\Http\Controllers\PosProdukMerkController::class, 'bulkDestroy'])->name('pos-produk-merk.bulk-destroy');
+        Route::post('api/pos-produk-merk/quick-store', [\App\Http\Controllers\PosProdukMerkController::class, 'quickStore'])->name('pos-produk-merk.quick-store');
+        Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
     });
 
     // API Routes for AJAX (accessible by OWNER & ADMIN)
