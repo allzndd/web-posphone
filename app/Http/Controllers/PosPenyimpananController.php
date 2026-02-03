@@ -13,7 +13,24 @@ class PosPenyimpananController extends Controller
      */
     public function index()
     {
-        $posPenyimpanans = PosPenyimpanan::with('owner')->paginate(15);
+        $query = PosPenyimpanan::with('owner');
+        
+        // If superadmin, only show global items
+        if (auth()->user()->role_id === 1) {
+            $query->where('id_global', 1);
+        }
+        // If owner, filter by their ID or global items
+        elseif (auth()->user()->role_id === 2) {
+            $query->where(function($q) {
+                $q->where('id_owner', auth()->id())
+                  ->orWhere('id_global', 1);
+            });
+        } elseif (auth()->user()->role_id === 3) { // role_id 3 = admin
+            // Admin can only see global items
+            $query->where('id_global', 1);
+        }
+        
+        $posPenyimpanans = $query->paginate(15);
         return view('pages.pos-penyimpanan.index', compact('posPenyimpanans'));
     }
 
@@ -22,7 +39,8 @@ class PosPenyimpananController extends Controller
      */
     public function create()
     {
-        $owners = User::where('role_id', 2)->get(); // role_id 2 = owner
+        // Only super admin can select owner; for other roles, id_owner is auto-set
+        $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-penyimpanan.create', compact('owners'));
     }
 
@@ -32,7 +50,7 @@ class PosPenyimpananController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_owner' => 'nullable|integer|exists:users,id',
+            'id_owner' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
             'id_global' => 'nullable|integer',
         ]);
@@ -40,6 +58,15 @@ class PosPenyimpananController extends Controller
         // For superadmin, set id_owner to null and id_global to 1
         if (auth()->user()->role_id === 1) {
             $validated['id_owner'] = null;
+            $validated['id_global'] = 1;
+        }
+        // For owner, set id_owner to their ID and id_global to 0
+        elseif (auth()->user()->role_id === 2) {
+            $validated['id_owner'] = auth()->id();
+            $validated['id_global'] = 0;
+        }
+        // For admin, id_global should be 1
+        elseif (auth()->user()->role_id === 3) {
             $validated['id_global'] = 1;
         }
 
@@ -62,7 +89,13 @@ class PosPenyimpananController extends Controller
      */
     public function edit(PosPenyimpanan $posPenyimpanan)
     {
-        $owners = User::where('role_id', 2)->get(); // role_id 2 = owner
+        // Check authorization for owner - only can edit their own items
+        if (auth()->user()->role_id === 2 && $posPenyimpanan->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        // Only super admin can select owner; for other roles, id_owner is auto-set
+        $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-penyimpanan.edit', compact('posPenyimpanan', 'owners'));
     }
 
@@ -71,8 +104,13 @@ class PosPenyimpananController extends Controller
      */
     public function update(Request $request, PosPenyimpanan $posPenyimpanan)
     {
+        // Check authorization for owner - only can update their own items, not global items
+        if (auth()->user()->role_id === 2 && $posPenyimpanan->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
-            'id_owner' => 'nullable|integer|exists:users,id',
+            'id_owner' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
             'id_global' => 'nullable|integer',
         ]);
@@ -80,6 +118,15 @@ class PosPenyimpananController extends Controller
         // For superadmin, set id_owner to null and id_global to 1
         if (auth()->user()->role_id === 1) {
             $validated['id_owner'] = null;
+            $validated['id_global'] = 1;
+        }
+        // For owner, set id_owner to their ID and id_global to 0
+        elseif (auth()->user()->role_id === 2) {
+            $validated['id_owner'] = auth()->id();
+            $validated['id_global'] = 0;
+        }
+        // For admin, id_global should be 1
+        elseif (auth()->user()->role_id === 3) {
             $validated['id_global'] = 1;
         }
 
@@ -94,6 +141,11 @@ class PosPenyimpananController extends Controller
      */
     public function destroy(PosPenyimpanan $posPenyimpanan)
     {
+        // Check authorization for owner - only can delete their own items, not global items
+        if (auth()->user()->role_id === 2 && $posPenyimpanan->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $posPenyimpanan->delete();
 
         return redirect()->route('pos-penyimpanan.index')
@@ -112,7 +164,14 @@ class PosPenyimpananController extends Controller
                 ->with('error', 'Tidak ada data yang dipilih');
         }
 
-        PosPenyimpanan::whereIn('id', $ids)->delete();
+        $query = PosPenyimpanan::whereIn('id', $ids);
+        
+        // If owner, only allow deleting their own items
+        if (auth()->user()->role_id === 2) {
+            $query->where('id_owner', auth()->id());
+        }
+        
+        $query->delete();
 
         return redirect()->route('pos-penyimpanan.index')
             ->with('success', 'Penyimpanan berhasil dihapus');
