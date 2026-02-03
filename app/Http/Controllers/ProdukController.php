@@ -268,7 +268,7 @@ class ProdukController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
-        $ids = json_decode($request->ids, true);
+        $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {
             return redirect()->back()->with('error', 'Pilih minimal satu produk untuk dihapus');
