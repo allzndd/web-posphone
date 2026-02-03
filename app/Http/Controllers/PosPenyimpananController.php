@@ -32,10 +32,16 @@ class PosPenyimpananController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_owner' => 'required|exists:users,id',
+            'id_owner' => 'nullable|integer|exists:users,id',
             'kapasitas' => 'required|integer|min:0',
             'id_global' => 'nullable|integer',
         ]);
+
+        // For superadmin, set id_owner to null and id_global to 1
+        if (auth()->user()->role_id === 1) {
+            $validated['id_owner'] = null;
+            $validated['id_global'] = 1;
+        }
 
         PosPenyimpanan::create($validated);
 
@@ -66,10 +72,16 @@ class PosPenyimpananController extends Controller
     public function update(Request $request, PosPenyimpanan $posPenyimpanan)
     {
         $validated = $request->validate([
-            'id_owner' => 'required|exists:users,id',
+            'id_owner' => 'nullable|integer|exists:users,id',
             'kapasitas' => 'required|integer|min:0',
             'id_global' => 'nullable|integer',
         ]);
+
+        // For superadmin, set id_owner to null and id_global to 1
+        if (auth()->user()->role_id === 1) {
+            $validated['id_owner'] = null;
+            $validated['id_global'] = 1;
+        }
 
         $posPenyimpanan->update($validated);
 
