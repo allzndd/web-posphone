@@ -159,8 +159,10 @@ Route::middleware(['auth'])->group(function () {
         // Data Master
         Route::delete('pos-penyimpanan/bulk-destroy', \App\Http\Controllers\PosPenyimpananController::class . '@bulkDestroy')->name('pos-penyimpanan.bulk-destroy');
         Route::delete('pos-warna/bulk-destroy', \App\Http\Controllers\PosWarnaController::class . '@bulkDestroy')->name('pos-warna.bulk-destroy');
+        Route::delete('pos-ram/bulk-destroy', \App\Http\Controllers\PosRamController::class . '@bulkDestroy')->name('pos-ram.bulk-destroy');
         Route::resource('pos-penyimpanan', \App\Http\Controllers\PosPenyimpananController::class);
         Route::resource('pos-warna', \App\Http\Controllers\PosWarnaController::class);
+        Route::resource('pos-ram', \App\Http\Controllers\PosRamController::class);
 
         // Manage Profile - Contact Admin
         Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');
