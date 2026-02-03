@@ -108,4 +108,26 @@ class PosRoleController extends Controller
 
         return redirect()->route('pos-role.index')->with('success', 'Role berhasil dihapus');
     }
+
+    /**
+     * Bulk delete roles
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu role untuk dihapus');
+        }
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = PosRole::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('pos-role.index')
+            ->with('success', $deletedCount . ' role berhasil dihapus');
+    }
 }
