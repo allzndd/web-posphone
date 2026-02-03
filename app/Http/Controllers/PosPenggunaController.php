@@ -137,4 +137,26 @@ class PosPenggunaController extends Controller
 
         return redirect()->route('pos-pengguna.index')->with('success', 'Pengguna berhasil dihapus');
     }
+
+    /**
+     * Bulk delete users
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu pengguna untuk dihapus');
+        }
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = PosPengguna::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('pos-pengguna.index')
+            ->with('success', $deletedCount . ' pengguna berhasil dihapus');
+    }
 }
