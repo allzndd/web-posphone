@@ -82,11 +82,17 @@
                     </thead>
                     <tbody>
                         @foreach($posRams as $ram)
-                        <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-ram.edit', $ram) }}">
+                        {{-- Check if user is owner and this is a global item --}}
+                        @php
+                            $isOwner = auth()->user()->role_id === 2;
+                            $isGlobal = $ram->is_global === 1;
+                            $canDelete = !($isOwner && $isGlobal);
+                        @endphp
+                        <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors {{ $canDelete ? 'cursor-pointer' : '' }}" {{ $canDelete ? 'data-href=' . route('pos-ram.edit', $ram) : '' }}>
                             <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
-                                <input type="checkbox" class="ram-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
-                                       value="{{ $ram->id }}" 
-                                       onchange="updateBulkDeleteButton()">
+                                <input type="checkbox" class="ram-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 {{ $canDelete ? 'cursor-pointer' : 'cursor-not-allowed opacity-50' }}" 
+                                       value="{{ $ram->id }}"
+                                       {{ $canDelete ? 'onchange="updateBulkDeleteButton()"' : 'disabled' }}>
                             </td>
                             <td class="py-4 col-no">
                                 <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($posRams->currentPage() - 1) * $posRams->perPage() + $loop->iteration }}</p>
@@ -107,11 +113,19 @@
                             </td>
                             <td class="py-4 col-actions" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center">
-                                    <button class="btn-actions-menu relative" data-ram-id="{{ $ram->id }}" data-ram-name="{{ $ram->kapasitas }}" data-ram-edit="{{ route('pos-ram.edit', $ram) }}" data-ram-destroy="{{ route('pos-ram.destroy', $ram) }}">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
-                                        </svg>
-                                    </button>
+                                    @if($canDelete)
+                                        <button class="btn-actions-menu relative" data-ram-id="{{ $ram->id }}" data-ram-name="{{ $ram->kapasitas }}" data-ram-edit="{{ route('pos-ram.edit', $ram) }}" data-ram-destroy="{{ route('pos-ram.destroy', $ram) }}">
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <span class="text-xs font-medium text-gray-400 dark:text-gray-600">
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                                            </svg>
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
