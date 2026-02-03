@@ -127,7 +127,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('supplier/bulk-destroy', [\App\Http\Controllers\SupplierController::class, 'bulkDestroy'])->name('supplier.bulk-destroy');
         Route::resource('supplier', \App\Http\Controllers\SupplierController::class);
         
-        // Services (pos_service)
+        // Services (pos_service) - Custom bulk delete must come before resource
+        Route::delete('service/bulk-destroy', [\App\Http\Controllers\ServiceController::class, 'bulkDestroy'])->name('service.bulk-destroy');
         Route::resource('service', \App\Http\Controllers\ServiceController::class);
         
         // Chat Analisis

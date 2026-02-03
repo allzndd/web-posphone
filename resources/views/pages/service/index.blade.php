@@ -2,6 +2,20 @@
 
 @section('title', 'Services')
 
+@push('style')
+<!-- Load reusable table components CSS -->
+<link rel="stylesheet" href="{{ asset('css/table-components.css') }}">
+
+<style>
+.col-no {
+    width: 50px;
+}
+.col-actions {
+    width: 60px;
+}
+</style>
+@endpush
+
 @section('main')
 <div class="mt-3 px-[11px] pr-[10px]">
     <!-- Services Card -->
@@ -15,8 +29,19 @@
                 </p>
             </div>
             
-            <!-- Add New Button -->
-            <div>
+            <!-- Search & Add & Bulk Delete Button -->
+            <div class="flex items-center gap-3">
+                <!-- Bulk Delete Button (hidden by default) -->
+                <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
+                        onclick="confirmBulkDelete()">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                    </svg>
+                    Delete Selected
+                </button>
+                
+                <!-- Add New Button -->
                 <a href="{{ route('service.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -66,9 +91,22 @@
 
         <!-- Table -->
         <div class="overflow-x-auto px-6 pb-6">
+            <form id="bulkDeleteForm" method="POST" style="display: none;">
+                @csrf
+                <input type="hidden" name="_method" value="DELETE">
+                <input type="hidden" id="bulkDeleteIds" name="ids" value="">
+            </form>
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
+                        <th class="py-3 text-left" style="width: 40px;">
+                            <input type="checkbox" id="selectAllCheckbox" 
+                                   class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer"
+                                   onchange="toggleSelectAll(this)">
+                        </th>
+                        <th class="py-3 text-left col-no">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">No</p>
+                        </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Service Name</p>
                         </th>
@@ -81,16 +119,22 @@
                         <th class="py-3 text-center">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Duration</p>
                         </th>
-                        <th class="py-3 text-center">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
+                        <th class="py-3 text-center col-actions">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Aksi</p>
                         </th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($services as $service)
-                    <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition" 
-                        data-href="{{ route('service.edit', $service->id) }}"
-                        onclick="window.location = this.dataset.href">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('service.edit', $service) }}">
+                        <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="service-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
+                                   value="{{ $service->id }}" 
+                                   onchange="updateBulkDeleteButton()">
+                        </td>
+                        <td class="py-4 col-no">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $loop->iteration + ($services->currentPage() - 1) * $services->perPage() }}</p>
+                        </td>
                         <!-- Service Name -->
                         <td class="py-4">
                             <div>
@@ -126,33 +170,19 @@
                         </td>
                         
                         <!-- Actions -->
-                        <td class="py-4 text-center">
-                            <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation()">
-                                <a href="{{ route('service.edit', $service->id) }}" 
-                                   class="flex items-center justify-center rounded-lg bg-lightPrimary p-2 text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                        <td class="py-4 col-actions" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center">
+                                <button class="btn-actions-menu relative" data-service-id="{{ $service->id }}" data-service-name="{{ $service->nama }}" data-service-edit="{{ route('service.edit', $service) }}" data-service-destroy="{{ route('service.destroy', $service) }}">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
-                                </a>
-                                <form action="{{ route('service.destroy', $service->id) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            onclick="return confirm('Are you sure you want to delete this service?')"
-                                            class="flex items-center justify-center rounded-lg bg-red-100 p-2 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill="none" d="M0 0h24v24H0z"></path>
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                                        </svg>
-                                    </button>
-                                </form>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="py-12 text-center">
+                        <td colspan="7" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -237,4 +267,229 @@
         </div>
     </div>
 </div>
+
+<!-- Action Dropdown - Inline -->
+<div id="actionDropdown" class="actions-dropdown">
+    <button id="editMenuItem" class="actions-dropdown-item edit">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+        </svg>
+        <span>Edit</span>
+    </button>
+    <button id="deleteMenuItem" class="actions-dropdown-item delete">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+        </svg>
+        <span>Hapus</span>
+    </button>
+</div>
+
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-sm w-full mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Konfirmasi Hapus</h3>
+            <button type="button" id="modalCloseBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-600 dark:text-gray-400 mb-2">Apakah Anda yakin ingin menghapus item ini?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500">Tindakan ini tidak dapat dibatalkan.</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition">Batal</button>
+            <button type="button" id="modalConfirmBtn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Hapus</button>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+}
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.service-checkbox');
+    checkboxes.forEach(function(cb) {
+        cb.checked = checkbox.checked;
+    });
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkedBoxes = document.querySelectorAll('.service-checkbox:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (checkedBoxes.length > 0) {
+        bulkDeleteBtn.classList.remove('hidden');
+    } else {
+        bulkDeleteBtn.classList.add('hidden');
+        document.getElementById('selectAllCheckbox').checked = false;
+    }
+}
+
+function confirmBulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.service-checkbox:checked');
+    const count = checkedBoxes.length;
+    
+    if (count === 0) {
+        alert('Pilih minimal satu service untuk dihapus');
+        return;
+    }
+
+    const modal = document.getElementById('deleteConfirmModal');
+    const messageEl = modal.querySelector('p.text-gray-600');
+    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus <span class="font-bold text-red-600 dark:text-red-400">' + count + ' service' + (count > 1 ? 's' : '') + '</span>?';
+    modal.classList.remove('hidden');
+    
+    window.pendingDeleteIds = Array.from(checkedBoxes).map(function(cb) {
+        return cb.value;
+    });
+}
+
+function proceedBulkDelete() {
+    // Check if this is a single delete from dropdown
+    if (window.pendingDeleteUrl) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.pendingDeleteUrl;
+        form.style.display = 'none';
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_token';
+            input.value = csrfToken.content;
+            form.appendChild(input);
+        }
+        
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+        delete window.pendingDeleteUrl;
+        return;
+    }
+    
+    // Otherwise it's a bulk delete
+    if (!window.pendingDeleteIds || window.pendingDeleteIds.length === 0) {
+        alert('Pilih minimal satu service untuk dihapus');
+        return;
+    }
+
+    document.getElementById('bulkDeleteIds').value = JSON.stringify(window.pendingDeleteIds);
+    
+    const form = document.getElementById('bulkDeleteForm');
+    form.action = '{{ route('service.bulk-destroy') }}';
+    form.submit();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+        if (e.target.id === 'deleteConfirmModal') {
+            closeDeleteModal();
+        }
+    });
+
+    // Dropdown management
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    // Handle action button click
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+            
+            // Position dropdown - account for zoom: 90% (0.9) in app.blade
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+            
+            actionDropdown.classList.add('show');
+        });
+    });
+
+    // Handle edit menu item click
+    editMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-service-edit');
+            if (editUrl) {
+                window.location.href = editUrl;
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Handle delete menu item click
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-service-destroy');
+            const serviceId = currentButton.getAttribute('data-service-id');
+            if (destroyUrl) {
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus service ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+                window.pendingDeleteIds = [serviceId];
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    // Close dropdown with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    document.querySelectorAll('tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.service-checkbox')) {
+                window.location.href = this.dataset.href;
+            }
+        });
+    });
+});
+</script>
+@endpush

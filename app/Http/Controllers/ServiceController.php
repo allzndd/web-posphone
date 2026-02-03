@@ -39,7 +39,10 @@ class ServiceController extends Controller
      */
     public function create()
     {
-        $tokos = PosToko::orderBy('nama')->get();
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $tokos = PosToko::where('owner_id', $ownerId)->orderBy('nama')->get();
 
         return view('pages.service.create', compact('tokos'));
     }
@@ -49,16 +52,27 @@ class ServiceController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
         $validated = $request->validate([
-            'pos_toko_id' => 'required|exists:pos_toko,id',
+            'pos_toko_id' => [
+                'required',
+                'exists:pos_toko,id',
+                function ($attribute, $value, $fail) use ($ownerId) {
+                    $toko = PosToko::where('id', $value)->where('owner_id', $ownerId)->first();
+                    if (!$toko) {
+                        $fail('The selected store is invalid.');
+                    }
+                },
+            ],
             'nama' => 'required|string|max:45',
             'keterangan' => 'nullable|string|max:45',
             'harga' => 'required|numeric|min:0',
             'durasi' => 'nullable|integer|min:0',
         ]);
 
-        $user = auth()->user();
-        $validated['owner_id'] = $user->owner ? $user->owner->id : null;
+        $validated['owner_id'] = $ownerId;
 
         PosService::create($validated);
 
@@ -71,7 +85,10 @@ class ServiceController extends Controller
      */
     public function edit(PosService $service)
     {
-        $tokos = PosToko::orderBy('nama')->get();
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $tokos = PosToko::where('owner_id', $ownerId)->orderBy('nama')->get();
 
         return view('pages.service.edit', compact('service', 'tokos'));
     }
@@ -81,8 +98,20 @@ class ServiceController extends Controller
      */
     public function update(Request $request, PosService $service)
     {
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
         $validated = $request->validate([
-            'pos_toko_id' => 'required|exists:pos_toko,id',
+            'pos_toko_id' => [
+                'required',
+                'exists:pos_toko,id',
+                function ($attribute, $value, $fail) use ($ownerId) {
+                    $toko = PosToko::where('id', $value)->where('owner_id', $ownerId)->first();
+                    if (!$toko) {
+                        $fail('The selected store is invalid.');
+                    }
+                },
+            ],
             'nama' => 'required|string|max:45',
             'keterangan' => 'nullable|string|max:45',
             'harga' => 'required|numeric|min:0',
@@ -104,5 +133,23 @@ class ServiceController extends Controller
 
         return redirect()->route('service.index')
             ->with('success', 'Service deleted successfully');
+    }
+
+    /**
+     * Bulk delete multiple services.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->input('ids'), true);
+
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->route('service.index')
+                ->with('error', 'No services selected for deletion');
+        }
+
+        $count = PosService::whereIn('id', $ids)->delete();
+
+        return redirect()->route('service.index')
+            ->with('success', $count . ' service(s) deleted successfully');
     }
 }

@@ -67,13 +67,13 @@
                     </label>
                     <div class="relative">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                            <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
+                            <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">Rp</span>
                         </div>
                         <input type="text" id="harga" name="harga" value="{{ old('harga', 0) }}" required inputmode="numeric"
                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 @error('harga') border-red-500 @enderror"
-                               placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}">
+                               placeholder="0">
                     </div>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: {{ get_currency() }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-600">Currency: IDR</p>
                     @error('harga')
                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                     @enderror
@@ -125,52 +125,21 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    function formatCurrency(input) {
-        let value = input.value.replace(/[^0-9]/g, '');
-        if (value) {
-            const currency = '{{ get_currency() }}';
-            if (currency === 'IDR') {
-                input.value = parseInt(value).toLocaleString('id-ID');
-            } else {
-                input.value = (parseInt(value) / 100).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            }
-        }
-    }
-    
-    function unformatCurrency(value) {
-        return value.replace(/[^0-9]/g, '');
-    }
-    
     const priceInput = document.querySelector('#harga');
     if (priceInput) {
         priceInput.addEventListener('input', function(e) {
             let cursorPos = this.selectionStart;
             let oldValue = this.value;
-            const currency = '{{ get_currency() }}';
             
-            let cleanValue;
-            if (currency === 'USD' || currency === 'MYR') {
-                cleanValue = this.value.replace(/[^0-9.]/g, '');
-                
-                let parts = cleanValue.split('.');
-                if (parts.length > 2) {
-                    cleanValue = parts[0] + '.' + parts.slice(1).join('');
-                }
-                if (parts.length === 2 && parts[1].length > 2) {
-                    cleanValue = parts[0] + '.' + parts[1].substring(0, 2);
-                }
-                
-                this.value = cleanValue;
-            } else {
-                cleanValue = this.value.replace(/[^0-9]/g, '');
-                
-                if (!cleanValue) {
-                    this.value = '';
-                    return;
-                }
-                
-                this.value = parseInt(cleanValue).toLocaleString('id-ID');
+            // Format as IDR (Indonesian Rupiah)
+            let cleanValue = this.value.replace(/[^0-9]/g, '');
+            
+            if (!cleanValue) {
+                this.value = '';
+                return;
             }
+            
+            this.value = parseInt(cleanValue).toLocaleString('id-ID');
             
             if (this.value.length !== oldValue.length) {
                 let diff = this.value.length - oldValue.length;
@@ -182,33 +151,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         priceInput.addEventListener('blur', function() {
             if (this.value) {
-                const currency = '{{ get_currency() }}';
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    let num = parseFloat(this.value);
-                    if (!isNaN(num)) {
-                        this.value = num.toFixed(2);
-                    }
-                } else {
-                    let cleanValue = this.value.replace(/[^0-9]/g, '');
-                    if (cleanValue) {
-                        this.value = parseInt(cleanValue).toLocaleString('id-ID');
-                    }
+                let cleanValue = this.value.replace(/[^0-9]/g, '');
+                if (cleanValue) {
+                    this.value = parseInt(cleanValue).toLocaleString('id-ID');
                 }
             }
         });
         
         priceInput.closest('form').addEventListener('submit', function() {
             if (priceInput.value) {
-                const currency = '{{ get_currency() }}';
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    let cleanValue = priceInput.value.replace(/[^0-9.]/g, '');
-                    priceInput.value = parseFloat(cleanValue).toFixed(2);
-                } else {
-                    let cleanValue = priceInput.value.replace(/[^0-9]/g, '');
-                    priceInput.value = cleanValue;
-                }
+                let cleanValue = priceInput.value.replace(/[^0-9]/g, '');
+                priceInput.value = cleanValue;
             }
         });
     }
