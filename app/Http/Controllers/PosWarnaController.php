@@ -13,7 +13,24 @@ class PosWarnaController extends Controller
      */
     public function index()
     {
-        $posWarnas = PosWarna::with('owner')->paginate(15);
+        $query = PosWarna::with('owner');
+        
+        // If superadmin, only show global items
+        if (auth()->user()->role_id === 1) {
+            $query->where('is_global', 1);
+        }
+        // If owner, filter by their ID or global items
+        elseif (auth()->user()->role_id === 2) {
+            $query->where(function($q) {
+                $q->where('id_owner', auth()->id())
+                  ->orWhere('is_global', 1);
+            });
+        } elseif (auth()->user()->role_id === 3) { // role_id 3 = admin
+            // Admin can only see global items
+            $query->where('is_global', 1);
+        }
+        
+        $posWarnas = $query->paginate(15);
         return view('pages.pos-warna.index', compact('posWarnas'));
     }
 
@@ -22,7 +39,8 @@ class PosWarnaController extends Controller
      */
     public function create()
     {
-        $owners = User::where('role_id', 2)->get(); // role_id 2 = owner
+        // Only super admin can select owner; for other roles, id_owner is auto-set
+        $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-warna.create', compact('owners'));
     }
 
@@ -32,10 +50,25 @@ class PosWarnaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_owner' => 'nullable|exists:users,id',
+            'id_owner' => 'nullable|integer',
             'warna' => 'required|string|max:100',
             'is_global' => 'nullable|integer',
         ]);
+
+        // For superadmin, set id_owner to null and is_global to 1
+        if (auth()->user()->role_id === 1) {
+            $validated['id_owner'] = null;
+            $validated['is_global'] = 1;
+        }
+        // For owner, set id_owner to their ID and is_global to 0
+        elseif (auth()->user()->role_id === 2) {
+            $validated['id_owner'] = auth()->id();
+            $validated['is_global'] = 0;
+        }
+        // For admin, is_global should be 1
+        elseif (auth()->user()->role_id === 3) {
+            $validated['is_global'] = 1;
+        }
 
         PosWarna::create($validated);
 
@@ -56,7 +89,13 @@ class PosWarnaController extends Controller
      */
     public function edit(PosWarna $posWarna)
     {
-        $owners = User::where('role_id', 2)->get(); // role_id 2 = owner
+        // Check authorization for owner - only can edit their own items
+        if (auth()->user()->role_id === 2 && $posWarna->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        // Only super admin can select owner; for other roles, id_owner is auto-set
+        $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-warna.edit', compact('posWarna', 'owners'));
     }
 
@@ -65,11 +104,31 @@ class PosWarnaController extends Controller
      */
     public function update(Request $request, PosWarna $posWarna)
     {
+        // Check authorization for owner - only can update their own items, not global items
+        if (auth()->user()->role_id === 2 && $posWarna->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
-            'id_owner' => 'nullable|exists:users,id',
+            'id_owner' => 'nullable|integer',
             'warna' => 'required|string|max:100',
             'is_global' => 'nullable|integer',
         ]);
+
+        // For superadmin, set id_owner to null and is_global to 1
+        if (auth()->user()->role_id === 1) {
+            $validated['id_owner'] = null;
+            $validated['is_global'] = 1;
+        }
+        // For owner, set id_owner to their ID and is_global to 0
+        elseif (auth()->user()->role_id === 2) {
+            $validated['id_owner'] = auth()->id();
+            $validated['is_global'] = 0;
+        }
+        // For admin, is_global should be 1
+        elseif (auth()->user()->role_id === 3) {
+            $validated['is_global'] = 1;
+        }
 
         $posWarna->update($validated);
 
@@ -82,6 +141,11 @@ class PosWarnaController extends Controller
      */
     public function destroy(PosWarna $posWarna)
     {
+        // Check authorization for owner - only can delete their own items, not global items
+        if (auth()->user()->role_id === 2 && $posWarna->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $posWarna->delete();
 
         return redirect()->route('pos-warna.index')
@@ -100,7 +164,14 @@ class PosWarnaController extends Controller
                 ->with('error', 'Tidak ada data yang dipilih');
         }
 
-        PosWarna::whereIn('id', $ids)->delete();
+        $query = PosWarna::whereIn('id', $ids);
+        
+        // If owner, only allow deleting their own items
+        if (auth()->user()->role_id === 2) {
+            $query->where('id_owner', auth()->id());
+        }
+        
+        $query->delete();
 
         return redirect()->route('pos-warna.index')
             ->with('success', 'Warna berhasil dihapus');
