@@ -52,13 +52,13 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
-                        <th class="py-3 text-center w-12">
+                        <th class="py-3 text-left" style="width: 40px;">
                             <input type="checkbox" id="selectAllCheckbox" 
-                                   class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-400 dark:ring-offset-gray-800 focus:ring-2 dark:bg-navy-700 dark:border-gray-600"
-                                   onchange="toggleSelectAll(this)" />
+                                   class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer"
+                                   onchange="toggleSelectAll(this)">
                         </th>
-                        <th class="py-3 text-center w-16">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">NO</p>
+                        <th class="py-3 text-left col-no">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">No</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
@@ -81,7 +81,7 @@
                         <th class="py-3 text-right">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Selling Price</p>
                         </th>
-                        <th class="py-3 text-center">
+                        <th class="py-3 text-center col-actions">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
                         </th>
                     </tr>
@@ -89,13 +89,13 @@
                 <tbody>
                     @forelse ($produk as $item)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('produk.edit', $item) }}">
-                        <td class="py-4 text-center" onclick="event.stopPropagation()">
-                            <input type="checkbox" value="{{ $item->id }}" 
-                                   class="produk-checkbox w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-400 dark:ring-offset-gray-800 focus:ring-2 dark:bg-navy-700 dark:border-gray-600"
-                                   onchange="updateBulkDeleteButton()" />
+                        <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="produk-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
+                                   value="{{ $item->id }}" 
+                                   onchange="updateBulkDeleteButton()">
                         </td>
-                        <td class="py-4 text-center">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $loop->iteration }}</p>
+                        <td class="py-4 col-no">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($produk->currentPage() - 1) * $produk->perPage() + $loop->iteration }}</p>
                         </td>
                         <td class="py-4">
                             @if($item->merk)
@@ -144,9 +144,9 @@
                                 {{ get_currency_symbol() }} {{ number_format($item->harga_jual, 0, ',', '.') }}
                             </p>
                         </td>
-                        <td class="py-4" onclick="event.stopPropagation()">
+                        <td class="py-4 col-actions" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-produk-id="{{ $item->id }}" data-produk-name="{{ $item->nama }}" data-produk-edit="{{ route('produk.edit', $item) }}" data-produk-destroy="{{ route('produk.destroy', $item) }}">
+                                <button class="btn-actions-menu relative" data-produk-id="{{ $item->id }}" data-produk-name="{{ $item->nama }}" data-produk-edit="{{ route('produk.edit', $item) }}" data-produk-destroy="{{ route('produk.destroy', $item) }}" data-destroy="{{ route('produk.destroy', $item) }}">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
@@ -156,7 +156,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="py-12 text-center">
+                        <td colspan="10" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
@@ -381,6 +381,40 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus produk ini?'
     });
 
+    // Custom handling for delete menu item click
+    document.getElementById('deleteMenuItem').addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Get the active button from the dropdown
+        const activeButton = document.querySelector('.btn-actions-menu[data-active="true"]') || 
+                            document.querySelector('.btn-actions-menu:focus') ||
+                            window.currentActionButton;
+        
+        if (activeButton) {
+            const destroyUrl = activeButton.getAttribute('data-destroy') || 
+                              activeButton.getAttribute('data-produk-destroy');
+            
+            if (destroyUrl) {
+                // Show modal and set the URL
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus produk ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+            } else {
+                alert('Delete URL not found');
+            }
+        }
+    });
+
+    // Store button reference when action menu is clicked
+    document.querySelectorAll('.btn-actions-menu').forEach(button => {
+        button.addEventListener('click', function() {
+            window.currentActionButton = this;
+        });
+    });
+
     document.querySelectorAll('tr[data-href]').forEach(function(row) {
         row.addEventListener('click', function(e) {
             if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.produk-checkbox')) {
@@ -389,5 +423,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
 </script>
 @endpush
