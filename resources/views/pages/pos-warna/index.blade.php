@@ -84,11 +84,16 @@
                 </thead>
                 <tbody>
                     @forelse ($posWarnas as $warna)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-warna.edit', $warna) }}">
+                    @php
+                        $isOwner = auth()->user()->role_id === 2;
+                        $isGlobal = $warna->is_global === 1;
+                        $canDelete = !($isOwner && $isGlobal);
+                    @endphp
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors {{ $canDelete ? 'cursor-pointer' : '' }}" {{ $canDelete ? 'data-href=' . route('pos-warna.edit', $warna) : '' }}>
                         <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
-                            <input type="checkbox" class="warna-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
+                            <input type="checkbox" class="warna-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 {{ !$canDelete ? 'opacity-50' : 'cursor-pointer' }}" 
                                    value="{{ $warna->id }}" 
-                                   onchange="updateBulkDeleteButton()">
+                                   {{ $canDelete ? 'onchange="updateBulkDeleteButton()"' : 'disabled' }}>
                         </td>
                         <td class="py-4 col-no">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($posWarnas->currentPage() - 1) * $posWarnas->perPage() + $loop->iteration }}</p>
@@ -114,11 +119,17 @@
                         </td>
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-warna-id="{{ $warna->id }}" data-warna-name="{{ $warna->warna }}" data-warna-edit="{{ route('pos-warna.edit', $warna) }}" data-warna-destroy="{{ route('pos-warna.destroy', $warna) }}">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                @if($canDelete)
+                                    <button class="btn-actions-menu relative" data-warna-id="{{ $warna->id }}" data-warna-name="{{ $warna->warna }}" data-warna-edit="{{ route('pos-warna.edit', $warna) }}" data-warna-destroy="{{ route('pos-warna.destroy', $warna) }}">
+                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                                        </svg>
+                                    </button>
+                                @else
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
-                                </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
