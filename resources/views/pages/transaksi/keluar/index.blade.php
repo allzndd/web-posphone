@@ -58,13 +58,13 @@
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-white/10">
                             <!-- Checkbox -->
-                            <th class="col-no py-3 text-center" style="width: 40px;">
+                            <th class="py-3 text-center" style="width: 40px;">
                                 <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"
                                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 dark:border-white/20">
                             </th>
                             <!-- NO -->
                             <th class="col-no py-3 text-center">
-                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">NO</p>
+                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">No</p>
                             </th>
                             <th class="py-3 text-left">
                                 <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Invoice</p>
@@ -79,16 +79,16 @@
                                 <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Total</p>
                             </th>
                             <th class="py-3 text-left">
-                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Payment</p>
+                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Pembayaran</p>
                             </th>
                             <th class="py-3 text-center">
                                 <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Status</p>
                             </th>
                             <th class="py-3 text-center">
-                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Date</p>
+                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Tanggal</p>
                             </th>
                             <th class="col-actions py-3 text-center">
-                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
+                                <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Aksi</p>
                             </th>
                         </tr>
                     </thead>
@@ -98,7 +98,7 @@
                             data-href="{{ route('transaksi.keluar.edit', $item->id) }}"
                             onclick="if(!event.target.closest('input, button, .actions-dropdown')) window.location = this.dataset.href">
                             <!-- Checkbox -->
-                            <td class="py-4 text-center" onclick="event.stopPropagation();">
+                            <td class="py-4 text-center" style="width: 40px;" onclick="event.stopPropagation();">
                                 <input type="checkbox" class="transaksi-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 dark:border-white/20"
                                        value="{{ $item->id }}" onchange="updateBulkDeleteButton()">
                             </td>
