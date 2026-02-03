@@ -132,4 +132,26 @@ class TokoController extends Controller
 
         return redirect()->route('toko.index')->with('success', 'Toko berhasil dihapus');
     }
+
+    /**
+     * Bulk delete stores
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu toko untuk dihapus');
+        }
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = PosToko::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('toko.index')
+            ->with('success', $deletedCount . ' toko berhasil dihapus');
+    }
 }

@@ -156,4 +156,26 @@ class ProdukStokController extends Controller
         return redirect()->route('produk-stok.index')
             ->with('success', 'Product stock deleted successfully');
     }
+
+    /**
+     * Bulk delete multiple stock records.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu item untuk dihapus');
+        }
+
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = ProdukStok::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('produk-stok.index')
+            ->with('success', $deletedCount . ' item stok berhasil dihapus');
+    }
 }

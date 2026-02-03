@@ -107,10 +107,10 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
                     <form method="GET" action="{{ route('pos-pengguna.index') }}" class="inline-block">
-                        <select name="per_page" onchange="this.form.submit()" class="px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 text-sm">
+                        <select name="per_page" onchange="this.form.submit()" 
+                                class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
                             <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
                         </select>
                     </form>
                     <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -121,23 +121,30 @@
                 <!-- Pagination Buttons -->
                 <div class="flex items-center gap-1">
                     @if ($pengguna->onFirstPage())
-                        <button disabled class="px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 text-gray-400 text-sm">← Previous</button>
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
                     @else
-                        <a href="{{ $pengguna->previousPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-navy-700 text-sm transition">← Previous</a>
+                        <a href="{{ $pengguna->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">◀</a>
                     @endif
 
-                    @foreach ($pengguna->getUrlRange(1, $pengguna->lastPage()) as $page => $url)
+                    @for ($page = max(1, $pengguna->currentPage() - 2); $page <= min($pengguna->lastPage(), $pengguna->currentPage() + 2); $page++)
                         @if ($page == $pengguna->currentPage())
-                            <button disabled class="px-3 py-1 rounded-lg bg-brand-500 text-white text-sm font-bold">{{ $page }}</button>
+                            <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
+                                {{ $page }}
+                            </span>
                         @else
-                            <a href="{{ $url }}" class="px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-navy-700 text-sm transition">{{ $page }}</a>
+                            <a href="{{ $pengguna->url($page) }}&per_page={{ request('per_page', 10) }}" 
+                               class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">
+                                {{ $page }}
+                            </a>
                         @endif
-                    @endforeach
+                    @endfor
 
                     @if ($pengguna->hasMorePages())
-                        <a href="{{ $pengguna->nextPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-navy-700 text-sm transition">Next →</a>
+                        <a href="{{ $pengguna->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">▶</a>
                     @else
-                        <button disabled class="px-3 py-1 rounded-lg border border-gray-200 dark:border-white/10 text-gray-400 text-sm">Next →</button>
+                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>
                     @endif
                 </div>
             </div>

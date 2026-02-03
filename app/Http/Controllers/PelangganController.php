@@ -138,6 +138,25 @@ class PelangganController extends Controller
     {
         $pelanggan->delete();
 
-        return redirect()->route('pelanggan.index')->with('success', 'Customer berhasil dihapus');
+        return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus');
+    }
+
+    /**
+     * Delete multiple resources.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->input('ids'), true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->route('pelanggan.index')->with('error', 'Tidak ada pelanggan yang dipilih');
+        }
+
+        PosPelanggan::whereIn('id', $ids)->delete();
+
+        return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus');
     }
 }

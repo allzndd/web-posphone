@@ -204,7 +204,7 @@
                     <!-- IMEI -->
                     <div>
                         <label for="imei" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                            IMEI Number <span id="imei-required-marker" class="text-red-500">*</span>
+                            IMEI Number <span class="text-red-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -212,6 +212,7 @@
                             name="imei" 
                             value="{{ old('imei') }}"
                             placeholder="Enter IMEI number"
+                            required
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('imei') !border-red-500 @enderror"
                         >
                         @error('imei')
@@ -398,9 +399,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Auto-focus on search field
     document.getElementById('productNameSearch').focus();
-    
-    // Set IMEI as required by default (electronic type is default)
-    document.getElementById('imei').required = true;
     
     // Currency formatting function
     function formatCurrency(input) {
@@ -619,29 +617,12 @@ function switchProductType(type) {
     activeTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
     activeTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
     
-    // Show/hide specifications section and handle IMEI requirement
+    // Show/hide specifications section
     const specificationsSection = document.getElementById('specifications-section');
-    const imeiField = document.getElementById('imei');
-    const imeiMarker = document.getElementById('imei-required-marker');
-    
     if (type === 'electronic') {
         specificationsSection.classList.remove('hidden');
-        // Make IMEI required for electronic
-        imeiField.required = true;
-        if (imeiMarker) imeiMarker.classList.remove('hidden');
     } else {
         specificationsSection.classList.add('hidden');
-        // Remove IMEI requirement for accessories
-        imeiField.required = false;
-        if (imeiMarker) imeiMarker.classList.add('hidden');
-        // Clear specification fields when switching to accessories
-        imeiField.value = '';
-        document.getElementById('warna').value = '';
-        document.getElementById('penyimpanan').value = '';
-        document.getElementById('battery_health').value = '';
-        if (document.getElementById('aksesoris')) {
-            document.getElementById('aksesoris').value = '';
-        }
     }
 }
 

@@ -4,65 +4,78 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class PosToko extends Model
 {
     use HasFactory;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'pos_toko';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
     protected $fillable = [
         'owner_id',
         'nama',
         'slug',
-        'alamat'
+        'alamat',
     ];
 
     /**
-     * Get the route key for the model.
+     * The attributes that should be cast.
+     *
+     * @var array
      */
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
+    protected $casts = [
+        'owner_id' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
-    // Auto-generate slug from nama
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($model) {
-            if (empty($model->slug)) {
-                $model->slug = Str::slug($model->nama);
-            }
-        });
-
-        static::updating(function ($model) {
-            if ($model->isDirty('nama')) {
-                $model->slug = Str::slug($model->nama);
-            }
-        });
-    }
-
-    // Relationships
+    /**
+     * Get the owner that owns the store.
+     */
     public function owner()
     {
         return $this->belongsTo(Owner::class, 'owner_id');
     }
 
+    /**
+     * Get the employees (users) for the store.
+     */
     public function pengguna()
     {
         return $this->hasMany(PosPengguna::class, 'pos_toko_id');
     }
 
-    public function produk()
+    /**
+     * Get the stock records for the store.
+     */
+    public function produkStok()
     {
-        return $this->hasMany(PosProduk::class, 'pos_toko_id');
+        return $this->hasMany(ProdukStok::class, 'pos_toko_id');
     }
 
-    public function transaksi()
+    /**
+     * Get the stock logs for the store.
+     */
+    public function logStok()
     {
-        return $this->hasMany(PosTransaksi::class, 'pos_toko_id');
+        return $this->hasMany(LogStok::class, 'pos_toko_id');
+    }
+
+    /**
+     * Get the services for the store.
+     */
+    public function layanan()
+    {
+        return $this->hasMany(Layanan::class, 'pos_toko_id');
     }
 }

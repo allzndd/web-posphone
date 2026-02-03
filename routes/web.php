@@ -38,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Incoming Transactions (Sales) - Must come before resource route
         Route::prefix('transaksi/masuk')->name('transaksi.masuk.')->group(function () {
+            Route::delete('bulk-destroy', [\App\Http\Controllers\TransaksiController::class, 'bulkDestroyMasuk'])->name('bulk-destroy');
             Route::get('/', [\App\Http\Controllers\TransaksiController::class, 'indexMasuk'])->name('index');
             Route::get('/create', [\App\Http\Controllers\TransaksiController::class, 'createMasuk'])->name('create');
             Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeMasuk'])->name('store');
@@ -49,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
         
         // Outgoing Transactions (Purchases) - Must come before resource route
         Route::prefix('transaksi/keluar')->name('transaksi.keluar.')->group(function () {
+            Route::delete('bulk-destroy', [\App\Http\Controllers\TransaksiController::class, 'bulkDestroyKeluar'])->name('bulk-destroy');
             Route::get('/', [\App\Http\Controllers\TransaksiController::class, 'indexKeluar'])->name('index');
             Route::get('/create', [\App\Http\Controllers\TransaksiController::class, 'createKeluar'])->name('create');
             Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeKeluar'])->name('store');
@@ -65,6 +67,9 @@ Route::middleware(['auth'])->group(function () {
         // Route::resource('retur', \App\Http\Controllers\ReturController::class);
         
         // Customers (pos_pelanggan)
+        Route::delete('customer/bulk-destroy', [\App\Http\Controllers\CustomerController::class, 'bulkDestroy'])->name('customer.bulk-destroy');
+        Route::resource('customer', \App\Http\Controllers\CustomerController::class);
+        Route::delete('pelanggan/bulk-destroy', [\App\Http\Controllers\PelangganController::class, 'bulkDestroy'])->name('pelanggan.bulk-destroy');
         Route::resource('pelanggan', \App\Http\Controllers\PelangganController::class);
         
         // Reports - Laporan
@@ -98,23 +103,28 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('pos-role/bulk-destroy', [\App\Http\Controllers\PosRoleController::class, 'bulkDestroy'])->name('pos-role.bulk-destroy');
         Route::resource('pos-role', \App\Http\Controllers\PosRoleController::class);
         
-        // Stores (pos_toko)
+        // Stores (pos_toko) - Custom bulk delete must come before resource
+        Route::delete('toko/bulk-destroy', [\App\Http\Controllers\TokoController::class, 'bulkDestroy'])->name('toko.bulk-destroy');
         Route::resource('toko', \App\Http\Controllers\TokoController::class);
         
-        // Products (pos_produk)
+        // Products (pos_produk) - Custom bulk delete must come before resource
+        Route::delete('produk/bulk-destroy', [\App\Http\Controllers\ProdukController::class, 'bulkDestroy'])->name('produk.bulk-destroy');
         Route::resource('produk', \App\Http\Controllers\ProdukController::class);
         
-        // Product Brands (pos_produk_merk)
+        // Product Brands (pos_produk_merk) - Custom bulk delete must come before resource
+        Route::delete('pos-produk-merk/bulk-destroy', [\App\Http\Controllers\PosProdukMerkController::class, 'bulkDestroy'])->name('pos-produk-merk.bulk-destroy');
         Route::post('api/pos-produk-merk/quick-store', [\App\Http\Controllers\PosProdukMerkController::class, 'quickStore'])->name('pos-produk-merk.quick-store');
         Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
         
-        // Stock Management (pos_produk_stok)
+        // Stock Management (pos_produk_stok) - Custom bulk delete must come before resource
+        Route::delete('produk-stok/bulk-destroy', [\App\Http\Controllers\ProdukStokController::class, 'bulkDestroy'])->name('produk-stok.bulk-destroy');
         Route::resource('produk-stok', \App\Http\Controllers\ProdukStokController::class);
         
         // Stock History (pos_log_stok)
         Route::get('log-stok', [\App\Http\Controllers\LogStokController::class, 'index'])->name('log-stok.index');
         
-        // Suppliers (pos_supplier)
+        // Suppliers (pos_supplier) - Custom bulk delete must come before resource
+        Route::delete('supplier/bulk-destroy', [\App\Http\Controllers\SupplierController::class, 'bulkDestroy'])->name('supplier.bulk-destroy');
         Route::resource('supplier', \App\Http\Controllers\SupplierController::class);
         
         // Services (pos_service)

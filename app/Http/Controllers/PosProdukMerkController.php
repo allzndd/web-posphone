@@ -122,6 +122,28 @@ class PosProdukMerkController extends Controller
     }
 
     /**
+     * Bulk delete product brands
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu brand untuk dihapus');
+        }
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = PosProdukMerk::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('pos-produk-merk.index')
+            ->with('success', $deletedCount . ' brand berhasil dihapus');
+    }
+
+    /**
      * Quick store product name from AJAX modal (for product forms)
      *
      * @param  \Illuminate\Http\Request  $request

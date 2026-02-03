@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@push('style')
+    <link rel="stylesheet" href="{{ asset('css/table-components.css') }}">
+@endpush
+
 @section('title', 'Suppliers')
 
 @section('main')
@@ -15,17 +19,25 @@
                 </p>
             </div>
             
+            <!-- Bulk Delete Button -->
+            <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
+                    onclick="confirmBulkDelete()">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                </svg>
+                Delete Selected
+            </button>
+            
             <!-- Add New Button -->
-            <div>
-                <a href="{{ route('supplier.create') }}" 
-                   class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                        <path fill="none" d="M0 0h24v24H0z"></path>
-                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
-                    </svg>
-                    Add New Supplier
-                </a>
-            </div>
+            <a href="{{ route('supplier.create') }}" 
+               class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                </svg>
+                Add New Supplier
+            </a>
         </div>
 
         <!-- Filters -->
@@ -59,9 +71,21 @@
 
         <!-- Table -->
         <div class="overflow-x-auto px-6 pb-6">
+            <form id="bulkDeleteForm" method="POST" action="{{ route('supplier.bulk-destroy') }}">
+                @csrf
+                @method('DELETE')
+                <input type="hidden" id="bulkIds" name="ids" value="[]">
+            </form>
+            
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
+                        <th class="w-12 py-3">
+                            <input type="checkbox" id="selectAllCheckbox" class="rounded border-gray-300 dark:border-gray-600 cursor-pointer" onchange="toggleSelectAll(this)">
+                        </th>
+                        <th class="w-16 py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">NO</p>
+                        </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Supplier Name</p>
                         </th>
@@ -81,9 +105,17 @@
                 </thead>
                 <tbody>
                     @forelse($suppliers as $supplier)
-                    <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition" 
-                        data-href="{{ route('supplier.edit', $supplier) }}"
-                        onclick="window.location = this.dataset.href">
+                    <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5" onclick="if(!event.target.closest('.supplier-checkbox, .btn-actions-menu')) window.location.href='{{ route('supplier.edit', $supplier) }}'">
+                        <!-- Checkbox -->
+                        <td class="w-12 py-4" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="supplier-checkbox rounded border-gray-300 dark:border-gray-600 cursor-pointer" data-id="{{ $supplier->id }}" onchange="updateBulkDeleteButton()">
+                        </td>
+                        
+                        <!-- NO -->
+                        <td class="w-16 py-4">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $loop->iteration }}</p>
+                        </td>
+                        
                         <!-- Name -->
                         <td class="py-4">
                             <div>
@@ -130,33 +162,19 @@
                         </td>
                         
                         <!-- Actions -->
-                        <td class="py-4 text-center">
-                            <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation()">
-                                <a href="{{ route('supplier.edit', $supplier) }}" 
-                                   class="flex items-center justify-center rounded-lg bg-lightPrimary p-2 text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                        <td class="py-4 col-actions" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center">
+                                <button class="btn-actions-menu relative" data-supplier-id="{{ $supplier->id }}" data-supplier-name="{{ $supplier->nama }}" data-supplier-edit="{{ route('supplier.edit', $supplier) }}" data-supplier-destroy="{{ route('supplier.destroy', $supplier) }}">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
-                                </a>
-                                <form action="{{ route('supplier.destroy', $supplier) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            onclick="return confirm('Are you sure you want to delete this supplier?')"
-                                            class="flex items-center justify-center rounded-lg bg-red-100 p-2 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill="none" d="M0 0h24v24H0z"></path>
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                                        </svg>
-                                    </button>
-                                </form>
+                                </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="py-12 text-center">
+                        <td colspan="7" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -175,15 +193,13 @@
         <div class="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 dark:border-white/10 px-6 py-4 gap-4">
             <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
-                <form method="GET" action="{{ route('supplier.index') }}" id="perPageForm" class="inline-block">
+                <form method="GET" action="{{ route('supplier.index') }}" class="inline-block">
                     <input type="hidden" name="nama" value="{{ request('nama') }}">
                     <input type="hidden" name="nomor_hp" value="{{ request('nomor_hp') }}">
                     <select name="per_page" onchange="this.form.submit()" 
                             class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 [&>option]:!bg-white [&>option]:dark:!bg-navy-800 [&>option]:!text-navy-700 [&>option]:dark:!text-white">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                         <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page', 10) == 100 ? 'selected' : '' }}>100</option>
                     </select>
                 </form>
                 <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -191,24 +207,16 @@
                 </span>
             </div>
             <div class="flex items-center gap-1">
+                {{-- Previous Button --}}
                 @if ($suppliers->onFirstPage())
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
-                        </svg>
-                    </span>
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
                 @else
                     <a href="{{ $suppliers->appends(request()->except('page'))->previousPageUrl() }}" 
-                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
-                        </svg>
-                    </a>
+                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">◀</a>
                 @endif
 
-                @foreach ($suppliers->getUrlRange(max(1, $suppliers->currentPage() - 2), min($suppliers->lastPage(), $suppliers->currentPage() + 2)) as $page => $url)
+                {{-- Page Numbers --}}
+                @for ($page = max(1, $suppliers->currentPage() - 2); $page <= min($suppliers->lastPage(), $suppliers->currentPage() + 2); $page++)
                     @if ($page == $suppliers->currentPage())
                         <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
                             {{ $page }}
@@ -219,26 +227,154 @@
                             {{ $page }}
                         </a>
                     @endif
-                @endforeach
+                @endfor
 
+                {{-- Next Button --}}
                 @if ($suppliers->hasMorePages())
                     <a href="{{ $suppliers->appends(request()->except('page'))->nextPageUrl() }}" 
-                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
-                        </svg>
-                    </a>
+                       class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">▶</a>
                 @else
-                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">
-                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
-                        </svg>
-                    </span>
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>
                 @endif
             </div>
         </div>
     </div>
 </div>
+
+<!-- Action Dropdown - Inline -->
+<div id="actionDropdown" class="actions-dropdown">
+    <button id="editMenuItem" class="actions-dropdown-item edit">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+        </svg>
+        <span>Edit</span>
+    </button>
+    <button id="deleteMenuItem" class="actions-dropdown-item delete">
+        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path fill="none" d="M0 0h24v24H0z"></path>
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+        </svg>
+        <span>Delete</span>
+    </button>
+</div>
+
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="_method" value="DELETE">
+    <input type="hidden" id="bulkIds" name="ids" value="">
+</form>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-sm w-full mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Confirm Delete</h3>
+            <button type="button" id="modalCloseBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-700 dark:text-gray-300">Are you sure you want to delete <span id="deleteItemCount">item</span>?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">This action cannot be undone.</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition">Cancel</button>
+            <button type="button" id="modalConfirmBtn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Delete</button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+}
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.supplier-checkbox');
+    checkboxes.forEach(function(cb) {
+        cb.checked = checkbox.checked;
+    });
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkedCount = document.querySelectorAll('.supplier-checkbox:checked').length;
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (checkedCount > 0) {
+        bulkDeleteBtn.classList.remove('hidden');
+    } else {
+        bulkDeleteBtn.classList.add('hidden');
+    }
+}
+
+function confirmBulkDelete(ids = null) {
+    let selectedIds = [];
+    
+    if (ids) {
+        selectedIds = ids;
+    } else {
+        const checkboxes = document.querySelectorAll('.supplier-checkbox:checked');
+        selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
+    }
+    
+    if (selectedIds.length === 0) {
+        alert('Please select at least one supplier to delete');
+        return;
+    }
+    
+    const modal = document.getElementById('deleteConfirmModal');
+    const itemCount = document.getElementById('deleteItemCount');
+    itemCount.textContent = selectedIds.length > 1 ? selectedIds.length + ' suppliers' : selectedIds.length + ' supplier';
+    
+    modal.classList.remove('hidden');
+    window.pendingDeleteIds = selectedIds;
+}
+
+function proceedBulkDelete() {
+    const ids = window.pendingDeleteIds;
+    if (!ids || ids.length === 0) return;
+    
+    document.getElementById('bulkIds').value = JSON.stringify(ids);
+    
+    const form = document.getElementById('bulkDeleteForm');
+    form.action = '{{ route('supplier.bulk-destroy') }}';
+    form.submit();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+        if (e.target.id === 'deleteConfirmModal') {
+            closeDeleteModal();
+        }
+    });
+
+    const dropdown = new TableActionDropdown({
+        dropdownSelector: '#actionDropdown',
+        buttonSelector: '.btn-actions-menu',
+        editMenuSelector: '#editMenuItem',
+        deleteMenuSelector: '#deleteMenuItem',
+        zoomFactor: 0.9,
+        confirmDeleteMessage: 'Are you sure you want to delete this supplier?'
+    });
+
+    document.querySelectorAll('tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.supplier-checkbox')) {
+                window.location.href = this.dataset.href;
+            }
+        });
+    });
+});
+</script>
+@endpush
 @endsection

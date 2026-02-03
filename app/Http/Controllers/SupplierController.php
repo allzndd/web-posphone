@@ -106,4 +106,26 @@ class SupplierController extends Controller
         return redirect()->route('supplier.index')
             ->with('success', 'Supplier deleted successfully');
     }
+
+    /**
+     * Bulk delete multiple suppliers.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Please select at least one supplier to delete');
+        }
+
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = PosSupplier::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('supplier.index')
+            ->with('success', $deletedCount . ' supplier(s) deleted successfully');
+    }
 }

@@ -524,7 +524,29 @@ class TransaksiController extends Controller
 
         $transaksi->delete();
 
-        return redirect()->route('transaksi.masuk.index')->with('success', 'Incoming transaction deleted successfully');
+        return redirect()->route('transaksi.masuk.index')->with('success', 'Transaksi masuk berhasil dihapus');
+    }
+
+    /**
+     * Bulk delete incoming transactions
+     */
+    public function bulkDestroyMasuk(Request $request)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $ids = json_decode($request->input('ids'), true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Tidak ada transaksi yang dipilih');
+        }
+
+        PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 1)
+            ->whereIn('id', $ids)
+            ->delete();
+
+        return redirect()->route('transaksi.masuk.index')->with('success', 'Transaksi masuk berhasil dihapus');
     }
 
     // ============================================
@@ -735,6 +757,28 @@ class TransaksiController extends Controller
         $transaksi->delete();
 
         return redirect()->route('transaksi.keluar.index')->with('success', 'Outgoing transaction deleted successfully');
+    }
+
+    /**
+     * Bulk delete outgoing transactions
+     */
+    public function bulkDestroyKeluar(Request $request)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $ids = json_decode($request->input('ids'), true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'No transactions selected');
+        }
+
+        PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->whereIn('id', $ids)
+            ->delete();
+
+        return redirect()->route('transaksi.keluar.index')->with('success', 'Outgoing transactions deleted successfully');
     }
 
     /**

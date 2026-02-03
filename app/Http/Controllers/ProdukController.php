@@ -35,15 +35,15 @@ class ProdukController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    // public function create()
-    // {
-    //     $user = Auth::user();
-    //     $ownerId = $user->owner ? $user->owner->id : null;
+    public function create()
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
 
-    //     $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
+        $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
 
-    //     return view('pages.produk.create', compact('merks'));
-    // }
+        return view('pages.produk.create', compact('merks'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -261,6 +261,28 @@ class ProdukController extends Controller
         $produk->delete();
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
+    }
+
+    /**
+     * Bulk delete products
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $ids = json_decode($request->ids, true);
+        
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->with('error', 'Pilih minimal satu produk untuk dihapus');
+        }
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $deletedCount = PosProduk::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->delete();
+        
+        return redirect()->route('produk.index')
+            ->with('success', $deletedCount . ' produk berhasil dihapus');
     }
 
     /**
