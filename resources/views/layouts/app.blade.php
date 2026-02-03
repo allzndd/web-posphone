@@ -240,10 +240,179 @@
     <!-- SweetAlert2 for confirmations -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Table Action Dropdown Class -->
-    <script src="{{ asset('js/table-action-dropdown.js') }}"></script>
-
     @stack('scripts')
+    
+    <!-- Table Action Dropdown Class - Inline to avoid compilation overhead -->
+    <script>
+        class TableActionDropdown {
+            constructor(options = {}) {
+                this.dropdownSelector = options.dropdownSelector || '#actionDropdown';
+                this.buttonSelector = options.buttonSelector || '.btn-actions-menu';
+                this.editMenuSelector = options.editMenuSelector || '#editMenuItem';
+                this.deleteMenuSelector = options.deleteMenuSelector || '#deleteMenuItem';
+                this.zoomFactor = options.zoomFactor || 1;
+                this.confirmDeleteMessage = options.confirmDeleteMessage || 'Apakah Anda yakin ingin menghapus item ini?';
+                this.onEditCallback = options.onEditCallback || null;
+                this.onDeleteCallback = options.onDeleteCallback || null;
+                
+                this.dropdown = document.querySelector(this.dropdownSelector);
+                this.editMenuItem = document.querySelector(this.editMenuSelector);
+                this.deleteMenuItem = document.querySelector(this.deleteMenuSelector);
+                
+                this.currentEditUrl = null;
+                this.currentDestroyUrl = null;
+                this.currentButton = null;
+                
+                this.handleDocumentKeydown = this.handleDocumentKeydown.bind(this);
+                this.handleButtonClick = this.handleButtonClick.bind(this);
+                
+                if (this.dropdown) {
+                    this.init();
+                }
+            }
+            
+            init() {
+                // Attach listeners to EACH button directly instead of relying on document bubbling
+                const self = this;
+                document.querySelectorAll(this.buttonSelector).forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        self.handleButtonClick(this);
+                    });
+                });
+                
+                // Close dropdown when clicking elsewhere
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest(self.dropdownSelector) && !e.target.closest(self.buttonSelector)) {
+                        self.closeDropdown();
+                    }
+                }, true); // Use capture phase
+                
+                // Keyboard handler
+                document.addEventListener('keydown', this.handleDocumentKeydown);
+                
+                // Menu item handlers
+                if (this.editMenuItem) {
+                    this.editMenuItem.addEventListener('click', () => this.handleEdit());
+                }
+                
+                if (this.deleteMenuItem) {
+                    this.deleteMenuItem.addEventListener('click', () => this.handleDelete());
+                }
+            }
+            
+            handleDocumentKeydown(e) {
+                if (e.key === 'Escape') {
+                    this.closeDropdown();
+                }
+            }
+            
+            handleButtonClick(btn) {
+                console.log('🚀 handleButtonClick called');
+                const editUrl = btn.dataset.roleEdit || btn.dataset.editUrl;
+                const destroyUrl = btn.dataset.roleDestroy || btn.dataset.destroyUrl;
+                
+                console.log('📌 Edit URL:', editUrl);
+                console.log('📌 Destroy URL:', destroyUrl);
+                
+                this.currentEditUrl = editUrl;
+                this.currentDestroyUrl = destroyUrl;
+                this.currentButton = btn;
+                
+                this.positionDropdown(btn);
+                console.log('✅ Adding show class to dropdown');
+                this.dropdown.classList.add('show');
+                console.log('📦 Dropdown classes:', this.dropdown.className);
+            }
+            
+            positionDropdown(btn) {
+                const rect = btn.getBoundingClientRect();
+                const dropdownWidth = 140;
+                
+                const adjustedLeft = rect.left / this.zoomFactor;
+                const adjustedTop = rect.top / this.zoomFactor;
+                
+                this.dropdown.style.position = 'fixed';
+                this.dropdown.style.top = adjustedTop + 'px';
+                this.dropdown.style.left = (adjustedLeft - dropdownWidth) + 'px';
+                this.dropdown.style.zIndex = '1001';
+            }
+            
+            closeDropdown() {
+                this.dropdown.classList.remove('show');
+                this.currentButton = null;
+            }
+            
+            handleEdit() {
+                if (this.currentEditUrl) {
+                    if (this.onEditCallback) {
+                        this.onEditCallback(this.currentEditUrl);
+                    } else {
+                        window.location.href = this.currentEditUrl;
+                    }
+                }
+                this.closeDropdown();
+            }
+            
+            handleDelete() {
+                if (!this.currentDestroyUrl) {
+                    alert('Delete URL not found');
+                    return;
+                }
+                
+                // Show confirmation modal
+                const modal = document.getElementById('deleteConfirmModal');
+                if (!modal) {
+                    alert('Confirmation modal not found');
+                    return;
+                }
+                
+                const messageEl = modal.querySelector('p.text-gray-600');
+                if (messageEl) {
+                    messageEl.textContent = this.confirmDeleteMessage;
+                }
+                
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = this.currentDestroyUrl;
+                this.closeDropdown();
+            }
+            
+            submitDeleteForm() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = this.currentDestroyUrl;
+                form.style.display = 'none';
+                
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (csrfToken) {
+                    const token = document.createElement('input');
+                    token.type = 'hidden';
+                    token.name = '_token';
+                    token.value = csrfToken.content;
+                    form.appendChild(token);
+                }
+                
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+                
+                setTimeout(() => form.remove(), 100);
+            }
+            
+            destroy() {
+                document.removeEventListener('click', this.handleDocumentClick);
+                document.removeEventListener('keydown', this.handleDocumentKeydown);
+                this.currentButton = null;
+                this.dropdown = null;
+            }
+        }
+    </script>
 
     <!-- Template JS File -->
     <script src="{{ asset('js/scripts.js') }}"></script>
