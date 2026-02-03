@@ -82,11 +82,16 @@
                     </thead>
                     <tbody>
                         @foreach($posPenyimpanans as $penyimpanan)
-                        <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-penyimpanan.edit', $penyimpanan) }}">
+                        @php
+                            $isOwner = auth()->user()->role_id === 2;
+                            $isGlobal = $penyimpanan->id_global === 1;
+                            $canDelete = !($isOwner && $isGlobal);
+                        @endphp
+                        <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors {{ $canDelete ? 'cursor-pointer' : '' }}" {{ $canDelete ? 'data-href=' . route('pos-penyimpanan.edit', $penyimpanan) : '' }}>
                             <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
-                                <input type="checkbox" class="penyimpanan-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
+                                <input type="checkbox" class="penyimpanan-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 {{ !$canDelete ? 'opacity-50' : 'cursor-pointer' }}" 
                                        value="{{ $penyimpanan->id }}" 
-                                       onchange="updateBulkDeleteButton()">
+                                       {{ $canDelete ? 'onchange="updateBulkDeleteButton()"' : 'disabled' }}>
                             </td>
                             <td class="py-4 col-no">
                                 <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($posPenyimpanans->currentPage() - 1) * $posPenyimpanans->perPage() + $loop->iteration }}</p>
@@ -107,11 +112,17 @@
                             </td>
                             <td class="py-4 col-actions" onclick="event.stopPropagation()">
                                 <div class="flex items-center justify-center">
-                                    <button class="btn-actions-menu relative" data-penyimpanan-id="{{ $penyimpanan->id }}" data-penyimpanan-name="{{ $penyimpanan->kapasitas }}" data-penyimpanan-edit="{{ route('pos-penyimpanan.edit', $penyimpanan) }}" data-penyimpanan-destroy="{{ route('pos-penyimpanan.destroy', $penyimpanan) }}">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                    @if($canDelete)
+                                        <button class="btn-actions-menu relative" data-penyimpanan-id="{{ $penyimpanan->id }}" data-penyimpanan-name="{{ $penyimpanan->kapasitas }}" data-penyimpanan-edit="{{ route('pos-penyimpanan.edit', $penyimpanan) }}" data-penyimpanan-destroy="{{ route('pos-penyimpanan.destroy', $penyimpanan) }}">
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                         </svg>
-                                    </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
