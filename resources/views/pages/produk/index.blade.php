@@ -146,7 +146,7 @@
                         </td>
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-produk-id="{{ $item->id }}" data-produk-name="{{ $item->nama }}" data-produk-edit="{{ route('produk.edit', $item) }}" data-produk-destroy="{{ route('produk.destroy', $item) }}" data-destroy="{{ route('produk.destroy', $item) }}">
+                                <button class="btn-actions-menu relative" data-produk-id="{{ $item->id }}" data-produk-name="{{ $item->nama }}" data-produk-edit="{{ route('produk.edit', $item) }}" data-produk-destroy="{{ route('produk.destroy', $item) }}">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
@@ -372,49 +372,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const dropdown = new TableActionDropdown({
-        dropdownSelector: '#actionDropdown',
-        buttonSelector: '.btn-actions-menu',
-        editMenuSelector: '#editMenuItem',
-        deleteMenuSelector: '#deleteMenuItem',
-        zoomFactor: 0.9,
-        confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus produk ini?'
+    // Dropdown management
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    // Handle action button click
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+            
+            // Position dropdown - account for zoom: 90% (0.9) in app.blade
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+            
+            actionDropdown.classList.add('show');
+        });
     });
 
-    // Custom handling for delete menu item click
-    document.getElementById('deleteMenuItem').addEventListener('click', function(e) {
+    // Handle edit menu item click
+    editMenuItem.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Get the active button from the dropdown
-        const activeButton = document.querySelector('.btn-actions-menu[data-active="true"]') || 
-                            document.querySelector('.btn-actions-menu:focus') ||
-                            window.currentActionButton;
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-produk-edit');
+            if (editUrl) {
+                window.location.href = editUrl;
+            }
+        }
         
-        if (activeButton) {
-            const destroyUrl = activeButton.getAttribute('data-destroy') || 
-                              activeButton.getAttribute('data-produk-destroy');
-            
+        actionDropdown.classList.remove('show');
+    });
+
+    // Handle delete menu item click
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-produk-destroy');
             if (destroyUrl) {
-                // Show modal and set the URL
                 const modal = document.getElementById('deleteConfirmModal');
                 const messageEl = modal.querySelector('p.text-gray-600');
                 messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus produk ini?';
                 modal.classList.remove('hidden');
                 window.pendingDeleteUrl = destroyUrl;
-            } else {
-                alert('Delete URL not found');
             }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
         }
     });
 
-    // Store button reference when action menu is clicked
-    document.querySelectorAll('.btn-actions-menu').forEach(button => {
-        button.addEventListener('click', function() {
-            window.currentActionButton = this;
-        });
+    // Close dropdown with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            actionDropdown.classList.remove('show');
+        }
     });
 
+    // Row click to edit
     document.querySelectorAll('tr[data-href]').forEach(function(row) {
         row.addEventListener('click', function(e) {
             if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.produk-checkbox')) {
