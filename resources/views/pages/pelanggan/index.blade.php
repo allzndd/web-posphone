@@ -336,13 +336,80 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const dropdown = new TableActionDropdown({
-        dropdownSelector: '#actionDropdown',
-        buttonSelector: '.btn-actions-menu',
-        editMenuSelector: '#editMenuItem',
-        deleteMenuSelector: '#deleteMenuItem',
-        zoomFactor: 0.9,
-        confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus pelanggan ini?'
+    // Dropdown management
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    // Handle action button click
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+            
+            // Position dropdown - account for zoom: 90% (0.9) in app.blade
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+            
+            actionDropdown.classList.add('show');
+        });
+    });
+
+    // Handle edit menu item click
+    editMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-pelanggan-edit');
+            if (editUrl) {
+                window.location.href = editUrl;
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Handle delete menu item click
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-pelanggan-destroy');
+            const pelangganId = currentButton.getAttribute('data-pelanggan-id');
+            if (destroyUrl) {
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus pelanggan ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+                window.pendingDeleteIds = [pelangganId];
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    // Close dropdown with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            actionDropdown.classList.remove('show');
+        }
     });
 
     document.querySelectorAll('tr[data-href]').forEach(function(row) {

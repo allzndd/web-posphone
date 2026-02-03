@@ -105,31 +105,12 @@
                             </span>
                         </td>
                         <td class="py-4" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center gap-2">
-                                <!-- Edit Button -->
-                                <a href="{{ route('toko.edit', $toko) }}" 
-                                   class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
-                                   title="Edit">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                            <div class="flex items-center justify-center">
+                                <button class="btn-actions-menu relative" data-toko-id="{{ $toko->id }}" data-toko-name="{{ $toko->nama }}" data-toko-edit="{{ route('toko.edit', $toko) }}" data-toko-destroy="{{ route('toko.destroy', $toko) }}">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
-                                </a>
-                                
-                                <!-- Delete Button -->
-                                <form action="{{ route('toko.destroy', $toko) }}" method="POST" class="inline-block" 
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus toko ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
-                                            title="Delete">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill="none" d="M0 0h24v24H0z"></path>
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                                        </svg>
-                                    </button>
-                                </form>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -351,15 +332,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const dropdown = new TableActionDropdown({
-        dropdownSelector: '#actionDropdown',
-        buttonSelector: '.btn-actions-menu',
-        editMenuSelector: '#editMenuItem',
-        deleteMenuSelector: '#deleteMenuItem',
-        zoomFactor: 0.9,
-        confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus toko ini?'
+    // Dropdown management
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    // Handle action button click
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+            
+            // Position dropdown - account for zoom: 90% (0.9) in app.blade
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+            
+            actionDropdown.classList.add('show');
+        });
     });
 
+    // Handle edit menu item click
+    editMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-toko-edit');
+            if (editUrl) {
+                window.location.href = editUrl;
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Handle delete menu item click
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-toko-destroy');
+            if (destroyUrl) {
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus toko ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    // Close dropdown with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    // Row click to edit
     document.querySelectorAll('tr[data-href]').forEach(function(row) {
         row.addEventListener('click', function(e) {
             if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.toko-checkbox')) {

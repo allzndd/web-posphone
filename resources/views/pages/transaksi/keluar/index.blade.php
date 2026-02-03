@@ -4,9 +4,7 @@
 
 @push('style')
 <!-- Page-specific styles -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/table-action-dropdown@latest/dist/table-action-dropdown.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/table-action-dropdown@latest/dist/table-action-dropdown.min.css">
+<link rel="stylesheet" href="{{ asset('css/table-components.css') }}">
 <style>
     .col-no { width: 50px; }
     .col-actions { width: 60px; }
@@ -155,11 +153,12 @@
                             </td>
                             <!-- Actions -->
                             <td class="py-4 text-center" onclick="event.stopPropagation();">
-                                <button class="actions-dropdown-button flex items-center justify-center rounded-lg bg-lightPrimary p-2 text-gray-600 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
+                                <button class="btn-actions-menu relative" 
+                                        data-transaksi-id="{{ $item->id }}"
+                                        data-transaksi-invoice="{{ $item->invoice }}"
                                         data-transaksi-edit="{{ route('transaksi.keluar.edit', $item->id) }}"
                                         data-transaksi-print="{{ route('transaksi.keluar.print', $item->id) }}"
-                                        data-transaksi-delete="{{ route('transaksi.keluar.destroy', $item->id) }}"
-                                        onclick="event.stopPropagation();">
+                                        data-transaksi-destroy="{{ route('transaksi.keluar.destroy', $item->id) }}">
                                     <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                                     </svg>
@@ -239,22 +238,46 @@
     </div>
 </div>
 
+<!-- Action Dropdown - Inline -->
+<div id="actionDropdown" class="actions-dropdown">
+    <button id="editMenuItem" class="actions-dropdown-item edit">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        <span>Edit</span>
+    </button>
+    <button id="printMenuItem" class="actions-dropdown-item print">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        <span>Cetak</span>
+    </button>
+    <button id="deleteMenuItem" class="actions-dropdown-item delete">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        <span>Hapus</span>
+    </button>
+</div>
+
 <!-- Delete Confirmation Modal -->
-<div id="deleteConfirmModal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-lg p-6 max-w-sm mx-4">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirm Delete</h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-6" id="deleteConfirmMessage">
-            Are you sure you want to delete the selected transactions?
-        </p>
-        <div class="flex gap-3 justify-end">
-            <button onclick="document.getElementById('deleteConfirmModal').style.display = 'none'" 
-                    class="px-4 py-2 rounded-lg bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-400 dark:hover:bg-gray-600">
-                Cancel
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-sm w-full mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Konfirmasi Hapus</h3>
+            <button type="button" id="modalCloseBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
             </button>
-            <button onclick="proceedBulkDelete()" 
-                    class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600">
-                Delete
-            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-600 dark:text-gray-400 mb-2">Apakah Anda yakin ingin menghapus transaksi ini?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500">Tindakan ini tidak dapat dibatalkan.</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition">Batal</button>
+            <button type="button" id="modalConfirmBtn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Hapus</button>
         </div>
     </div>
 </div>
@@ -329,6 +352,104 @@
         @endif
     });
 
+    // Modal event handlers
+    function closeDeleteModal() {
+        document.getElementById('deleteConfirmModal').classList.add('hidden');
+        window.pendingDeleteUrl = null;
+        window.pendingDeleteIds = null;
+    }
+
+    document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+        if (e.target.id === 'deleteConfirmModal') closeDeleteModal();
+    });
+
+    // Dropdown management
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const printMenuItem = document.getElementById('printMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    // Action button click handler with zoom compensation
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+            actionDropdown.classList.add('show');
+        });
+    });
+
+    // Edit menu item handler
+    editMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-transaksi-edit');
+            if (editUrl) window.location.href = editUrl;
+        }
+        actionDropdown.classList.remove('show');
+    });
+
+    // Print menu item handler
+    printMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentButton) {
+            const printUrl = currentButton.getAttribute('data-transaksi-print');
+            if (printUrl) window.open(printUrl, '_blank');
+        }
+        actionDropdown.classList.remove('show');
+    });
+
+    // Delete menu item handler
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-transaksi-destroy');
+            const transaksiId = currentButton.getAttribute('data-transaksi-id');
+            if (destroyUrl) {
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus transaksi ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+                window.pendingDeleteIds = [transaksiId];
+            }
+        }
+        actionDropdown.classList.remove('show');
+    });
+
+    // Close dropdown when clicking outside or pressing Escape
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
+        }
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') actionDropdown.classList.remove('show');
+    });
+
+    // Row click navigation to edit page
+    document.querySelectorAll('tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.transaksi-checkbox')) {
+                window.location.href = this.dataset.href;
+            }
+        });
+    });
+
     // Checkbox functions
     function toggleSelectAll(checkbox) {
         const checkboxes = document.querySelectorAll('.transaksi-checkbox');
@@ -372,31 +493,36 @@
             return;
         }
 
-        document.getElementById('deleteConfirmMessage').textContent = 
-            `Are you sure you want to delete ${count} transaction${count > 1 ? 's' : ''}?`;
-        document.getElementById('deleteConfirmModal').style.display = 'flex';
+        const modal = document.getElementById('deleteConfirmModal');
+        const messageEl = modal.querySelector('p.text-gray-600');
+        messageEl.innerHTML = `Apakah Anda yakin ingin menghapus ${count} transaksi?`;
+        modal.classList.remove('hidden');
+        
+        // Store bulk delete IDs
+        window.pendingDeleteIds = Array.from(checkboxes).map(cb => cb.value);
+        window.pendingDeleteUrl = null;
     }
 
     function proceedBulkDelete() {
-        const checkboxes = document.querySelectorAll('.transaksi-checkbox:checked');
-        const ids = Array.from(checkboxes).map(cb => cb.value);
-        
-        document.getElementById('bulkDeleteIds').value = JSON.stringify(ids);
-        document.getElementById('bulkDeleteForm').submit();
-    }
-
-    function deleteSingleTransaction(deleteUrl) {
-        if (confirm('Are you sure you want to delete this transaction?')) {
+        // Single delete from dropdown
+        if (window.pendingDeleteUrl && !window.pendingDeleteIds.length) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = deleteUrl;
+            form.action = window.pendingDeleteUrl;
             form.innerHTML = `
                 @csrf
                 @method('DELETE')
             `;
             document.body.appendChild(form);
             form.submit();
+        } 
+        // Bulk delete from checkboxes
+        else if (window.pendingDeleteIds && window.pendingDeleteIds.length) {
+            document.getElementById('bulkDeleteIds').value = JSON.stringify(window.pendingDeleteIds);
+            document.getElementById('bulkDeleteForm').submit();
         }
+        
+        closeDeleteModal();
     }
 
     function showSuccessToast(message) {
@@ -411,15 +537,5 @@
             setTimeout(() => toast.remove(), 500);
         }, 5000);
     }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        const dropdowns = document.querySelectorAll('.actions-dropdown');
-        dropdowns.forEach(dd => {
-            if (!dd.parentElement.contains(event.target)) {
-                dd.classList.add('hidden');
-            }
-        });
-    });
 </script>
 @endpush

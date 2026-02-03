@@ -75,18 +75,14 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ $user->toko ? $user->toko->nama : '-' }}</td>
-                        <td class="px-4 py-3 text-center">
-                            <button class="btn-actions-menu relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-600 transition"
-                                    data-pengguna-id="{{ $user->id }}"
-                                    data-pengguna-name="{{ $user->nama }}"
-                                    data-pengguna-edit="{{ route('pos-pengguna.edit', $user) }}"
-                                    data-pengguna-destroy="{{ route('pos-pengguna.destroy', $user) }}">
-                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
-                                    <circle cx="12" cy="12" r="2"></circle>
-                                    <circle cx="19" cy="12" r="2"></circle>
-                                    <circle cx="5" cy="12" r="2"></circle>
-                                </svg>
-                            </button>
+                        <td class="px-4 py-3 text-center" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center">
+                                <button class="btn-actions-menu relative" data-pengguna-id="{{ $user->id }}" data-pengguna-name="{{ $user->nama }}" data-pengguna-edit="{{ route('pos-pengguna.edit', $user) }}" data-pengguna-destroy="{{ route('pos-pengguna.destroy', $user) }}">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -298,13 +294,78 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const dropdown = new TableActionDropdown({
-        dropdownSelector: '#actionDropdown',
-        buttonSelector: '.btn-actions-menu',
-        editMenuSelector: '#editMenuItem',
-        deleteMenuSelector: '#deleteMenuItem',
-        zoomFactor: 0.9,
-        confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus pengguna ini?'
+    // Dropdown management
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    // Handle action button click
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+            
+            // Position dropdown - account for zoom: 90% (0.9) in app.blade
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+            
+            actionDropdown.classList.add('show');
+        });
+    });
+
+    // Handle edit menu item click
+    editMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-pengguna-edit');
+            if (editUrl) {
+                window.location.href = editUrl;
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Handle delete menu item click
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-pengguna-destroy');
+            if (destroyUrl) {
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus pengguna ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    // Close dropdown with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            actionDropdown.classList.remove('show');
+        }
     });
 
     document.querySelectorAll('tr[data-href]').forEach(function(row) {
