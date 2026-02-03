@@ -1,27 +1,59 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="flex flex-col gap-6">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-navy-700 dark:text-white">
-                Edit Penyimpanan
-            </h1>
-            <p class="mt-2 text-base text-gray-600 dark:text-gray-400">
-                Perbarui data penyimpanan
-            </p>
-        </div>
-    </div>
+@section('title', 'Edit Penyimpanan')
 
+@push('style')
+<!-- Page-specific styles -->
+@endpush
+
+@section('main')
+<div class="mt-3 px-[11px] pr-[10px]">
     <!-- Form Card -->
-    <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 shadow-sm p-6">
-        <form action="{{ route('pos-penyimpanan.update', $posPenyimpanan->id) }}" method="POST" class="space-y-6">
+    <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
+        <!-- Header -->
+        <div class="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
+            <div>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Edit Penyimpanan</h4>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Update informasi kapasitas penyimpanan</p>
+            </div>
+            <a href="{{ route('pos-penyimpanan.index') }}" 
+               class="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
+                </svg>
+                Kembali ke Daftar
+            </a>
+        </div>
+
+        <!-- Error Messages -->
+        @if($errors->any())
+        <div class="mb-6 rounded-lg bg-red-100 p-4 dark:bg-red-900/30">
+            <div class="flex items-start gap-3">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-bold text-red-800 dark:text-red-300">Terjadi kesalahan</h3>
+                    <ul class="mt-2 list-inside list-disc space-y-1 text-sm text-red-700 dark:text-red-400">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <form action="{{ route('pos-penyimpanan.update', $posPenyimpanan) }}" method="POST">
             @csrf
             @method('PUT')
-
-            <div class="grid grid-cols-1 gap-6">
-                <!-- ID Field (Read-only) -->
+            
+            <!-- Form Grid -->
+            <div class="grid grid-cols-1 gap-5">
+                
+                <!-- ID (Read-only) -->
                 <div>
                     <label for="id" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                         ID
@@ -30,12 +62,13 @@
                         type="text" 
                         id="id"
                         value="{{ $posPenyimpanan->id }}"
-                        readonly
-                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900/50 px-4 py-3 text-sm text-gray-600 dark:text-gray-400 cursor-not-allowed"
+                        disabled
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-navy-900/50 px-4 py-3 text-sm text-gray-600 dark:text-gray-400 cursor-not-allowed"
                     >
                 </div>
 
-                <!-- Owner Field -->
+                <!-- Owner Field - Only show for non-superadmin -->
+                @if(!auth()->user()->isSuperadmin())
                 <div>
                     <label for="id_owner" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                         Owner <span class="text-red-500">*</span>
@@ -57,93 +90,99 @@
                     @enderror
                     <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Pilih owner yang akan mengelola penyimpanan ini</p>
                 </div>
+                @endif
 
                 <!-- Kapasitas Field -->
                 <div>
                     <label for="kapasitas" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Kapasitas <span class="text-red-500">*</span>
+                        Kapasitas <span class="text-red-500\">*</span>
                     </label>
                     <input 
                         type="number" 
                         id="kapasitas"
                         name="kapasitas" 
                         value="{{ old('kapasitas', $posPenyimpanan->kapasitas) }}"
-                        placeholder="Masukkan kapasitas penyimpanan"
-                        min="1"
+                        placeholder="Contoh: 32, 64, 128, 256"
                         class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('kapasitas') !border-red-500 @enderror"
                         required
                     >
                     @error('kapasitas')
                         <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
                     @enderror
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Masukkan kapasitas penyimpanan dalam satuan unit</p>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Masukkan kapasitas penyimpanan dalam angka (contoh: 32, 64, 128, 256, dll)</p>
                 </div>
 
-                <!-- Is Global Field - Auto checked for Superadmin -->
-                <div>
-                    <label for="id_global" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Global <span class="text-gray-500">(Otomatis aktif)</span>
-                    </label>
-                    <div class="flex items-center gap-3">
-                        <input 
-                            type="hidden" 
-                            name="id_global" 
-                            value="0"
-                        >
-                        <input 
-                            type="checkbox" 
-                            id="id_global"
-                            name="id_global" 
-                            value="1"
-                            checked
-                            disabled
-                            class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-white/10 dark:bg-navy-900 cursor-not-allowed"
-                        >
-                        <label for="id_global" class="text-sm text-gray-600 dark:text-gray-400">
-                            Penyimpanan ini tersedia secara global untuk semua owner
-                        </label>
+                <!-- Is Global (Hidden) -->
+                <input type="hidden" name="id_global" value="1">
+
+                <!-- Info Box -->
+                <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 p-4">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Dibuat</p>
+                            <p class="mt-1 text-sm font-bold text-navy-700 dark:text-white">{{ $posPenyimpanan->created_at->format('d/m/Y H:i:s') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase">Diperbarui</p>
+                            <p class="mt-1 text-sm font-bold text-navy-700 dark:text-white">{{ $posPenyimpanan->updated_at->format('d/m/Y H:i:s') }}</p>
+                        </div>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Untuk superadmin, penyimpanan selalu bersifat global</p>
                 </div>
+
             </div>
 
-            <!-- Form Actions -->
-            <div class="flex gap-3 items-center justify-between pt-6 border-t border-gray-200 dark:border-white/10">
-                <form action="{{ route('pos-penyimpanan.destroy', $posPenyimpanan->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Apakah Anda yakin ingin menghapus penyimpanan ini? Data yang dihapus tidak dapat dikembalikan.');">
-                    @csrf
-                    @method('DELETE')
-                    <button 
-                        type="submit"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 px-6 py-3 text-sm font-bold text-red-600 dark:text-red-300 transition-all duration-200"
-                    >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                        Hapus
-                    </button>
-                </form>
-                <div class="flex gap-3">
-                    <button 
-                        type="submit"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300 px-6 py-3 text-sm font-bold text-white transition-all duration-200"
-                    >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Update
-                    </button>
-                    <a 
-                        href="{{ route('pos-penyimpanan.index') }}"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-200 hover:bg-gray-300 dark:bg-white/10 dark:hover:bg-white/20 px-6 py-3 text-sm font-bold text-navy-700 dark:text-white transition-all duration-200"
-                    >
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+            <!-- Action Buttons -->
+            <div class="mt-8 flex items-center justify-between gap-3 border-t border-gray-200 dark:border-white/10 pt-6">
+                <!-- Delete Button -->
+                <button type="button" 
+                        onclick="document.getElementById('deleteForm').submit();"
+                        class="flex items-center gap-2 rounded-xl bg-red-100 px-6 py-3 text-sm font-bold text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                    </svg>
+                    Hapus Penyimpanan
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('pos-penyimpanan.index') }}" 
+                       class="rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
                         Batal
                     </a>
+                    <button type="submit" 
+                            class="flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h24v24H0z"></path>
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                        </svg>
+                        Perbarui Penyimpanan
+                    </button>
                 </div>
             </div>
+        </form>
+
+        <!-- Delete Form (Hidden) -->
+        <form id="deleteForm" action="{{ route('pos-penyimpanan.destroy', $posPenyimpanan) }}" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
         </form>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on kapasitas field
+    document.getElementById('kapasitas').focus();
+    
+    // Confirm before delete
+    document.querySelector('button[onclick*="deleteForm"]').addEventListener('click', function(e) {
+        e.preventDefault();
+        if (confirm('Apakah Anda yakin ingin menghapus penyimpanan ini? Tindakan ini tidak dapat dibatalkan.')) {
+            document.getElementById('deleteForm').submit();
+        }
+    });
+});
+</script>
+@endpush
