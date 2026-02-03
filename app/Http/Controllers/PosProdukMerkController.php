@@ -16,15 +16,35 @@ class PosProdukMerkController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
-
-        $merks = PosProdukMerk::where('owner_id', $ownerId)
-            ->withCount('produk')
-            ->when($request->input('nama'), function ($query, $nama) {
-                return $query->where('nama', 'like', '%' . $nama . '%');
-            })
-            ->orderBy('id', 'desc')
-            ->paginate($request->input('per_page', 10));
+        $isSuperadmin = $user->hasRole('SUPERADMIN');
+        
+        if ($isSuperadmin) {
+            // Superadmin sees only global items (is_global = 1, owner_id = null)
+            $merks = PosProdukMerk::where('is_global', 1)
+                ->whereNull('owner_id')
+                ->withCount('produk')
+                ->when($request->input('nama'), function ($query, $nama) {
+                    return $query->where('nama', 'like', '%' . $nama . '%');
+                })
+                ->when($request->input('merk'), function ($query, $merk) {
+                    return $query->where('merk', 'like', '%' . $merk . '%');
+                })
+                ->orderBy('id', 'desc')
+                ->paginate($request->input('per_page', 10));
+        } else {
+            // Owner/Admin sees only their own items
+            $ownerId = $user->owner ? $user->owner->id : null;
+            $merks = PosProdukMerk::where('owner_id', $ownerId)
+                ->withCount('produk')
+                ->when($request->input('nama'), function ($query, $nama) {
+                    return $query->where('nama', 'like', '%' . $nama . '%');
+                })
+                ->when($request->input('merk'), function ($query, $merk) {
+                    return $query->where('merk', 'like', '%' . $merk . '%');
+                })
+                ->orderBy('id', 'desc')
+                ->paginate($request->input('per_page', 10));
+        }
 
         return view('pages.pos-produk-merk.index', compact('merks'));
     }
@@ -48,16 +68,28 @@ class PosProdukMerkController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
+        $isSuperadmin = $user->hasRole('SUPERADMIN');
 
         $request->validate([
             'nama' => 'required|string|max:255',
         ]);
 
-        PosProdukMerk::create([
-            'owner_id' => $ownerId,
-            'nama' => $request->nama,
-        ]);
+        if ($isSuperadmin) {
+            // Superadmin: is_global = 1, owner_id = null
+            PosProdukMerk::create([
+                'owner_id' => null,
+                'nama' => $request->nama,
+                'is_global' => 1,
+            ]);
+        } else {
+            // Owner/Admin: owner_id = their owner_id, is_global = 0 or null
+            $ownerId = $user->owner ? $user->owner->id : null;
+            PosProdukMerk::create([
+                'owner_id' => $ownerId,
+                'nama' => $request->nama,
+                'is_global' => 0,
+            ]);
+        }
 
         return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil ditambahkan');
     }
@@ -95,14 +127,24 @@ class PosProdukMerkController extends Controller
     public function update(Request $request, PosProdukMerk $posProdukMerk)
     {
         $merk = $posProdukMerk;
+        $user = Auth::user();
+        $isSuperadmin = $user->hasRole('SUPERADMIN');
 
         $request->validate([
             'nama' => 'required|string|max:255',
         ]);
 
-        $merk->update([
+        $updateData = [
             'nama' => $request->nama,
-        ]);
+        ];
+
+        // Ensure superadmin items stay global
+        if ($isSuperadmin) {
+            $updateData['is_global'] = 1;
+            $updateData['owner_id'] = null;
+        }
+
+        $merk->update($updateData);
 
         return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil diperbarui');
     }
@@ -133,11 +175,21 @@ class PosProdukMerkController extends Controller
         }
 
         $user = Auth::user();
-        $ownerId = $user->owner ? $user->owner->id : null;
+        $isSuperadmin = $user->hasRole('SUPERADMIN');
 
-        $deletedCount = PosProdukMerk::where('owner_id', $ownerId)
-            ->whereIn('id', $ids)
-            ->delete();
+        if ($isSuperadmin) {
+            // Superadmin can only delete global items
+            $deletedCount = PosProdukMerk::where('is_global', 1)
+                ->whereNull('owner_id')
+                ->whereIn('id', $ids)
+                ->delete();
+        } else {
+            // Owner/Admin can only delete their own items
+            $ownerId = $user->owner ? $user->owner->id : null;
+            $deletedCount = PosProdukMerk::where('owner_id', $ownerId)
+                ->whereIn('id', $ids)
+                ->delete();
+        }
         
         return redirect()->route('pos-produk-merk.index')
             ->with('success', $deletedCount . ' brand berhasil dihapus');
@@ -153,16 +205,26 @@ class PosProdukMerkController extends Controller
     {
         try {
             $user = Auth::user();
-            $ownerId = $user->owner ? $user->owner->id : null;
+            $isSuperadmin = $user->hasRole('SUPERADMIN');
 
             $validatedData = $request->validate([
                 'nama' => 'required|string|max:255',
             ]);
 
-            $merk = PosProdukMerk::create([
-                'owner_id' => $ownerId,
-                'nama' => $validatedData['nama'],
-            ]);
+            if ($isSuperadmin) {
+                $merk = PosProdukMerk::create([
+                    'owner_id' => null,
+                    'nama' => $validatedData['nama'],
+                    'is_global' => 1,
+                ]);
+            } else {
+                $ownerId = $user->owner ? $user->owner->id : null;
+                $merk = PosProdukMerk::create([
+                    'owner_id' => $ownerId,
+                    'nama' => $validatedData['nama'],
+                    'is_global' => 0,
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
