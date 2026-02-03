@@ -133,6 +133,14 @@ Route::middleware(['auth'])->group(function () {
         // Chat Analisis
         Route::get('chat-analisis', [\App\Http\Controllers\ChatAnalysisController::class, 'index'])->name('chat.index');
         Route::post('chat-analisis/ask', [\App\Http\Controllers\ChatAnalysisController::class, 'ask'])->name('chat.ask');
+        
+        // Data Master - Penyimpanan, Warna, RAM (OWNER & ADMIN accessible)
+        Route::delete('pos-penyimpanan/bulk-destroy', \App\Http\Controllers\PosPenyimpananController::class . '@bulkDestroy')->name('pos-penyimpanan.bulk-destroy');
+        Route::delete('pos-warna/bulk-destroy', \App\Http\Controllers\PosWarnaController::class . '@bulkDestroy')->name('pos-warna.bulk-destroy');
+        Route::delete('pos-ram/bulk-destroy', \App\Http\Controllers\PosRamController::class . '@bulkDestroy')->name('pos-ram.bulk-destroy');
+        Route::resource('pos-penyimpanan', \App\Http\Controllers\PosPenyimpananController::class);
+        Route::resource('pos-warna', \App\Http\Controllers\PosWarnaController::class);
+        Route::resource('pos-ram', \App\Http\Controllers\PosRamController::class);
     });
 
     // API Routes for AJAX (accessible by OWNER & ADMIN)
@@ -156,12 +164,14 @@ Route::middleware(['auth'])->group(function () {
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
 
-        // Data Master
-        Route::delete('pos-penyimpanan/bulk-destroy', \App\Http\Controllers\PosPenyimpananController::class . '@bulkDestroy')->name('pos-penyimpanan.bulk-destroy');
-        Route::delete('pos-warna/bulk-destroy', \App\Http\Controllers\PosWarnaController::class . '@bulkDestroy')->name('pos-warna.bulk-destroy');
-        Route::delete('pos-ram/bulk-destroy', \App\Http\Controllers\PosRamController::class . '@bulkDestroy')->name('pos-ram.bulk-destroy');
+        // Data Master (Penyimpanan, Warna, RAM) - Custom bulk delete must come before resource
+        Route::delete('pos-penyimpanan/bulk-destroy', [\App\Http\Controllers\PosPenyimpananController::class, 'bulkDestroy'])->name('pos-penyimpanan.bulk-destroy');
         Route::resource('pos-penyimpanan', \App\Http\Controllers\PosPenyimpananController::class);
+        
+        Route::delete('pos-warna/bulk-destroy', [\App\Http\Controllers\PosWarnaController::class, 'bulkDestroy'])->name('pos-warna.bulk-destroy');
         Route::resource('pos-warna', \App\Http\Controllers\PosWarnaController::class);
+        
+        Route::delete('pos-ram/bulk-destroy', [\App\Http\Controllers\PosRamController::class, 'bulkDestroy'])->name('pos-ram.bulk-destroy');
         Route::resource('pos-ram', \App\Http\Controllers\PosRamController::class);
 
         // Manage Profile - Contact Admin
