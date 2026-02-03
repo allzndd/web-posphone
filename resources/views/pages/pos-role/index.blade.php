@@ -20,7 +20,7 @@
                 </p>
             </div>
             
-            <!-- Search & Add Button -->
+            <!-- Search & Add & Bulk Delete Button -->
             <div class="flex items-center gap-3">
                 <!-- Search Form -->
                 <form method="GET" action="{{ route('pos-role.index') }}" class="relative">
@@ -32,6 +32,16 @@
                                class="block w-full bg-transparent text-sm font-medium text-navy-700 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                     </div>
                 </form>
+                
+                <!-- Bulk Delete Button (hidden by default) -->
+                <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
+                        onclick="confirmBulkDelete()">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                    </svg>
+                    Delete Selected
+                </button>
                 
                 <!-- Add New Button -->
                 <a href="{{ route('pos-role.create') }}" 
@@ -50,6 +60,11 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
+                        <th class="py-3 text-left" style="width: 40px;">
+                            <input type="checkbox" id="selectAllCheckbox" 
+                                   class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer"
+                                   onchange="toggleSelectAll(this)">
+                        </th>
                         <th class="py-3 text-left col-no">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">No</p>
                         </th>
@@ -70,6 +85,11 @@
                 <tbody>
                     @forelse ($roles as $role)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-role.edit', $role) }}">
+                        <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
+                            <input type="checkbox" class="role-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
+                                   value="{{ $role->id }}" 
+                                   onchange="updateBulkDeleteButton()">
+                        </td>
                         <td class="py-4 col-no">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $loop->iteration }}</p>
                         </td>
@@ -185,27 +205,151 @@
         <span>Delete</span>
     </button>
 </div>
+
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="_method" value="DELETE">
+    <input type="hidden" id="bulkIds" name="ids" value="">
+</form>
+
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-sm w-full mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Konfirmasi Hapus</h3>
+            <button type="button" id="modalCloseBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-600 dark:text-gray-400 mb-2">Apakah Anda yakin ingin menghapus item ini?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500">Tindakan ini tidak dapat dibatalkan.</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition">Batal</button>
+            <button type="button" id="modalConfirmBtn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Hapus</button>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize the reusable dropdown component
-        new TableActionDropdown({
-            dropdownSelector: '#actionDropdown',
-            buttonSelector: '.btn-actions-menu',
-            editMenuSelector: '#editMenuItem',
-            deleteMenuSelector: '#deleteMenuItem',
-            zoomFactor: 0.9,
-            confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus role ini?'
-        });
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+}
 
-        // Make table rows clickable
-        document.querySelectorAll('tr[data-href]').forEach(function(row) {
-            row.addEventListener('click', function() {
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.role-checkbox');
+    checkboxes.forEach(function(cb) {
+        cb.checked = checkbox.checked;
+    });
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkedBoxes = document.querySelectorAll('.role-checkbox:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (checkedBoxes.length > 0) {
+        bulkDeleteBtn.classList.remove('hidden');
+    } else {
+        bulkDeleteBtn.classList.add('hidden');
+        document.getElementById('selectAllCheckbox').checked = false;
+    }
+}
+
+function confirmBulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.role-checkbox:checked');
+    const count = checkedBoxes.length;
+    
+    if (count === 0) {
+        alert('Pilih minimal satu role untuk dihapus');
+        return;
+    }
+
+    const modal = document.getElementById('deleteConfirmModal');
+    const messageEl = modal.querySelector('p.text-gray-600');
+    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus <span class="font-bold text-red-600 dark:text-red-400">' + count + ' role' + (count > 1 ? 's' : '') + '</span>?';
+    modal.classList.remove('hidden');
+    
+    window.pendingDeleteIds = Array.from(checkedBoxes).map(function(cb) {
+        return cb.value;
+    });
+}
+
+function proceedBulkDelete() {
+    // Check if this is a single delete from dropdown
+    if (window.pendingDeleteUrl) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.pendingDeleteUrl;
+        form.style.display = 'none';
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_token';
+            input.value = csrfToken.content;
+            form.appendChild(input);
+        }
+        
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+        delete window.pendingDeleteUrl;
+        return;
+    }
+    
+    // Otherwise it's a bulk delete
+    if (!window.pendingDeleteIds || window.pendingDeleteIds.length === 0) {
+        alert('Pilih minimal satu role untuk dihapus');
+        return;
+    }
+
+    document.getElementById('bulkIds').value = JSON.stringify(window.pendingDeleteIds);
+    
+    const form = document.getElementById('bulkDeleteForm');
+    form.action = '{{ route('pos-role.bulk-destroy') }}';
+    form.submit();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+        if (e.target.id === 'deleteConfirmModal') {
+            closeDeleteModal();
+        }
+    });
+
+    const dropdown = new TableActionDropdown({
+        dropdownSelector: '#actionDropdown',
+        buttonSelector: '.btn-actions-menu',
+        editMenuSelector: '#editMenuItem',
+        deleteMenuSelector: '#deleteMenuItem',
+        zoomFactor: 0.9,
+        confirmDeleteMessage: 'Apakah Anda yakin ingin menghapus role ini?'
+    });
+
+    document.querySelectorAll('tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.role-checkbox')) {
                 window.location.href = this.dataset.href;
-            });
+            }
         });
     });
+});
 </script>
 @endpush
