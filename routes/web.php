@@ -32,7 +32,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin & Owner Routes - POS Transactions & Customers
     Route::middleware(['role:OWNER,ADMIN'])->group(function () {
-        // POS Users (pos_pengguna) - Karyawan toko
+        // POS Users (pos_pengguna) - Karyawan toko - Custom bulk delete must come before resource
+        Route::delete('pos-pengguna/bulk-destroy', [\App\Http\Controllers\PosPenggunaController::class, 'bulkDestroy'])->name('pos-pengguna.bulk-destroy');
         Route::resource('pos-pengguna', \App\Http\Controllers\PosPenggunaController::class);
         
         // Incoming Transactions (Sales) - Must come before resource route
@@ -93,7 +94,8 @@ Route::middleware(['auth'])->group(function () {
         // Trade-In (pos_tukar_tambah) - OWNER ONLY
         Route::resource('tukar-tambah', \App\Http\Controllers\TukarTambahController::class);
         
-        // POS Roles (pos_role)
+        // POS Roles (pos_role) - Custom bulk delete must come before resource
+        Route::delete('pos-role/bulk-destroy', [\App\Http\Controllers\PosRoleController::class, 'bulkDestroy'])->name('pos-role.bulk-destroy');
         Route::resource('pos-role', \App\Http\Controllers\PosRoleController::class);
         
         // Stores (pos_toko)
