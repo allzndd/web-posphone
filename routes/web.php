@@ -156,7 +156,13 @@ Route::middleware(['auth'])->group(function () {
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
 
-                // Manage Profile - Contact Admin
-                Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');
+        // Data Master
+        Route::delete('pos-penyimpanan/bulk-destroy', \App\Http\Controllers\PosPenyimpananController::class . '@bulkDestroy')->name('pos-penyimpanan.bulk-destroy');
+        Route::delete('pos-warna/bulk-destroy', \App\Http\Controllers\PosWarnaController::class . '@bulkDestroy')->name('pos-warna.bulk-destroy');
+        Route::resource('pos-penyimpanan', \App\Http\Controllers\PosPenyimpananController::class);
+        Route::resource('pos-warna', \App\Http\Controllers\PosWarnaController::class);
+
+        // Manage Profile - Contact Admin
+        Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');
     });
 });
