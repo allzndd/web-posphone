@@ -81,8 +81,20 @@ class TableActionDropdown {
     }
     
     handleButtonClick(btn) {
-        const editUrl = btn.dataset.roleEdit || btn.dataset.editUrl;
-        const destroyUrl = btn.dataset.roleDestroy || btn.dataset.destroyUrl;
+        // Try to find edit URL from various data attribute prefixes
+        let editUrl = btn.dataset.roleEdit || 
+                      btn.dataset.produkEdit || 
+                      btn.dataset.warnaEdit ||
+                      btn.dataset.penyimpananEdit ||
+                      btn.dataset.editUrl;
+        
+        // Try to find destroy URL from various data attribute prefixes
+        let destroyUrl = btn.dataset.roleDestroy || 
+                         btn.dataset.produkDestroy || 
+                         btn.dataset.warnaDestroy ||
+                         btn.dataset.penyimpananDestroy ||
+                         btn.dataset.destroy ||
+                         btn.dataset.destroyUrl;
         
         this.currentEditUrl = editUrl;
         this.currentDestroyUrl = destroyUrl;
