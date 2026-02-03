@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pelanggan')
+@section('title', 'Customers')
 
 @push('style')
 <!-- Load reusable table components CSS -->
@@ -16,7 +16,7 @@
             <div>
                 <h4 class="text-xl font-bold text-navy-700 dark:text-white">Pelanggan</h4>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {{ $pelanggan->total() }} total pelanggan
+                    {{ $pelanggan->total() }} total Customers
                 </p>
             </div>
             
@@ -50,7 +50,7 @@
                         <path fill="none" d="M0 0h24v24H0z"></path>
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
                     </svg>
-                    Tambah Pelanggan
+                    Add New Customer
                 </a>
             </div>
         </div>
