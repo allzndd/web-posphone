@@ -52,29 +52,33 @@
             <!-- Form Grid -->
             <div class="grid grid-cols-1 gap-5">
                 
-                <!-- Owner Field - Only show for non-superadmin -->
-                @if(!auth()->user()->isSuperadmin())
-                <div>
-                    <label for="id_owner" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Owner <span class="text-red-500">*</span>
-                    </label>
-                    <select 
-                        id="id_owner"
-                        name="id_owner" 
-                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('id_owner') !border-red-500 @enderror"
-                    >
-                        <option value="">-- Pilih Owner --</option>
-                        @foreach($owners as $owner)
-                            <option value="{{ $owner->id }}" {{ old('id_owner') == $owner->id ? 'selected' : '' }}>
-                                {{ $owner->name }} ({{ $owner->email }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('id_owner')
-                        <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Pilih owner yang akan mengelola penyimpanan ini</p>
-                </div>
+                <!-- ID Owner (Hidden field for non-superadmin) -->
+                @if(auth()->user()->isSuperadmin())
+                    <!-- For superadmin, show dropdown to select owner -->
+                    <div>
+                        <label for="id_owner" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                            Owner <span class="text-red-500">*</span>
+                        </label>
+                        <select 
+                            id="id_owner"
+                            name="id_owner" 
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('id_owner') !border-red-500 @enderror"
+                        >
+                            <option value="">-- Pilih Owner --</option>
+                            @foreach($owners as $owner)
+                                <option value="{{ $owner->id }}" {{ old('id_owner') == $owner->id ? 'selected' : '' }}>
+                                    {{ $owner->name }} ({{ $owner->email }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('id_owner')
+                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Pilih owner yang akan mengelola penyimpanan ini</p>
+                    </div>
+                @else
+                    <!-- For owner and admin, use hidden field with their ID -->
+                    <input type="hidden" name="id_owner" value="{{ auth()->id() }}">
                 @endif
 
                 <!-- Kapasitas Field -->
