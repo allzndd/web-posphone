@@ -21,15 +21,29 @@
             </div>
             
             <!-- Search & Add & Bulk Delete Button -->
-            <div class="flex items-center gap-3">
-                <!-- Search Form -->
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- Merk Filter -->
                 <form method="GET" action="{{ route('pos-produk-merk.index') }}" class="relative">
                     <div class="flex items-center rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-4 py-2">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="h-4 w-4 text-gray-400 dark:text-white mr-2" xmlns="http://www.w3.org/2000/svg">
                             <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path>
                         </svg>
-                        <input type="text" name="nama" value="{{ request('nama') }}" placeholder="Search brands..." 
-                               class="block w-full bg-transparent text-sm font-medium text-navy-700 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                        <input type="text" name="merk" value="{{ request('merk') }}" placeholder="Search merk..." 
+                               class="block w-40 bg-transparent text-sm font-medium text-navy-700 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                    </div>
+                </form>
+
+                <!-- Product Name Filter -->
+                <form method="GET" action="{{ route('pos-produk-merk.index') }}" class="relative">
+                    @if(request('merk'))
+                        <input type="hidden" name="merk" value="{{ request('merk') }}">
+                    @endif
+                    <div class="flex items-center rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-4 py-2">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="h-4 w-4 text-gray-400 dark:text-white mr-2" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path>
+                        </svg>
+                        <input type="text" name="nama" value="{{ request('nama') }}" placeholder="Search name..." 
+                               class="block w-48 bg-transparent text-sm font-medium text-navy-700 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                     </div>
                 </form>
                 
@@ -50,13 +64,16 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
-                        <th class="py-3 text-center w-12">
+                        <th class="py-3 text-center" style="width: 40px;">
                             <input type="checkbox" id="selectAllCheckbox" 
                                    class="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-400 dark:ring-offset-gray-800 focus:ring-2 dark:bg-navy-700 dark:border-gray-600"
                                    onchange="toggleSelectAll(this)" />
                         </th>
-                        <th class="py-3 text-center w-16">
+                        <th class="py-3 text-center col-no">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">NO</p>
+                        </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Merk</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
@@ -72,13 +89,16 @@
                 <tbody>
                     @forelse ($merks as $merk)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pos-produk-merk.edit', $merk) }}">
-                        <td class="py-4 text-center" onclick="event.stopPropagation()">
+                        <td class="py-4 text-center" style="width: 40px;" onclick="event.stopPropagation()">
                             <input type="checkbox" value="{{ $merk->id }}" 
                                    class="merk-checkbox w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500 dark:focus:ring-brand-400 dark:ring-offset-gray-800 focus:ring-2 dark:bg-navy-700 dark:border-gray-600"
                                    onchange="updateBulkDeleteButton()" />
                         </td>
-                        <td class="py-4 text-center">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $loop->iteration }}</p>
+                        <td class="py-4 text-center col-no">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $loop->iteration + ($merks->currentPage() - 1) * $merks->perPage() }}</p>
+                        </td>
+                        <td class="py-4">
+                            <p class="text-sm font-medium text-navy-700 dark:text-white">{{ $merk->merk ?? '-' }}</p>
                         </td>
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $merk->nama }}</p>
@@ -100,13 +120,13 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="py-12 text-center">
+                        <td colspan="6" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
-                                <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-12 w-12 text-gray-400 dark:text-gray-600 mb-4" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
-                                <p class="text-lg font-medium text-gray-600 dark:text-gray-400">No brands found</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Try adjusting your search criteria</p>
+                                <p class="text-gray-600 dark:text-gray-400 font-medium">No product names found</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Try adjusting your search filters</p>
                             </div>
                         </td>
                     </tr>
@@ -118,52 +138,33 @@
         <!-- Pagination -->
         <div class="border-t border-gray-200 dark:border-white/10 px-6 py-4">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <!-- Items Per Page & Info -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
-                    <form method="GET" action="{{ route('pos-produk-merk.index') }}" class="inline-block">
-                        @if(request('nama'))
-                            <input type="hidden" name="nama" value="{{ request('nama') }}">
-                        @endif
-                        <select name="per_page" onchange="this.form.submit()" 
-                                class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
-                            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
-                        </select>
-                    </form>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing {{ $merks->firstItem() ?? 0 }} to {{ $merks->lastItem() ?? 0 }} of {{ $merks->total() }}
-                    </span>
+                <!-- Per Page Selector -->
+                <form method="GET" action="{{ route('pos-produk-merk.index') }}" class="flex items-center gap-2">
+                    @if(request('nama'))
+                        <input type="hidden" name="nama" value="{{ request('nama') }}">
+                    @endif
+                    @if(request('merk'))
+                        <input type="hidden" name="merk" value="{{ request('merk') }}">
+                    @endif
+                    <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Per page:</label>
+                    <select name="per_page" onchange="this.form.submit()" class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-navy-800 px-3 py-1 text-sm font-medium text-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                </form>
+
+                <!-- Pagination Info -->
+                <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Showing <span class="font-bold">{{ $merks->firstItem() ?? 0 }}</span> to 
+                    <span class="font-bold">{{ $merks->lastItem() ?? 0 }}</span> of 
+                    <span class="font-bold">{{ $merks->total() }}</span> results
                 </div>
 
-                <!-- Pagination Buttons -->
-                <div class="flex items-center gap-1">
-                    @if ($merks->onFirstPage())
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
-                    @else
-                        <a href="{{ $merks->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
-                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">◀</a>
-                    @endif
-
-                    @for ($page = max(1, $merks->currentPage() - 2); $page <= min($merks->lastPage(), $merks->currentPage() + 2); $page++)
-                        @if ($page == $merks->currentPage())
-                            <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
-                                {{ $page }}
-                            </span>
-                        @else
-                            <a href="{{ $merks->url($page) }}&per_page={{ request('per_page', 10) }}" 
-                               class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">
-                                {{ $page }}
-                            </a>
-                        @endif
-                    @endfor
-
-                    @if ($merks->hasMorePages())
-                        <a href="{{ $merks->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
-                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">▶</a>
-                    @else
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>
-                    @endif
+                <!-- Pagination Links -->
+                <div class="flex items-center gap-2">
+                    {{ $merks->appends(request()->query())->links('pagination::tailwind') }}
                 </div>
             </div>
         </div>
@@ -329,13 +330,12 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             currentButton = btn;
             
-            // Position dropdown - account for zoom: 90% (0.9) in app.blade
+            // Position dropdown
             const rect = btn.getBoundingClientRect();
-            const zoomFactor = 0.9;
             const dropdownWidth = 140;
             actionDropdown.style.position = 'fixed';
-            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
-            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.top = rect.top + 'px';
+            actionDropdown.style.left = (rect.left - dropdownWidth) + 'px';
             actionDropdown.style.zIndex = '1001';
             
             actionDropdown.classList.add('show');
