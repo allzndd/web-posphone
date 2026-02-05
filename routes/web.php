@@ -142,6 +142,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('pos-produk-merk/bulk-destroy', [\App\Http\Controllers\PosProdukMerkController::class, 'bulkDestroy'])->name('pos-produk-merk.bulk-destroy');
         Route::post('api/pos-produk-merk/quick-store', [\App\Http\Controllers\PosProdukMerkController::class, 'quickStore'])->name('pos-produk-merk.quick-store');
         Route::resource('pos-produk-merk', \App\Http\Controllers\PosProdukMerkController::class);
+        Route::delete('pos-kategori-expense/bulk-destroy', [\App\Http\Controllers\PosKategoriExpenseController::class, 'bulkDestroy'])->name('pos-kategori-expense.bulk-destroy');
+        Route::resource('pos-kategori-expense', \App\Http\Controllers\PosKategoriExpenseController::class);
     });
 
     // API Routes for AJAX (accessible by OWNER & ADMIN)
