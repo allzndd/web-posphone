@@ -21,14 +21,13 @@ class SupplierController extends Controller
         $query = PosSupplier::where('owner_id', $ownerId)
             ->orderBy('created_at', 'desc');
 
-        // Search by name
-        if ($request->filled('nama')) {
-            $query->where('nama', 'like', '%' . $request->nama . '%');
-        }
-
-        // Search by phone
-        if ($request->filled('nomor_hp')) {
-            $query->where('nomor_hp', 'like', '%' . $request->nomor_hp . '%');
+        // Search by name or phone
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('nama', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('nomor_hp', 'like', '%' . $searchTerm . '%');
+            });
         }
 
         $suppliers = $query->paginate($perPage);

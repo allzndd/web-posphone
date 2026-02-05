@@ -159,7 +159,7 @@
                             @if ($posRams->onFirstPage())
                                 <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
                             @else
-                                <a href="{{ $posRams->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                                <a href="{{ $posRams->previousPageUrl() }}&per_page={{ request('per_page', 10) }}{{ request('kapasitas') ? '&kapasitas=' . request('kapasitas') : '' }}" 
                                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">◀</a>
                             @endif
 
@@ -169,7 +169,7 @@
                                         {{ $page }}
                                     </span>
                                 @else
-                                    <a href="{{ $posRams->url($page) }}&per_page={{ request('per_page', 10) }}" 
+                                    <a href="{{ $posRams->url($page) }}&per_page={{ request('per_page', 10) }}{{ request('kapasitas') ? '&kapasitas=' . request('kapasitas') : '' }}" 
                                        class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">
                                         {{ $page }}
                                     </a>
@@ -177,7 +177,7 @@
                             @endfor
 
                             @if ($posRams->hasMorePages())
-                                <a href="{{ $posRams->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
+                                <a href="{{ $posRams->nextPageUrl() }}&per_page={{ request('per_page', 10) }}{{ request('kapasitas') ? '&kapasitas=' . request('kapasitas') : '' }}" 
                                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">▶</a>
                             @else
                                 <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>

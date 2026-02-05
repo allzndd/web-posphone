@@ -11,7 +11,7 @@ class PosPenyimpananController extends Controller
     /**
      * Display a listing of the penyimpanan.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = PosPenyimpanan::with('owner');
         
@@ -30,7 +30,13 @@ class PosPenyimpananController extends Controller
             $query->where('id_global', 1);
         }
         
-        $posPenyimpanans = $query->paginate(15);
+        // Search by kapasitas
+        if ($request->has('kapasitas') && !empty($request->get('kapasitas'))) {
+            $query->where('kapasitas', 'like', '%' . $request->get('kapasitas') . '%');
+        }
+        
+        $perPage = $request->get('per_page', 15);
+        $posPenyimpanans = $query->orderBy('created_at', 'desc')->paginate($perPage);
         return view('pages.pos-penyimpanan.index', compact('posPenyimpanans'));
     }
 

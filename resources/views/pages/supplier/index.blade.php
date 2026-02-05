@@ -19,54 +19,39 @@
                 </p>
             </div>
             
-            <!-- Bulk Delete Button -->
-            <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
-                    onclick="confirmBulkDelete()">
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="none" d="M0 0h24v24H0z"></path>
-                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                </svg>
-                Delete Selected
-            </button>
-            
-            <!-- Add New Button -->
-            <a href="{{ route('supplier.create') }}" 
-               class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                    <path fill="none" d="M0 0h24v24H0z"></path>
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
-                </svg>
-                Add New Supplier
-            </a>
-        </div>
-
-        <!-- Filters -->
-        <div class="px-6 pb-4">
-            <form method="GET" action="{{ route('supplier.index') }}" class="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <!-- Search Name -->
-                <input type="text" name="nama" value="{{ request('nama') }}" placeholder="Search supplier name..." 
-                       class="rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-2 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-
-                <!-- Search Phone -->
-                <input type="text" name="nomor_hp" value="{{ request('nomor_hp') }}" placeholder="Search phone number..." 
-                       class="rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-2 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 placeholder:text-gray-400 dark:placeholder:text-gray-500" />
-
-                <div class="flex gap-2">
-                    <button type="submit" 
-                            class="flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 py-2 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <!-- Search & Bulk Delete & Add Button -->
+            <div class="flex items-center gap-3">
+                <!-- Search Form -->
+                <form method="GET" action="{{ route('supplier.index') }}" class="relative">
+                    <div class="flex items-center rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-4 py-2">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="h-4 w-4 text-gray-400 dark:text-white mr-2" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path>
                         </svg>
-                        Search
-                    </button>
-                    @if(request()->hasAny(['nama', 'nomor_hp']))
-                        <a href="{{ route('supplier.index') }}" 
-                           class="flex items-center justify-center rounded-xl bg-gray-100 px-5 py-2 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
-                            Reset
-                        </a>
-                    @endif
-                </div>
-            </form>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search supplier..." 
+                               class="block w-48 bg-transparent text-sm font-medium text-navy-700 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500" />
+                    </div>
+                </form>
+                
+                <!-- Bulk Delete Button (hidden by default) -->
+                <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
+                        onclick="confirmBulkDelete()">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                    </svg>
+                    Delete Selected
+                </button>
+                
+                <!-- Add New Button -->
+                <a href="{{ route('supplier.create') }}" 
+                   class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                    </svg>
+                    Add New Supplier
+                </a>
+            </div>
         </div>
 
         <!-- Table -->
@@ -194,8 +179,9 @@
             <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
                 <form method="GET" action="{{ route('supplier.index') }}" class="inline-block">
-                    <input type="hidden" name="nama" value="{{ request('nama') }}">
-                    <input type="hidden" name="nomor_hp" value="{{ request('nomor_hp') }}">
+                    @if(request('search'))
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
                     <select name="per_page" onchange="this.form.submit()" 
                             class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400 [&>option]:!bg-white [&>option]:dark:!bg-navy-800 [&>option]:!text-navy-700 [&>option]:dark:!text-white">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>

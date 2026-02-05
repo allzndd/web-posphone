@@ -147,7 +147,7 @@
                             </div>
                         </a>
                     </li>
-                    <li class="relative mb-2 flex hover:cursor-pointer">
+                    <!-- <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('pos-produk-merk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('pos-produk-merk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
@@ -155,7 +155,7 @@
                                 </p>
                             </div>
                         </a>
-                    </li>
+                    </li> -->
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('produk-stok.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">

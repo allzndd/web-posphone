@@ -11,7 +11,7 @@ class PosWarnaController extends Controller
     /**
      * Display a listing of the warna.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = PosWarna::with('owner');
         
@@ -30,7 +30,13 @@ class PosWarnaController extends Controller
             $query->where('is_global', 1);
         }
         
-        $posWarnas = $query->paginate(15);
+        // Search by warna
+        if ($request->has('warna') && !empty($request->get('warna'))) {
+            $query->where('warna', 'like', '%' . $request->get('warna') . '%');
+        }
+        
+        $perPage = $request->get('per_page', 15);
+        $posWarnas = $query->orderBy('created_at', 'desc')->paginate($perPage);
         return view('pages.pos-warna.index', compact('posWarnas'));
     }
 
