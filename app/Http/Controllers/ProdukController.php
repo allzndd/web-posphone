@@ -304,11 +304,18 @@ class ProdukController extends Controller
                 'harga_beli' => 'required|numeric|min:0',
                 'harga_jual' => 'required|numeric|min:0',
                 'warna' => 'nullable|string|max:255',
+                'ram' => 'nullable|string|max:255',
                 'penyimpanan' => 'nullable|string|max:255',
                 'battery_health' => 'nullable|string|max:255',
-                'imei' => $request->product_type === 'electronic' ? 'required|string|max:255' : 'nullable|string|max:255',
+                'imei' => 'nullable|string|max:255',
             ]);
 
+            // Prepare warna, ram, penyimpanan (store as text values)
+            // Also create records in related tables for reference
+            $warnaText = null;
+            $penyimpananText = null;
+
+            // Create product first
             $produk = PosProduk::create([
                 'owner_id' => $ownerId,
                 'pos_produk_merk_id' => $request->pos_produk_merk_id,
@@ -321,6 +328,43 @@ class ProdukController extends Controller
                 'battery_health' => $request->battery_health,
                 'imei' => $request->imei,
             ]);
+
+            // Handle Color (Warna)
+            if (!empty($request->warna)) {
+                \App\Models\PosWarna::create([
+                    'id_owner' => $ownerId,
+                    'warna' => $request->warna,
+                    'pos_produk_id' => $produk->id,
+                    'is_global' => 0,
+                ]);
+            }
+
+            // Handle RAM - store in PosRam table
+            if (!empty($request->ram)) {
+                // Extract only numeric value for PosRam
+                $ramValue = preg_replace('/[^0-9]/', '', $request->ram);
+                if (!empty($ramValue)) {
+                    \App\Models\PosRam::create([
+                        'id_owner' => $ownerId,
+                        'kapasitas' => (int)$ramValue,
+                        'pos_produk_id' => $produk->id,
+                        'is_global' => 0,
+                    ]);
+                }
+            }
+
+            // Handle Storage (Penyimpanan)
+            if (!empty($request->penyimpanan)) {
+                // Extract only numeric value for PosPenyimpanan
+                $storageValue = preg_replace('/[^0-9]/', '', $request->penyimpanan);
+                if (!empty($storageValue)) {
+                    \App\Models\PosPenyimpanan::create([
+                        'id_owner' => $ownerId,
+                        'kapasitas' => (int)$storageValue,
+                        'pos_produk_id' => $produk->id,
+                    ]);
+                }
+            }
 
             // Automatically create stock entry for all stores with quantity 1
             $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
