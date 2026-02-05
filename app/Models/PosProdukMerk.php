@@ -14,8 +14,10 @@ class PosProdukMerk extends Model
 
     protected $fillable = [
         'owner_id',
+        'merk',
         'nama',
         'slug',
+        'is_global',
     ];
 
     /**
