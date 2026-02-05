@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosProdukMerk;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class PosProdukMerkController extends Controller
 {
@@ -13,39 +13,46 @@ class PosProdukMerkController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index()
     {
-        $user = Auth::user();
-        $isSuperadmin = $user->hasRole('SUPERADMIN');
+        $query = PosProdukMerk::with('owner');
         
-        if ($isSuperadmin) {
-            // Superadmin sees only global items (is_global = 1, owner_id = null)
-            $merks = PosProdukMerk::where('is_global', 1)
-                ->whereNull('owner_id')
-                ->withCount('produk')
-                ->when($request->input('nama'), function ($query, $nama) {
-                    return $query->where('nama', 'like', '%' . $nama . '%');
-                })
-                ->when($request->input('merk'), function ($query, $merk) {
-                    return $query->where('merk', 'like', '%' . $merk . '%');
-                })
-                ->orderBy('id', 'desc')
-                ->paginate($request->input('per_page', 10));
-        } else {
-            // Owner/Admin sees only their own items
-            $ownerId = $user->owner ? $user->owner->id : null;
-            $merks = PosProdukMerk::where('owner_id', $ownerId)
-                ->withCount('produk')
-                ->when($request->input('nama'), function ($query, $nama) {
-                    return $query->where('nama', 'like', '%' . $nama . '%');
-                })
-                ->when($request->input('merk'), function ($query, $merk) {
-                    return $query->where('merk', 'like', '%' . $merk . '%');
-                })
-                ->orderBy('id', 'desc')
-                ->paginate($request->input('per_page', 10));
+        // If superadmin, only show global items
+        if (auth()->user()->role_id === 1) {
+            $query->where('is_global', 1);
         }
-
+        // If owner, filter by their ID or global items
+        elseif (auth()->user()->role_id === 2) {
+            $query->where(function($q) {
+                $q->where('owner_id', auth()->id())
+                  ->orWhere('is_global', 1);
+            });
+        } elseif (auth()->user()->role_id === 3) { // role_id 3 = admin
+            // Admin can only see global items
+            $query->where('is_global', 1);
+        }
+        
+        // Fuzzy search - search across all database data before pagination
+        if (request('nama')) {
+            $searchTerm = request('nama');
+            // Split search term into words for better fuzzy matching
+            $words = explode(' ', trim($searchTerm));
+            
+            $query->where(function($q) use ($words, $searchTerm) {
+                // First, try exact partial match on the full search term
+                $q->where('merk', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('nama', 'LIKE', '%' . $searchTerm . '%');
+                
+                // Also match if all individual words are found
+                foreach ($words as $word) {
+                    $q->orWhere('merk', 'LIKE', '%' . $word . '%')
+                      ->orWhere('nama', 'LIKE', '%' . $word . '%');
+                }
+            });
+        }
+        
+        $perPage = request('per_page', 10);
+        $merks = $query->paginate($perPage);
         return view('pages.pos-produk-merk.index', compact('merks'));
     }
 
@@ -56,7 +63,33 @@ class PosProdukMerkController extends Controller
      */
     public function create()
     {
-        return view('pages.pos-produk-merk.create');
+        // Get distinct merk values - show all for superadmin, filtered for owner/admin
+        if (auth()->user()->role_id === 1) {
+            // Superadmin: show all merks
+            $merks = PosProdukMerk::where('is_global', 1)
+                ->distinct()
+                ->pluck('merk')
+                ->filter(function($value) {
+                    return !is_null($value) && $value !== '';
+                })
+                ->sort()
+                ->values();
+        } else {
+            // Owner/Admin: show global merks and their own merks
+            $merks = PosProdukMerk::where(function($q) {
+                $q->where('is_global', 1)
+                  ->orWhere('owner_id', auth()->id());
+            })
+                ->distinct()
+                ->pluck('merk')
+                ->filter(function($value) {
+                    return !is_null($value) && $value !== '';
+                })
+                ->sort()
+                ->values();
+        }
+        
+        return view('pages.pos-produk-merk.create', compact('merks'));
     }
 
     /**
@@ -67,31 +100,31 @@ class PosProdukMerkController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $isSuperadmin = $user->hasRole('SUPERADMIN');
-
-        $request->validate([
+        $validated = $request->validate([
+            'merk' => 'required|string|max:255',
             'nama' => 'required|string|max:255',
         ]);
 
-        if ($isSuperadmin) {
-            // Superadmin: is_global = 1, owner_id = null
-            PosProdukMerk::create([
-                'owner_id' => null,
-                'nama' => $request->nama,
-                'is_global' => 1,
-            ]);
-        } else {
-            // Owner/Admin: owner_id = their owner_id, is_global = 0 or null
-            $ownerId = $user->owner ? $user->owner->id : null;
-            PosProdukMerk::create([
-                'owner_id' => $ownerId,
-                'nama' => $request->nama,
-                'is_global' => 0,
-            ]);
+        // For superadmin, set owner_id to null and is_global to 1
+        if (auth()->user()->role_id === 1) {
+            $validated['owner_id'] = null;
+            $validated['is_global'] = 1;
+        }
+        // For owner, set owner_id to their ID and is_global to 0
+        elseif (auth()->user()->role_id === 2) {
+            $validated['owner_id'] = auth()->id();
+            $validated['is_global'] = 0;
+        }
+        // For admin, set is_global to 1
+        elseif (auth()->user()->role_id === 3) {
+            $validated['owner_id'] = auth()->id();
+            $validated['is_global'] = 0;
         }
 
-        return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil ditambahkan');
+        PosProdukMerk::create($validated);
+
+        return redirect()->route('pos-produk-merk.index')
+            ->with('success', 'Produk Merk berhasil ditambahkan');
     }
 
     /**
@@ -113,8 +146,39 @@ class PosProdukMerkController extends Controller
      */
     public function edit(PosProdukMerk $posProdukMerk)
     {
-        $merk = $posProdukMerk->loadCount('produk');
-        return view('pages.pos-produk-merk.edit', compact('merk'));
+        // Check authorization for owner - only can edit their own items
+        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        // Get distinct merk values - show all for superadmin, filtered for owner/admin
+        if (auth()->user()->role_id === 1) {
+            // Superadmin: show all merks
+            $merks = PosProdukMerk::where('is_global', 1)
+                ->distinct()
+                ->pluck('merk')
+                ->filter(function($value) {
+                    return !is_null($value) && $value !== '';
+                })
+                ->sort()
+                ->values();
+        } else {
+            // Owner/Admin: show global merks and their own merks
+            $merks = PosProdukMerk::where(function($q) {
+                $q->where('is_global', 1)
+                  ->orWhere('owner_id', auth()->id());
+            })
+                ->distinct()
+                ->pluck('merk')
+                ->filter(function($value) {
+                    return !is_null($value) && $value !== '';
+                })
+                ->sort()
+                ->values();
+        }
+        
+        $merk = $posProdukMerk;
+        return view('pages.pos-produk-merk.edit', compact('merk', 'merks'));
     }
 
     /**
@@ -126,27 +190,36 @@ class PosProdukMerkController extends Controller
      */
     public function update(Request $request, PosProdukMerk $posProdukMerk)
     {
-        $merk = $posProdukMerk;
-        $user = Auth::user();
-        $isSuperadmin = $user->hasRole('SUPERADMIN');
+        // Check authorization for owner - only can update their own items, not global items
+        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        $request->validate([
+        $validated = $request->validate([
+            'merk' => 'required|string|max:255',
             'nama' => 'required|string|max:255',
         ]);
 
-        $updateData = [
-            'nama' => $request->nama,
-        ];
-
-        // Ensure superadmin items stay global
-        if ($isSuperadmin) {
-            $updateData['is_global'] = 1;
-            $updateData['owner_id'] = null;
+        // For superadmin, set owner_id to null and is_global to 1
+        if (auth()->user()->role_id === 1) {
+            $validated['owner_id'] = null;
+            $validated['is_global'] = 1;
+        }
+        // For owner, set owner_id to their ID and is_global to 0
+        elseif (auth()->user()->role_id === 2) {
+            $validated['owner_id'] = auth()->id();
+            $validated['is_global'] = 0;
+        }
+        // For admin, set is_global to 0
+        elseif (auth()->user()->role_id === 3) {
+            $validated['owner_id'] = auth()->id();
+            $validated['is_global'] = 0;
         }
 
-        $merk->update($updateData);
+        $posProdukMerk->update($validated);
 
-        return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil diperbarui');
+        return redirect()->route('pos-produk-merk.index')
+            ->with('success', 'Produk Merk berhasil diperbarui');
     }
 
     /**
@@ -157,10 +230,15 @@ class PosProdukMerkController extends Controller
      */
     public function destroy(PosProdukMerk $posProdukMerk)
     {
-        $merk = $posProdukMerk;
-        $merk->delete();
+        // Check authorization for owner - only can delete their own items, not global items
+        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
 
-        return redirect()->route('pos-produk-merk.index')->with('success', 'Brand berhasil dihapus');
+        $posProdukMerk->delete();
+
+        return redirect()->route('pos-produk-merk.index')
+            ->with('success', 'Produk Merk berhasil dihapus');
     }
 
     /**
@@ -168,31 +246,24 @@ class PosProdukMerkController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
-        $ids = json_decode($request->ids, true);
+        $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {
-            return redirect()->back()->with('error', 'Pilih minimal satu brand untuk dihapus');
+            return redirect()->route('pos-produk-merk.index')
+                ->with('error', 'Tidak ada data yang dipilih');
         }
 
-        $user = Auth::user();
-        $isSuperadmin = $user->hasRole('SUPERADMIN');
-
-        if ($isSuperadmin) {
-            // Superadmin can only delete global items
-            $deletedCount = PosProdukMerk::where('is_global', 1)
-                ->whereNull('owner_id')
-                ->whereIn('id', $ids)
-                ->delete();
-        } else {
-            // Owner/Admin can only delete their own items
-            $ownerId = $user->owner ? $user->owner->id : null;
-            $deletedCount = PosProdukMerk::where('owner_id', $ownerId)
-                ->whereIn('id', $ids)
-                ->delete();
+        $query = PosProdukMerk::whereIn('id', $ids);
+        
+        // If owner, only allow deleting their own items
+        if (auth()->user()->role_id === 2) {
+            $query->where('owner_id', auth()->id());
         }
         
+        $query->delete();
+
         return redirect()->route('pos-produk-merk.index')
-            ->with('success', $deletedCount . ' brand berhasil dihapus');
+            ->with('success', 'Produk Merk berhasil dihapus');
     }
 
     /**
@@ -204,25 +275,32 @@ class PosProdukMerkController extends Controller
     public function quickStore(Request $request)
     {
         try {
-            $user = Auth::user();
-            $isSuperadmin = $user->hasRole('SUPERADMIN');
-
             $validatedData = $request->validate([
                 'nama' => 'required|string|max:255',
             ]);
 
-            if ($isSuperadmin) {
+            // For superadmin, set owner_id to null and is_global to 1
+            if (auth()->user()->role_id === 1) {
                 $merk = PosProdukMerk::create([
                     'owner_id' => null,
                     'nama' => $validatedData['nama'],
                     'is_global' => 1,
                 ]);
-            } else {
-                $ownerId = $user->owner ? $user->owner->id : null;
+            }
+            // For owner, set owner_id to their ID and is_global to 0
+            elseif (auth()->user()->role_id === 2) {
                 $merk = PosProdukMerk::create([
-                    'owner_id' => $ownerId,
+                    'owner_id' => auth()->id(),
                     'nama' => $validatedData['nama'],
                     'is_global' => 0,
+                ]);
+            }
+            // For admin, is_global should be 1
+            elseif (auth()->user()->role_id === 3) {
+                $merk = PosProdukMerk::create([
+                    'owner_id' => null,
+                    'nama' => $validatedData['nama'],
+                    'is_global' => 1,
                 ]);
             }
 
