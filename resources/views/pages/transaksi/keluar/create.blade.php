@@ -392,7 +392,19 @@
                                 Color <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
                             <input type="text" id="quick_warna"
+                                   name="warna"
                                    placeholder="e.g. Sierra Blue"
+                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+
+                        <!-- RAM -->
+                        <div>
+                            <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                RAM <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input type="text" id="quick_ram"
+                                   name="ram"
+                                   placeholder="e.g. 8GB"
                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                         </div>
 
@@ -402,6 +414,7 @@
                                 Storage <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
                             <input type="text" id="quick_penyimpanan"
+                                   name="penyimpanan"
                                    placeholder="e.g. 256GB"
                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                         </div>
@@ -412,6 +425,7 @@
                                 Battery Health <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
                             <input type="text" id="quick_battery_health"
+                                   name="battery_health"
                                    placeholder="e.g. 85% or Good"
                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                         </div>
@@ -419,9 +433,10 @@
                         <!-- IMEI -->
                         <div>
                             <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                IMEI Number <span id="modal-imei-required-marker" class="text-red-500">*</span>
+                                IMEI Number <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
                             <input type="text" id="quick_imei"
+                                   name="imei"
                                    placeholder="Enter IMEI number"
                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                         </div>
@@ -670,7 +685,7 @@ function switchModalProductType(type) {
     
     if (type === 'electronic') {
         specificationsSection.classList.remove('hidden');
-        imeiField.required = true;
+        imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.remove('hidden');
     } else {
         specificationsSection.classList.add('hidden');
@@ -678,6 +693,7 @@ function switchModalProductType(type) {
         if (imeiMarker) imeiMarker.classList.add('hidden');
         imeiField.value = '';
         document.getElementById('quick_warna').value = '';
+        document.getElementById('quick_ram').value = '';
         document.getElementById('quick_penyimpanan').value = '';
         document.getElementById('quick_battery_health').value = '';
     }
@@ -746,8 +762,7 @@ function openProductModal(itemId) {
     
     // Then set defaults and tabs (after reset to prevent reset from overriding)
     document.getElementById('modal_product_type').value = 'electronic';
-    document.getElementById('quick_imei').required = true;
-    document.getElementById('modal-imei-required-marker').classList.remove('hidden');
+    document.getElementById('quick_imei').required = false;
     document.getElementById('modal-specifications-section').classList.remove('hidden');
     
     // Reset tab styles to electronic (active state)
@@ -797,6 +812,7 @@ function submitQuickProduct(event) {
         harga_beli: document.getElementById('quick_harga_beli').value,
         harga_jual: document.getElementById('quick_harga_jual').value,
         warna: document.getElementById('quick_warna').value,
+        ram: document.getElementById('quick_ram').value,
         penyimpanan: document.getElementById('quick_penyimpanan').value,
         battery_health: document.getElementById('quick_battery_health').value,
         imei: document.getElementById('quick_imei').value,

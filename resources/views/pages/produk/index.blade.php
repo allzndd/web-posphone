@@ -7,6 +7,10 @@
 <link rel="stylesheet" href="{{ asset('css/table-components.css') }}">
 @endpush
 
+@php
+use Illuminate\Support\Facades\DB;
+@endphp
+
 @section('main')
 <div class="mt-3 px-[11px] pr-[10px]">
     <!-- Products Table Card -->
@@ -73,6 +77,9 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Storage</p>
                         </th>
                         <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">RAM</p>
+                        </th>
+                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">IMEI</p>
                         </th>
                         <th class="py-3 text-right">
@@ -130,6 +137,13 @@
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->penyimpanan ?? '-' }}</p>
+                        </td>
+                        <td class="py-4">
+                            @php
+                                $ramData = DB::table('pos_ram')->where('pos_produk_id', $item->id)->first();
+                                $ramValue = $ramData ? $ramData->kapasitas . 'GB' : '-';
+                            @endphp
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $ramValue }}</p>
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->imei ?? '-' }}</p>

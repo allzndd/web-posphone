@@ -13,6 +13,7 @@ class PosPenyimpanan extends Model
 
     protected $fillable = [
         'id_owner',
+        'pos_produk_id',
         'kapasitas',
         'id_global',
     ];

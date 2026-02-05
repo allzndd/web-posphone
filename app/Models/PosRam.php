@@ -13,6 +13,7 @@ class PosRam extends Model
 
     protected $fillable = [
         'id_owner',
+        'pos_produk_id',
         'kapasitas',
         'is_global',
     ];

@@ -158,6 +158,21 @@ class PosProduk extends Model
         return $this->belongsTo(PosProdukTipe::class, 'pos_produk_tipe_id');
     }
 
+    public function warna()
+    {
+        return $this->belongsTo(PosWarna::class, 'pos_warna_id');
+    }
+
+    public function ram()
+    {
+        return $this->belongsTo(PosRam::class, 'pos_ram_id');
+    }
+
+    public function penyimpanan()
+    {
+        return $this->belongsTo(PosPenyimpanan::class, 'pos_penyimpanan_id');
+    }
+
     public function stok()
     {
         return $this->hasMany(ProdukStok::class, 'pos_produk_id');

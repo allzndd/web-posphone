@@ -13,6 +13,7 @@ class PosWarna extends Model
 
     protected $fillable = [
         'id_owner',
+        'pos_produk_id',
         'warna',
         'is_global',
     ];
