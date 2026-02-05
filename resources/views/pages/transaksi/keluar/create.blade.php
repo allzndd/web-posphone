@@ -391,10 +391,14 @@
                             <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
                                 Color <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
-                            <input type="text" id="quick_warna"
-                                   name="warna"
-                                   placeholder="e.g. Sierra Blue"
-                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                            <select id="quick_warna"
+                                    name="warna"
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                <option value="">Select Color</option>
+                                @foreach($warnas as $warna)
+                                    <option value="{{ $warna->id }}">{{ $warna->warna }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <!-- RAM -->
@@ -402,10 +406,14 @@
                             <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
                                 RAM <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
-                            <input type="text" id="quick_ram"
-                                   name="ram"
-                                   placeholder="e.g. 8GB"
-                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                            <select id="quick_ram"
+                                    name="ram"
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                <option value="">Select RAM</option>
+                                @foreach($rams as $ram)
+                                    <option value="{{ $ram->id }}">{{ $ram->kapasitas }} GB</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <!-- Storage -->
@@ -413,10 +421,14 @@
                             <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
                                 Storage <span class="text-xs text-gray-500">(Optional)</span>
                             </label>
-                            <input type="text" id="quick_penyimpanan"
-                                   name="penyimpanan"
-                                   placeholder="e.g. 256GB"
-                                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                            <select id="quick_penyimpanan"
+                                    name="penyimpanan"
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                <option value="">Select Storage</option>
+                                @foreach($penyimpanans as $penyimpanan)
+                                    <option value="{{ $penyimpanan->id }}">{{ $penyimpanan->kapasitas }} GB</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <!-- Battery Health -->

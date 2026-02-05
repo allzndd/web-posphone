@@ -583,11 +583,29 @@ class TransaksiController extends Controller
         $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
         $services = PosService::where('owner_id', $ownerId)->get();
         $merks = \App\Models\PosProdukMerk::where('owner_id', $ownerId)->get();
+        
+        // Get global colors or owner-specific colors
+        $warnas = \App\Models\PosWarna::where(function($query) use ($ownerId) {
+            $query->where('is_global', 1)
+                  ->orWhere('id_owner', $ownerId);
+        })->get();
+        
+        // Get global RAM or owner-specific RAM
+        $rams = \App\Models\PosRam::where(function($query) use ($ownerId) {
+            $query->where('is_global', 1)
+                  ->orWhere('id_owner', $ownerId);
+        })->get();
+        
+        // Get global storage or owner-specific storage (note: field is id_global not is_global)
+        $penyimpanans = \App\Models\PosPenyimpanan::where(function($query) use ($ownerId) {
+            $query->where('id_global', 1)
+                  ->orWhere('id_owner', $ownerId);
+        })->get();
 
         // Invoice akan di-generate otomatis saat submit untuk menghindari duplicate
         $invoiceNumber = '';
 
-        return view('pages.transaksi.keluar.create', compact('tokos', 'suppliers', 'produks', 'services', 'merks', 'invoiceNumber'));
+        return view('pages.transaksi.keluar.create', compact('tokos', 'suppliers', 'produks', 'services', 'merks', 'warnas', 'rams', 'penyimpanans', 'invoiceNumber'));
     }
 
     public function storeKeluar(Request $request)
