@@ -11,7 +11,7 @@ class PosRamController extends Controller
     /**
      * Display a listing of the ram.
      */
-    public function index()
+    public function index(Request $request)
     {
         $query = PosRam::with('owner');
         
@@ -30,7 +30,13 @@ class PosRamController extends Controller
             $query->where('is_global', 1);
         }
         
-        $posRams = $query->paginate(15);
+        // Search implementation
+        if ($request->has('kapasitas') && !empty($request->get('kapasitas'))) {
+            $query->where('kapasitas', 'like', '%' . $request->get('kapasitas') . '%');
+        }
+        
+        $perPage = $request->get('per_page', 15);
+        $posRams = $query->orderBy('created_at', 'desc')->paginate($perPage);
         return view('pages.pos-ram.index', compact('posRams'));
     }
 

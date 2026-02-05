@@ -177,7 +177,7 @@
                     @if ($posWarnas->onFirstPage())
                         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
                     @else
-                        <a href="{{ $posWarnas->previousPageUrl() }}&per_page={{ request('per_page', 15) }}" 
+                        <a href="{{ $posWarnas->previousPageUrl() }}&per_page={{ request('per_page', 15) }}{{ request('warna') ? '&warna=' . request('warna') : '' }}" 
                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">◀</a>
                     @endif
 
@@ -187,7 +187,7 @@
                                 {{ $page }}
                             </span>
                         @else
-                            <a href="{{ $posWarnas->url($page) }}&per_page={{ request('per_page', 15) }}" 
+                            <a href="{{ $posWarnas->url($page) }}&per_page={{ request('per_page', 15) }}{{ request('warna') ? '&warna=' . request('warna') : '' }}" 
                                class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">
                                 {{ $page }}
                             </a>
@@ -195,7 +195,7 @@
                     @endfor
 
                     @if ($posWarnas->hasMorePages())
-                        <a href="{{ $posWarnas->nextPageUrl() }}&per_page={{ request('per_page', 15) }}" 
+                        <a href="{{ $posWarnas->nextPageUrl() }}&per_page={{ request('per_page', 15) }}{{ request('warna') ? '&warna=' . request('warna') : '' }}" 
                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">▶</a>
                     @else
                         <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>

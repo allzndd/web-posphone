@@ -15,12 +15,21 @@ class ProdukStokController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->get('per_page', 10);
+        $searchTerm = $request->get('search');
         
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
         
         $stok = ProdukStok::with(['produk.merk', 'toko'])
             ->where('owner_id', $ownerId)
+            ->when($searchTerm, function($query) use ($searchTerm) {
+                return $query->whereHas('produk', function($subQuery) use ($searchTerm) {
+                    $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('toko', function($subQuery) use ($searchTerm) {
+                    $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
+                });
+            })
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
