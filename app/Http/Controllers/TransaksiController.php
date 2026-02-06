@@ -294,8 +294,18 @@ class TransaksiController extends Controller
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
             ->with(['toko', 'pelanggan'])
-            ->when($request->input('invoice'), function ($query, $invoice) {
-                return $query->where('invoice', 'like', '%' . $invoice . '%');
+            ->when($request->input('search'), function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('invoice', 'like', '%' . $search . '%')
+                        ->orWhereHas('toko', function ($subQ) use ($search) {
+                            $subQ->where('nama', 'like', '%' . $search . '%');
+                        })
+                        ->orWhereHas('pelanggan', function ($subQ) use ($search) {
+                            $subQ->where('nama', 'like', '%' . $search . '%');
+                        })
+                        ->orWhere('keterangan', 'like', '%' . $search . '%')
+                        ->orWhere('metode_pembayaran', 'like', '%' . $search . '%');
+                });
             })
             ->when($request->input('status'), function ($query, $status) {
                 return $query->where('status', $status);
@@ -561,8 +571,18 @@ class TransaksiController extends Controller
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
             ->with(['toko', 'supplier'])
-            ->when($request->input('invoice'), function ($query, $invoice) {
-                return $query->where('invoice', 'like', '%' . $invoice . '%');
+            ->when($request->input('search'), function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('invoice', 'like', '%' . $search . '%')
+                        ->orWhereHas('toko', function ($subQ) use ($search) {
+                            $subQ->where('nama', 'like', '%' . $search . '%');
+                        })
+                        ->orWhereHas('supplier', function ($subQ) use ($search) {
+                            $subQ->where('nama', 'like', '%' . $search . '%');
+                        })
+                        ->orWhere('keterangan', 'like', '%' . $search . '%')
+                        ->orWhere('metode_pembayaran', 'like', '%' . $search . '%');
+                });
             })
             ->when($request->input('status'), function ($query, $status) {
                 return $query->where('status', $status);
