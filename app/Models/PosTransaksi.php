@@ -17,17 +17,24 @@ class PosTransaksi extends Model
         'pos_pelanggan_id',
         'pos_tukar_tambah_id',
         'pos_supplier_id',
+        'pos_kategori_expense_id',
         'is_transaksi_masuk',
         'invoice',
         'total_harga',
         'keterangan',
         'status',
         'metode_pembayaran',
+        'payment_status',
+        'paid_amount',
+        'due_date',
+        'payment_terms',
     ];
 
     protected $casts = [
         'total_harga' => 'decimal:2',
         'is_transaksi_masuk' => 'integer',
+        'paid_amount' => 'decimal:2',
+        'due_date' => 'date',
     ];
 
     // Relationship to owner
@@ -58,6 +65,12 @@ class PosTransaksi extends Model
     public function supplier()
     {
         return $this->belongsTo(PosSupplier::class, 'pos_supplier_id');
+    }
+
+    // Relationship to kategori expense
+    public function kategoriExpense()
+    {
+        return $this->belongsTo(PosKategoriExpense::class, 'pos_kategori_expense_id');
     }
 
     // Relationship to transaksi items

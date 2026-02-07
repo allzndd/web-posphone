@@ -357,15 +357,15 @@
 
         @if(auth()->user()->isOwner() || auth()->user()->isAdmin())
         <!-- Transactions Dropdown (pos_transaksi) -->
-        <li class="relative mb-3" x-data="{ open: {{ Request::is('transaksi*') ? 'true' : 'false' }} }">
+        <li class="relative mb-3" x-data="{ open: {{ Request::is('transaksi*') || Request::is('expense*') ? 'true' : 'false' }} }">
             <div class="flex hover:cursor-pointer" @click="open = !open">
                 <div class="w-full">
                     <div class="my-[3px] flex cursor-pointer items-center px-8">
-                        <span class="{{ Request::is('transaksi*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <span class="{{ Request::is('transaksi*') || Request::is('expense*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"></path></svg>
                         </span>
-                        <p class="leading-1 ml-4 flex {{ Request::is('transaksi*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                            Transaksi
+                        <p class="leading-1 ml-4 flex {{ Request::is('transaksi*') || Request::is('expense*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                            Transactions
                         </p>
                         <span class="ml-auto mr-3 text-gray-600 transition-transform duration-200" :class="{ 'rotate-180': open }">
                             <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M7 10l5 5 5-5z"></path></svg>
@@ -373,17 +373,17 @@
                     </div>
                 </div>
             </div>
-            @if(Request::is('transaksi*'))
+            @if(Request::is('transaksi*') || Request::is('expense*'))
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
             <!-- Submenu -->
-            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('transaksi*')) style="display: none;" @endif>
+            <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform scale-y-95" x-transition:enter-end="opacity-100 transform scale-y-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 transform scale-y-100" x-transition:leave-end="opacity-0 transform scale-y-95" class="overflow-hidden" @if(!Request::is('transaksi*') && !Request::is('expense*')) style="display: none;" @endif>
                 <ul class="my-[3px]">
                     <li class="relative mb-2 flex hover:cursor-pointer">
                         <a href="{{ route('transaksi.masuk.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('transaksi/masuk*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    Transaksi Masuk
+                                    Incoming Transaction
                                 </p>
                             </div>
                         </a>
@@ -392,7 +392,7 @@
                         <a href="{{ route('transaksi.keluar.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('transaksi/keluar*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    Pembelian Barang
+                                    Outgoing Transaction
                                 </p>
                             </div>
                         </a>
@@ -401,7 +401,16 @@
                         <a href="{{ route('transaksi.index') }}" class="w-full">
                             <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
                                 <p class="leading-1 flex text-sm {{ Request::is('transaksi') && !Request::is('transaksi/masuk*') && !Request::is('transaksi/keluar*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
-                                    Riwayat Transaksi
+                                    History Transaction
+                                </p>
+                            </div>
+                        </a>
+                    </li>
+                    <li class="relative mb-2 flex hover:cursor-pointer">
+                        <a href="{{ route('expense.index') }}" class="w-full">
+                            <div class="my-[3px] flex cursor-pointer items-center py-2 pl-[60px] pr-8">
+                                <p class="leading-1 flex text-sm {{ Request::is('expense*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                                    Expense Transaction
                                 </p>
                             </div>
                         </a>

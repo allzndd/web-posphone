@@ -60,6 +60,17 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printKeluar'])->name('print');
         });
         
+        // Expenses - Must come before resource route
+        Route::prefix('expense')->name('expense.')->group(function () {
+            Route::delete('bulk-destroy', [\App\Http\Controllers\ExpenseController::class, 'bulkDestroy'])->name('bulk-destroy');
+            Route::get('/', [\App\Http\Controllers\ExpenseController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\ExpenseController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\ExpenseController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [\App\Http\Controllers\ExpenseController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\ExpenseController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
+        });
+        
         // Transactions (pos_transaksi) - General resource route
         Route::resource('transaksi', \App\Http\Controllers\TransaksiController::class);
         
