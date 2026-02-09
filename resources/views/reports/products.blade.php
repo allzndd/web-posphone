@@ -64,15 +64,27 @@
                     <form method="GET" action="{{ route('reports.products') }}" class="flex items-center gap-2">
                         <select name="category" onchange="this.form.submit()" class="rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700">
                             <option value="">Semua Kategori</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ $categoryFilter == $category->id ? 'selected' : '' }}>{{ $category->nama_kategori }}</option>
-                            @endforeach
+                            @if(!empty($categories) && is_iterable($categories))
+                                @foreach($categories as $category)
+                                    @if(is_object($category) && isset($category->id))
+                                        <option value="{{ $category->id }}" {{ (isset($categoryFilter) && $categoryFilter == $category->id) ? 'selected' : '' }}>
+                                            {{ $category->nama_kategori ?? 'Tanpa Nama' }}
+                                        </option>
+                                    @endif
+                                @endforeach
+                            @endif
                         </select>
                         <select name="brand" onchange="this.form.submit()" class="rounded-xl border border-gray-200 bg-white/0 px-3 py-2 text-sm outline-none dark:!border-white/10 dark:text-white dark:!bg-navy-700">
                             <option value="">Semua Merk</option>
-                            @foreach($brands as $brand)
-                                <option value="{{ $brand->id }}" {{ $brandFilter == $brand->id ? 'selected' : '' }}>{{ $brand->nama_merk }}</option>
-                            @endforeach
+                            @if(!empty($brands) && is_iterable($brands))
+                                @foreach($brands as $brand)
+                                    @if(is_object($brand) && isset($brand->id))
+                                        <option value="{{ $brand->id }}" {{ (isset($brandFilter) && $brandFilter == $brand->id) ? 'selected' : '' }}>
+                                            {{ $brand->nama_merk ?? 'Tanpa Nama' }}
+                                        </option>
+                                    @endif
+                                @endforeach
+                            @endif
                         </select>
                     </form>
                     <a href="{{ route('reports.products.export', request()->query()) }}" class="linear rounded-xl bg-green-500 px-4 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-green-600 active:bg-green-700 flex items-center gap-2">
@@ -100,16 +112,24 @@
                     <tbody>
                         @forelse($products as $index => $product)
                         @php
-                            $totalStok = $product->stok->sum('stok');
-                            $nilaiTotal = $totalStok * $product->harga_jual;
+                            $totalStok = 0;
+                            if(isset($product->stok) && is_iterable($product->stok)) {
+                                foreach($product->stok as $stok) {
+                                    if(is_object($stok) && isset($stok->stok)) {
+                                        $totalStok += $stok->stok;
+                                    }
+                                }
+                            }
+                            $hargaJual = is_object($product) && isset($product->harga_jual) ? $product->harga_jual : 0;
+                            $nilaiTotal = $totalStok * $hargaJual;
                         @endphp
                         <tr class="border-b border-gray-200 dark:border-white/10">
                             <td class="py-3 text-sm text-navy-700 dark:text-white">{{ $index + 1 }}</td>
-                            <td class="py-3 text-sm font-medium text-navy-700 dark:text-white">{{ $product->nama }}</td>
+                            <td class="py-3 text-sm font-medium text-navy-700 dark:text-white">{{ $product->nama ?? '-' }}</td>
                             <td class="py-3 text-sm text-navy-700 dark:text-white">-</td>
                             <td class="py-3 text-sm text-navy-700 dark:text-white">{{ $product->merk->nama ?? '-' }}</td>
                             <td class="py-3 text-right text-sm text-navy-700 dark:text-white">{{ number_format($totalStok, 0, ',', '.') }}</td>
-                            <td class="py-3 text-right text-sm text-navy-700 dark:text-white">Rp {{ number_format($product->harga_jual, 0, ',', '.') }}</td>
+                            <td class="py-3 text-right text-sm text-navy-700 dark:text-white">Rp {{ number_format($hargaJual, 0, ',', '.') }}</td>
                             <td class="py-3 text-right text-sm font-medium text-navy-700 dark:text-white">Rp {{ number_format($nilaiTotal, 0, ',', '.') }}</td>
                         </tr>
                         @empty
