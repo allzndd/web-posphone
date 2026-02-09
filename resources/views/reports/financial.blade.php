@@ -293,10 +293,10 @@
                 @forelse($expenses->take(5) as $expense)
                 <div class="flex items-center justify-between py-2 border-b border-gray-200 dark:border-white/10">
                     <div class="flex-1">
-                        <p class="text-sm text-navy-700 dark:text-white">{{ $expense->description ?? ucfirst($expense->expense_type) }}</p>
-                        <p class="text-xs text-gray-500">{{ $expense->expense_date->format('d M Y') }}</p>
+                        <p class="text-sm text-navy-700 dark:text-white">{{ $expense->keterangan ?? ($expense->kategoriExpense ? $expense->kategoriExpense->nama : 'Expense') }}</p>
+                        <p class="text-xs text-gray-500">{{ $expense->created_at->format('d M Y') }}</p>
                     </div>
-                    <span class="text-sm font-bold text-red-600 dark:text-red-400">Rp {{ number_format($expense->amount, 0, ',', '.') }}</span>
+                    <span class="text-sm font-bold text-red-600 dark:text-red-400">Rp {{ number_format($expense->total_harga, 0, ',', '.') }}</span>
                 </div>
                 @empty
                 <p class="text-sm text-gray-500">Belum ada data expenses</p>
