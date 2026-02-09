@@ -151,12 +151,13 @@ class ProdukController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  PosProduk  $produk
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(PosProduk $produk)
     {
-        //
+        $produk->load(['merk', 'ram', 'penyimpanan', 'warna']);
+        return view('pages.produk.show', compact('produk'));
     }
 
     /**
@@ -297,8 +298,10 @@ class ProdukController extends Controller
             $user = Auth::user();
             $ownerId = $user->owner ? $user->owner->id : null;
 
+            \Log::info('quickStore request data:', $request->all());
+
             $request->validate([
-                'nama' => 'required|string|max:255',
+                'nama' => 'nullable|string|max:255',
                 'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
                 'product_type' => 'required|in:electronic,accessories',
                 'harga_beli' => 'required|numeric|min:0',
@@ -306,64 +309,60 @@ class ProdukController extends Controller
                 'warna' => 'nullable|string|max:255',
                 'ram' => 'nullable|string|max:255',
                 'penyimpanan' => 'nullable|string|max:255',
-                'battery_health' => 'nullable|string|max:255',
+                'battery_health' => 'nullable|numeric|min:0|max:100',
                 'imei' => 'nullable|string|max:255',
             ]);
 
-            // Prepare warna, ram, penyimpanan (store as text values)
-            // Also create records in related tables for reference
-            $warnaText = null;
-            $penyimpananText = null;
+            \Log::info('After validation - warna: ' . $request->warna . ', ram: ' . $request->ram . ', penyimpanan: ' . $request->penyimpanan);
+
+            // Auto-generate nama dari tipe saja jika kosong
+            $nama = $request->nama;
+            if (empty($nama)) {
+                $merk = PosProdukMerk::find($request->pos_produk_merk_id);
+                $nama = ($merk && $merk->nama) ? $merk->nama : 'Produk Baru';
+            }
 
             // Create product first
-            $produk = PosProduk::create([
+            $createData = [
                 'owner_id' => $ownerId,
                 'pos_produk_merk_id' => $request->pos_produk_merk_id,
-                'nama' => $request->nama,
+                'nama' => $nama,
                 'product_type' => $request->product_type,
                 'harga_beli' => $request->harga_beli,
                 'harga_jual' => $request->harga_jual,
-                'warna' => $request->warna,
-                'penyimpanan' => $request->penyimpanan,
-                'battery_health' => $request->battery_health,
+                'pos_warna_id' => !empty($request->warna) ? $request->warna : null,
+                'pos_ram_id' => !empty($request->ram) ? $request->ram : null,
+                'pos_penyimpanan_id' => !empty($request->penyimpanan) ? $request->penyimpanan : null,
+                'battery_health' => !empty($request->battery_health) ? $request->battery_health : null,
                 'imei' => $request->imei,
-            ]);
+            ];
+            
+            \Log::info('Data to create product:', $createData);
+            
+            $produk = PosProduk::create($createData);
 
             // Handle Color (Warna)
             if (!empty($request->warna)) {
-                \App\Models\PosWarna::create([
-                    'id_owner' => $ownerId,
-                    'warna' => $request->warna,
-                    'pos_produk_id' => $produk->id,
-                    'is_global' => 0,
-                ]);
+                \App\Models\PosWarna::firstOrCreate(
+                    ['id' => $request->warna],
+                    ['id_owner' => $ownerId, 'is_global' => 0]
+                );
             }
 
-            // Handle RAM - store in PosRam table
+            // Handle RAM - ensure it exists
             if (!empty($request->ram)) {
-                // Extract only numeric value for PosRam
-                $ramValue = preg_replace('/[^0-9]/', '', $request->ram);
-                if (!empty($ramValue)) {
-                    \App\Models\PosRam::create([
-                        'id_owner' => $ownerId,
-                        'kapasitas' => (int)$ramValue,
-                        'pos_produk_id' => $produk->id,
-                        'is_global' => 0,
-                    ]);
-                }
+                \App\Models\PosRam::firstOrCreate(
+                    ['id' => $request->ram],
+                    ['id_owner' => $ownerId, 'is_global' => 0]
+                );
             }
 
             // Handle Storage (Penyimpanan)
             if (!empty($request->penyimpanan)) {
-                // Extract only numeric value for PosPenyimpanan
-                $storageValue = preg_replace('/[^0-9]/', '', $request->penyimpanan);
-                if (!empty($storageValue)) {
-                    \App\Models\PosPenyimpanan::create([
-                        'id_owner' => $ownerId,
-                        'kapasitas' => (int)$storageValue,
-                        'pos_produk_id' => $produk->id,
-                    ]);
-                }
+                \App\Models\PosPenyimpanan::firstOrCreate(
+                    ['id' => $request->penyimpanan],
+                    ['id_owner' => $ownerId]
+                );
             }
 
             // Automatically create stock entry for all stores with quantity 1
@@ -403,6 +402,9 @@ class ProdukController extends Controller
                     'merk_nama' => $produk->merk->nama ?? '',
                     'harga_beli' => $produk->harga_beli,
                     'harga_jual' => $produk->harga_jual,
+                    'ram' => $produk->pos_ram_id,
+                    'penyimpanan' => $produk->pos_penyimpanan_id,
+                    'battery_health' => $produk->battery_health,
                 ]
             ]);
 
