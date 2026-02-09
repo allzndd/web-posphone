@@ -13,9 +13,13 @@ class ServiceController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
         $perPage = $request->get('per_page', 10);
         
-        $query = PosService::with(['toko'])
+        $query = PosService::where('owner_id', $ownerId)
+            ->with(['toko'])
             ->orderBy('created_at', 'desc');
 
         // Search by name
@@ -29,7 +33,7 @@ class ServiceController extends Controller
         }
 
         $services = $query->paginate($perPage);
-        $tokos = PosToko::orderBy('nama')->get();
+        $tokos = PosToko::where('owner_id', $ownerId)->orderBy('nama')->get();
 
         return view('pages.service.index', compact('services', 'tokos'));
     }
