@@ -314,8 +314,6 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
             $query = PosProduk::select([
                 'pos_produk.id',
                 'pos_produk.nama',
-                'pos_produk.warna',
-                'pos_produk.penyimpanan',
                 'pos_produk.harga_jual'
             ])
                 ->with('merk')
@@ -325,8 +323,6 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
             $query = PosProduk::select([
                 'pos_produk.id',
                 'pos_produk.nama',
-                'pos_produk.warna',
-                'pos_produk.penyimpanan',
                 'pos_produk.harga_jual'
             ])
                 ->with('merk')
@@ -344,9 +340,7 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
                 'id' => $product->id,
                 'nama' => $product->display_name,
                 'merk' => $product->merk->nama ?? '-',
-                'harga_jual' => 'Rp ' . number_format($product->harga_jual, 0, ',', '.'),
-                'warna' => $product->warna,
-                'storage' => $product->penyimpanan ? $product->penyimpanan . 'GB' : '-'
+                'harga_jual' => 'Rp ' . number_format($product->harga_jual, 0, ',', '.')
             ];
         })->toArray();
     }
@@ -444,8 +438,6 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
                 'pos_produk.owner_id',
                 'pos_produk.pos_produk_merk_id',
                 'pos_produk.nama',
-                'pos_produk.warna',
-                'pos_produk.penyimpanan',
                 'pos_produk.harga_jual'
             ])
             ->selectRaw('COALESCE(SUM(pos_transaksi_item.quantity), 0) as total_terjual')
@@ -462,8 +454,6 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
                 'pos_produk.owner_id',
                 'pos_produk.pos_produk_merk_id',
                 'pos_produk.nama',
-                'pos_produk.warna',
-                'pos_produk.penyimpanan',
                 'pos_produk.harga_jual'
             ])
             ->orderByDesc('total_terjual')
@@ -478,9 +468,7 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
                 'nama' => $product->display_name,
                 'merk' => $product->merk->nama ?? '-',
                 'harga_jual' => number_format($product->harga_jual, 0, ',', '.'),
-                'total_terjual' => $product->total_terjual ?? 0,
-                'warna' => $product->warna,
-                'storage' => $product->penyimpanan ? $product->penyimpanan . 'GB' : '-'
+                'total_terjual' => $product->total_terjual ?? 0
             ];
         })->toArray();
     }
@@ -553,9 +541,7 @@ Penting: Jawab HANYA nama toko, jangan tambah penjelasan."
             return [
                 'nama' => $product->display_name,
                 'merk' => $product->merk->nama ?? '-',
-                'harga_jual' => number_format($product->harga_jual, 0, ',', '.'),
-                'warna' => $product->warna,
-                'storage' => $product->penyimpanan ? $product->penyimpanan . 'GB' : '-'
+                'harga_jual' => number_format($product->harga_jual, 0, ',', '.')
             ];
         })->toArray();
     }
