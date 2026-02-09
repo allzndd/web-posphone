@@ -15,7 +15,6 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\IncomingTransactionController;
 use App\Http\Controllers\Api\OutgoingTransactionController;
 use App\Http\Controllers\Api\AllTransactionController;
-use App\Http\Controllers\Api\HistoryTransactionController;
 use App\Http\Controllers\Api\SemuaLaporanController;
 use App\Http\Controllers\Api\LaporanPenjualanController;
 use App\Http\Controllers\Api\LaporanTukarTambahController;
@@ -26,7 +25,7 @@ use App\Http\Controllers\Api\RingkasanKeuanganController;
 use App\Http\Controllers\Api\TradeInController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserManagementController;
-use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\Api\ExpenseCategoryController;
 use App\Models\Langganan;
 
 /*
@@ -43,12 +42,6 @@ use App\Models\Langganan;
 // Auth Routes (Public)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-
-// AI Chatbot Routes (Public - bisa diakses tanpa auth untuk testing)
-Route::prefix('chatbot')->group(function () {
-    Route::post('/message', [ChatbotController::class, 'chat']);
-    Route::get('/info', [ChatbotController::class, 'info']);
-});
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -86,6 +79,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'show']);
     Route::put('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'update']);
     Route::delete('/stores/{id}', [\App\Http\Controllers\Api\StoreController::class, 'destroy']);
+
+    // Expense Categories API Routes
+    Route::get('/expense-categories', [ExpenseCategoryController::class, 'index']);
+    Route::post('/expense-categories', [ExpenseCategoryController::class, 'store']);
+    Route::get('/expense-categories/{id}', [ExpenseCategoryController::class, 'show']);
+    Route::put('/expense-categories/{id}', [ExpenseCategoryController::class, 'update']);
+    Route::delete('/expense-categories/{id}', [ExpenseCategoryController::class, 'destroy']);
 
     // Customers API Routes
     Route::get('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'index']);
@@ -204,13 +204,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [OutgoingTransactionController::class, 'show']);
         Route::put('/{id}', [OutgoingTransactionController::class, 'update']);
         Route::delete('/{id}', [OutgoingTransactionController::class, 'destroy']);
-    });
-
-    // History Transactions Routes (All transactions history)
-    Route::prefix('transactions/history')->group(function () {
-        Route::get('/', [HistoryTransactionController::class, 'index']);
-        Route::get('/summary', [HistoryTransactionController::class, 'summary']);
-        Route::get('/{id}', [HistoryTransactionController::class, 'show'])->whereNumber('id');
     });
 });
 
