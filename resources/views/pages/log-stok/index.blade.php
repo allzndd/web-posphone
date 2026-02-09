@@ -53,64 +53,65 @@
 
         <!-- Table -->
         <div class="overflow-x-auto px-6 pb-6">
-            <table class="w-full">
+            <table class="w-full table-fixed">
+                <colgroup>
+                    <col style="width: 140px;">
+                    <col style="width: 180px;">
+                    <col style="width: 120px;">
+                    <col style="width: 100px;">
+                    <col style="width: 70px;">
+                    <col style="width: 100px;">
+                    <col style="width: 70px;">
+                    <col style="width: auto;">
+                </colgroup>
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Date</p>
+                        <th class="py-3 px-2 text-left">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Date</p>
                         </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product</p>
+                        <th class="py-3 px-2 text-left">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Product</p>
                         </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Store</p>
+                        <th class="py-3 px-2 text-left">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Store</p>
                         </th>
-                        <th class="py-3 text-center">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Type</p>
+                        <th class="py-3 px-2 text-center">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Type</p>
                         </th>
-                        <th class="py-3 text-right">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Before</p>
+                        <th class="py-3 px-2 text-right">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Before</p>
                         </th>
-                        <th class="py-3 text-center">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Change</p>
+                        <th class="py-3 px-2 text-center">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Change</p>
                         </th>
-                        <th class="py-3 text-right">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">After</p>
+                        <th class="py-3 px-2 text-right">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">After</p>
                         </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Reference</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">User</p>
+                        <th class="py-3 px-2 text-left">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Reference</p>
                         </th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($logs as $log)
-                    <tr class="border-b border-gray-200 dark:border-white/10">
+                    <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <!-- Date -->
-                        <td class="py-4">
-                            <div>
-                                <p class="text-sm font-medium text-navy-700 dark:text-white">{{ $log->created_at->format('d M Y') }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $log->created_at->format('H:i') }}</p>
-                            </div>
+                        <td class="py-3 px-2 text-left">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ $log->created_at->format('d M Y H:i') }}</p>
                         </td>
                         
                         <!-- Product -->
-                        <td class="py-4">
-                            <div>
-                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $log->produk->nama ?? '-' }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $log->produk->kode ?? '-' }}</p>
-                            </div>
+                        <td class="py-3 px-2 text-left">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white truncate">{{ $log->produk->nama ?? '-' }}</p>
                         </td>
                         
                         <!-- Store -->
-                        <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $log->toko->nama ?? '-' }}</p>
+                        <td class="py-3 px-2 text-left">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ $log->toko->nama ?? '-' }}</p>
                         </td>
                         
                         <!-- Type -->
-                        <td class="py-4 text-center">
+                        <td class="py-3 px-2 text-center">
                             @php
                                 $colors = [
                                     'masuk' => 'green',
@@ -126,22 +127,22 @@
                         </td>
                         
                         <!-- Stock Before -->
-                        <td class="py-4 text-right">
+                        <td class="py-3 px-2 text-right">
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ number_format($log->stok_sebelum, 0, ',', '.') }}</p>
                         </td>
                         
                         <!-- Change -->
-                        <td class="py-4 text-center">
+                        <td class="py-3 px-2 text-center">
                             @if($log->perubahan > 0)
-                                <span class="inline-flex items-center gap-1 text-sm font-bold text-green-600 dark:text-green-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span class="inline-flex items-center gap-1 text-sm font-bold text-green-600 dark:text-green-400 whitespace-nowrap">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
                                     </svg>
                                     +{{ number_format($log->perubahan, 0, ',', '.') }}
                                 </span>
                             @elseif($log->perubahan < 0)
-                                <span class="inline-flex items-center gap-1 text-sm font-bold text-red-600 dark:text-red-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span class="inline-flex items-center gap-1 text-sm font-bold text-red-600 dark:text-red-400 whitespace-nowrap">
+                                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
                                     </svg>
                                     {{ number_format($log->perubahan, 0, ',', '.') }}
@@ -152,28 +153,18 @@
                         </td>
                         
                         <!-- Stock After -->
-                        <td class="py-4 text-right">
+                        <td class="py-3 px-2 text-right">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ number_format($log->stok_sesudah, 0, ',', '.') }}</p>
                         </td>
                         
                         <!-- Reference -->
-                        <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $log->referensi ?? '-' }}</p>
-                            @if($log->keterangan)
-                                <p class="text-xs text-gray-500 dark:text-gray-500">{{ $log->keterangan }}</p>
-                            @endif
-                        </td>
-                        
-                        <!-- User -->
-                        <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $log->user->nama ?? $log->pengguna->nama ?? 'System' }}
-                            </p>
+                        <td class="py-3 px-2 text-left">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 truncate">{{ $log->referensi ?? '-' }}</p>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="py-12 text-center">
+                        <td colspan="8" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
