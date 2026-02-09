@@ -68,24 +68,18 @@ use Illuminate\Support\Facades\DB;
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">SKU/Model</p>
-                        </th>
-                        <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Type</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">RAM</p>
                         </th>
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Storage</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">RAM</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Color</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">IMEI</p>
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Battery Health</p>
                         </th>
-                        <th class="py-3 text-right">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Purchase Price</p>
-                        </th>
-                        <th class="py-3 text-right">
+                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Selling Price</p>
                         </th>
                         <th class="py-3 text-center col-actions">
@@ -95,7 +89,7 @@ use Illuminate\Support\Facades\DB;
                 </thead>
                 <tbody>
                     @forelse ($produk as $item)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('produk.edit', $item) }}">
+                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('produk.show', $item) }}">
                         <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
                             <input type="checkbox" class="produk-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
                                    value="{{ $item->id }}" 
@@ -105,55 +99,43 @@ use Illuminate\Support\Facades\DB;
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($produk->currentPage() - 1) * $produk->perPage() + $loop->iteration }}</p>
                         </td>
                         <td class="py-4">
-                            @if($item->merk)
-                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->merk->nama }}</p>
+                            @if($item->nama)
+                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->nama }}</p>
                             @else
                                 <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800/30 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                                    No Product Name
+                                    Unnamed
                                 </span>
                             @endif
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->merk->nama ?? '-' }} {{ $item->warna ?? '' }}
-                            </p>
-                        </td>
-                        <td class="py-4">
-                            @if($item->product_type === 'electronic')
-                                <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
-                                    <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
-                                    </svg>
-                                    Electronic/HP
-                                </span>
+                            @if($item->pos_ram_id && $item->ram)
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->ram->kapasitas ?? '-' }} GB</p>
                             @else
-                                <span class="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-medium text-purple-800 dark:text-purple-300">
-                                    <svg class="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    Accessories
-                                </span>
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
                             @endif
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->penyimpanan ?? '-' }}</p>
+                            @if($item->pos_penyimpanan_id && $item->penyimpanan)
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->penyimpanan->kapasitas ?? '-' }} GB</p>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
+                            @endif
                         </td>
                         <td class="py-4">
-                            @php
-                                $ramData = DB::table('pos_ram')->where('pos_produk_id', $item->id)->first();
-                                $ramValue = $ramData ? $ramData->kapasitas . 'GB' : '-';
-                            @endphp
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $ramValue }}</p>
+                            @if($item->pos_warna_id && $item->warna)
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->warna->warna ?? '-' }}</p>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
+                            @endif
                         </td>
                         <td class="py-4">
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->imei ?? '-' }}</p>
+                            @if($item->battery_health)
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->battery_health }}%</p>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
+                            @endif
                         </td>
-                        <td class="py-4 text-right">
-                            <p class="text-sm font-bold text-brand-500 dark:text-brand-400">
-                                {{ get_currency_symbol() }} {{ number_format($item->harga_beli, 0, ',', '.') }}
-                            </p>
-                        </td>
-                        <td class="py-4 text-right">
+                        <td class="py-4 text-left">
                             <p class="text-sm font-bold text-green-500 dark:text-green-400">
                                 {{ get_currency_symbol() }} {{ number_format($item->harga_jual, 0, ',', '.') }}
                             </p>
