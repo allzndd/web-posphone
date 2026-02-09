@@ -602,7 +602,11 @@ class TransaksiController extends Controller
         $suppliers = PosSupplier::where('owner_id', $ownerId)->get();
         $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
         $services = PosService::where('owner_id', $ownerId)->get();
-        $merks = \App\Models\PosProdukMerk::where('owner_id', $ownerId)->get();
+        // Get global merks or owner-specific merks
+        $merks = \App\Models\PosProdukMerk::where(function($query) use ($ownerId) {
+            $query->where('is_global', 1)
+                  ->orWhere('owner_id', $ownerId);
+        })->get();
         
         // Get global colors or owner-specific colors
         $warnas = \App\Models\PosWarna::where(function($query) use ($ownerId) {
