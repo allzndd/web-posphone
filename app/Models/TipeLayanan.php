@@ -16,6 +16,7 @@ class TipeLayanan extends Model
         'slug',
         'harga',
         'durasi',
+        'durasi_satuan',
     ];
 
     protected $casts = [
@@ -36,12 +37,23 @@ class TipeLayanan extends Model
      */
     public function getDurationTextAttribute()
     {
-        if ($this->durasi == 1) {
-            return '1 Month';
-        } elseif ($this->durasi == 12) {
-            return '1 Year';
+        $satuan = $this->durasi_satuan ?? 'bulan'; // backward compatibility
+        
+        if ($satuan === 'hari') {
+            $singular = 'Day';
+            $plural = 'Days';
+        } elseif ($satuan === 'tahun') {
+            $singular = 'Year';
+            $plural = 'Years';
         } else {
-            return $this->durasi . ' Months';
+            $singular = 'Month';
+            $plural = 'Months';
+        }
+        
+        if ($this->durasi == 1) {
+            return '1 ' . $singular;
+        } else {
+            return $this->durasi . ' ' . $plural;
         }
     }
 }

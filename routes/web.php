@@ -26,12 +26,17 @@ Route::middleware(['auth'])->group(function () {
     Route::redirect('home', '/dashboard');
     Route::get('dashboard-general-dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
     
+    // Subscription expired page (accessible without subscription check)
+    Route::get('subscription-expired', function () {
+        return view('pembayaran.expired');
+    })->name('pembayaran.expired');
+    
     // Download Reports (accessible by all authenticated users)
     Route::get('dashboard/download-report', [\App\Http\Controllers\DashboardController::class, 'downloadFinancialReport'])->name('dashboard.download-report');
     Route::get('transaksi/download-report', [\App\Http\Controllers\TransaksiController::class, 'downloadReport'])->name('transaksi.download-report');
 
-    // Admin & Owner Routes - POS Transactions & Customers
-    Route::middleware(['role:OWNER,ADMIN'])->group(function () {
+    // Admin & Owner Routes - POS Transactions & Customers (with subscription check)
+    Route::middleware(['role:OWNER,ADMIN', 'subscription'])->group(function () {
         // POS Users (pos_pengguna) - Karyawan toko - Custom bulk delete must come before resource
         Route::delete('pos-pengguna/bulk-destroy', [\App\Http\Controllers\PosPenggunaController::class, 'bulkDestroy'])->name('pos-pengguna.bulk-destroy');
         Route::resource('pos-pengguna', \App\Http\Controllers\PosPenggunaController::class);
@@ -103,8 +108,8 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // Owner Only Routes - POS Management
-    Route::middleware(['role:OWNER'])->group(function () {
+    // Owner Only Routes - POS Management (with subscription check)
+    Route::middleware(['role:OWNER', 'subscription'])->group(function () {
         // Settings
         Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
@@ -144,8 +149,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('chat-analisis/ask', [\App\Http\Controllers\ChatAnalysisController::class, 'ask'])->name('chat.ask');
     });
 
-    // Data Master - Penyimpanan, Warna, RAM, Product Merk (OWNER & SUPERADMIN accessible)
-    Route::middleware(['role:OWNER,SUPERADMIN'])->group(function () {
+    // Data Master - Penyimpanan, Warna, RAM, Product Merk (OWNER & SUPERADMIN accessible, subscription check for OWNER)
+    Route::middleware(['role:OWNER,SUPERADMIN', 'subscription'])->group(function () {
         Route::delete('pos-penyimpanan/bulk-destroy', [\App\Http\Controllers\PosPenyimpananController::class, 'bulkDestroy'])->name('pos-penyimpanan.bulk-destroy');
         Route::resource('pos-penyimpanan', \App\Http\Controllers\PosPenyimpananController::class);
         Route::delete('pos-warna/bulk-destroy', [\App\Http\Controllers\PosWarnaController::class, 'bulkDestroy'])->name('pos-warna.bulk-destroy');
@@ -159,8 +164,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('pos-kategori-expense', \App\Http\Controllers\PosKategoriExpenseController::class);
     });
 
-    // API Routes for AJAX (accessible by OWNER & ADMIN)
-    Route::middleware(['role:OWNER,ADMIN'])->group(function () {
+    // API Routes for AJAX (accessible by OWNER & ADMIN with subscription)
+    Route::middleware(['role:OWNER,ADMIN', 'subscription'])->group(function () {
         Route::post('api/produk/quick-store', [\App\Http\Controllers\ProdukController::class, 'quickStore'])->name('produk.quick-store');
     });
 

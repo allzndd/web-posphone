@@ -32,7 +32,7 @@
 
             <div class="mb-6">
                 <label for="harga" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                    Price (Rp) <span class="text-red-500">*</span>
+                    Price (Rp) <span class="text-gray-400 text-xs">(optional, leave blank for free)</span>
                 </label>
                 <input type="number" 
                        id="harga" 
@@ -41,8 +41,7 @@
                        min="0"
                        step="0.01"
                        class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('harga') border-red-500 @enderror"
-                       placeholder="0"
-                       required>
+                       placeholder="Leave blank for free">
                 @error('harga')
                     <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                 @enderror
@@ -50,19 +49,27 @@
 
             <div class="mb-6">
                 <label for="durasi" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                    Duration (Months) <span class="text-red-500">*</span>
+                    Duration <span class="text-red-500">*</span>
                 </label>
-                <select id="durasi" 
-                        name="durasi"
-                        class="w-full rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('durasi') border-red-500 @enderror"
-                        required>
-                    <option value="">Select Duration</option>
-                    <option value="1" {{ old('durasi', $paket->durasi) == '1' ? 'selected' : '' }}>1 Month</option>
-                    <option value="3" {{ old('durasi', $paket->durasi) == '3' ? 'selected' : '' }}>3 Months</option>
-                    <option value="6" {{ old('durasi', $paket->durasi) == '6' ? 'selected' : '' }}>6 Months</option>
-                    <option value="12" {{ old('durasi', $paket->durasi) == '12' ? 'selected' : '' }}>1 Year (12 Months)</option>
-                </select>
+                <div class="flex gap-3">
+                    <input type="number" 
+                           id="durasi" 
+                           name="durasi" 
+                           value="{{ old('durasi', $paket->durasi) }}"
+                           min="1"
+                           class="w-2/3 rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('durasi') border-red-500 @enderror"
+                           placeholder="e.g., 15, 1, 3, 12"
+                           required>
+                    <select id="durasi_satuan" name="durasi_satuan" class="w-1/3 rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('durasi_satuan') border-red-500 @enderror" required>
+                        <option value="hari" {{ old('durasi_satuan', $paket->durasi_satuan ?? 'bulan') == 'hari' ? 'selected' : '' }}>Days</option>
+                        <option value="bulan" {{ old('durasi_satuan', $paket->durasi_satuan ?? 'bulan') == 'bulan' ? 'selected' : '' }}>Months</option>
+                        <option value="tahun" {{ old('durasi_satuan', $paket->durasi_satuan ?? 'bulan') == 'tahun' ? 'selected' : '' }}>Years</option>
+                    </select>
+                </div>
                 @error('durasi')
+                    <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+                @error('durasi_satuan')
                     <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>

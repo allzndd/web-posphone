@@ -31,12 +31,18 @@ class PaketLayananController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'harga' => 'required|numeric|min:0',
+            'harga' => 'nullable|numeric|min:0',
             'durasi' => 'required|integer|min:1',
+            'durasi_satuan' => 'nullable|in:hari,bulan,tahun',
         ]);
 
         // Auto-generate slug
         $validated['slug'] = \Illuminate\Support\Str::slug($validated['nama']);
+        
+        // Set default durasi_satuan if not provided
+        if (!isset($validated['durasi_satuan'])) {
+            $validated['durasi_satuan'] = 'bulan';
+        }
 
         TipeLayanan::create($validated);
 
@@ -68,12 +74,18 @@ class PaketLayananController extends Controller
     {
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
-            'harga' => 'required|numeric|min:0',
+            'harga' => 'nullable|numeric|min:0',
             'durasi' => 'required|integer|min:1',
+            'durasi_satuan' => 'nullable|in:hari,bulan,tahun',
         ]);
 
         // Auto-generate slug
         $validated['slug'] = \Illuminate\Support\Str::slug($validated['nama']);
+        
+        // Set default durasi_satuan if not provided
+        if (!isset($validated['durasi_satuan'])) {
+            $validated['durasi_satuan'] = 'bulan';
+        }
 
         $paket = TipeLayanan::findOrFail($id);
         $paket->update($validated);
