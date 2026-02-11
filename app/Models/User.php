@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -128,5 +128,27 @@ class User extends Authenticatable
     public function owner()
     {
         return $this->hasOne(Owner::class, 'pengguna_id');
+    }
+
+    /**
+     * Check if user has verified email.
+     *
+     * @return bool
+     */
+    public function hasVerifiedEmail()
+    {
+        return $this->email_is_verified == 1;
+    }
+
+    /**
+     * Mark the given user's email as verified.
+     *
+     * @return bool
+     */
+    public function markEmailAsVerified()
+    {
+        return $this->forceFill([
+            'email_is_verified' => 1,
+        ])->save();
     }
 }
