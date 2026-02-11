@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ManageProfilController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,12 +17,46 @@ use App\Http\Controllers\ManageProfilController;
 // Landing Page
 Route::get('/', function () {
     if (auth()->check()) {
+        // Check if user's email is verified before redirecting to dashboard
+        if (!auth()->user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
         return redirect()->route('dashboard');
     }
     return view('landing_page.index');
 })->name('landing');
 
+// Email Verification Routes
 Route::middleware(['auth'])->group(function () {
+    // Notice page - tell user to verify their email
+    Route::get('/email/verify', function () {
+        if (auth()->user()->hasVerifiedEmail()) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.verify-email');
+    })->name('verification.notice');
+
+    // Verify email with signed URL
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        // Mark email as verified
+        $request->user()->markEmailAsVerified();
+        
+        return redirect()->route('dashboard')->with('success', 'Email Anda telah berhasil diverifikasi!');
+    })->middleware(['signed'])->name('verification.verify');
+
+    // Resend verification email
+    Route::post('/email/verification-notification', function (\Illuminate\Http\Request $request) {
+        if ($request->user()->hasVerifiedEmail()) {
+            return redirect()->route('dashboard');
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('message', 'Link verifikasi telah dikirim ulang ke email Anda!');
+    })->middleware(['throttle:3,1'])->name('verification.send');
+});
+
+Route::middleware(['auth', 'email.verified'])->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::redirect('home', '/dashboard');
     Route::get('dashboard-general-dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
