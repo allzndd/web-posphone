@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -21,17 +22,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Custom login response based on user role
-        $this->app->instance(LoginResponse::class, new class implements LoginResponse {
-            public function toResponse($request)
-            {
-                if (auth()->user()->isSuperadmin()) {
-                    return redirect()->route('dashboard-superadmin');
-                }
-                
-                return redirect()->intended(route('dashboard'));
-            }
-        });
+        //
     }
 
     /**
@@ -57,5 +48,34 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn () => view('pages.auth.login'));
 
         Fortify::registerView(fn () => view('pages.auth.register'));
+
+        // Override Fortify's default RegisterResponse
+        // MUST be in boot() to run AFTER Fortify's own register() bindings
+        $this->app->singleton(RegisterResponse::class, function () {
+            return new class implements RegisterResponse {
+                public function toResponse($request)
+                {
+                    return redirect('/email/verify');
+                }
+            };
+        });
+
+        // Override Fortify's default LoginResponse
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    if (!auth()->user()->hasVerifiedEmail()) {
+                        return redirect()->route('verification.notice');
+                    }
+
+                    if (auth()->user()->isSuperadmin()) {
+                        return redirect()->route('dashboard-superadmin');
+                    }
+
+                    return redirect()->intended(route('dashboard'));
+                }
+            };
+        });
     }
 }
