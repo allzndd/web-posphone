@@ -43,7 +43,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => Hash::make($input['password']),
             'slug' => Str::slug($input['name'] . '-' . time()),
             'role_id' => 2, // Role Owner
-            'email_is_verified' => 1, // Email verified by default
+            'email_is_verified' => 0, // Email not verified initially
         ]);
 
         // Create owner record untuk user tersebut
