@@ -98,6 +98,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/customers/export', [\App\Http\Controllers\ReportController::class, 'exportCustomers'])->name('customers.export');
             Route::get('/financial', [\App\Http\Controllers\ReportController::class, 'financial'])->name('financial');
             Route::get('/financial/export', [\App\Http\Controllers\ReportController::class, 'exportFinancial'])->name('financial.export');
+            Route::get('/expense', [\App\Http\Controllers\ReportController::class, 'expense'])->name('expense');
+            Route::get('/expense/export', [\App\Http\Controllers\ReportController::class, 'exportExpense'])->name('expense.export');
         });
     });
 

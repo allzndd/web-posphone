@@ -13,6 +13,7 @@ use App\Models\PosTukarTambah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -683,5 +684,153 @@ class ReportController extends Controller
         // Similar implementation to get trade-in data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
+    }
+
+    /**
+     * Display the operating expenses report
+     */
+    /**
+     * Display the operating expenses report
+     */
+    public function expense(Request $request)
+    {
+        $user = auth()->user();
+        $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
+
+        if (!$ownerId) {
+            return redirect()->route('login')->with('error', 'Owner tidak ditemukan');
+        }
+
+        // Get query parameters
+        $period = $request->get('period', 'month');
+        $startDate = $request->get('start_date', '');
+        $endDate = $request->get('end_date', '');
+        $storeId = $request->get('store_id', '');
+        $categoryId = $request->get('category_id', '');
+
+        // Determine date range
+        if ($period === 'custom' && $startDate && $endDate) {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+        } elseif ($period === 'today') {
+            $start = Carbon::now()->startOfDay();
+            $end = Carbon::now()->endOfDay();
+        } elseif ($period === 'week') {
+            $start = Carbon::now()->startOfWeek();
+            $end = Carbon::now()->endOfWeek();
+        } elseif ($period === 'year') {
+            $start = Carbon::now()->startOfYear();
+            $end = Carbon::now()->endOfYear();
+        } elseif ($period === 'all') {
+            $start = Carbon::createFromYear(2000);
+            $end = Carbon::now()->endOfDay();
+        } else { // default month
+            $start = Carbon::now()->startOfMonth();
+            $end = Carbon::now()->endOfMonth();
+        }
+
+        // Format dates for the view
+        $startDate = $start->format('Y-m-d');
+        $endDate = $end->format('Y-m-d');
+
+        // Get all stores and categories for filters
+        $stores = PosToko::where('owner_id', $ownerId)->get();
+        $categories = \App\Models\PosKategoriExpense::where('owner_id', $ownerId)
+            ->orWhere('is_global', 1)
+            ->get();
+
+        // Build query for operating expenses from PosTransaksi
+        $expenseQuery = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 0)
+            ->whereNotNull('pos_kategori_expense_id')
+            ->with(['kategoriExpense', 'toko']);
+
+        // Apply filters
+        if ($storeId) {
+            $expenseQuery->where('pos_toko_id', $storeId);
+        }
+
+        if ($categoryId) {
+            $expenseQuery->where('pos_kategori_expense_id', $categoryId);
+        }
+
+        $expenses = $expenseQuery->orderBy('created_at', 'desc')->get();
+
+        // Calculate metrics
+        $totalExpenses = $expenses->sum('total_harga');
+        $totalExpenseCount = $expenses->count();
+        $averageExpense = $totalExpenseCount > 0 ? $totalExpenses / $totalExpenseCount : 0;
+
+        // Expenses breakdown by category
+        $expensesByCategory = [];
+        foreach ($expenses->groupBy('kategoriExpense.nama') as $categoryName => $categoryExpenses) {
+            if ($categoryName && $categoryName !== 'null') {
+                $expensesByCategory[$categoryName] = $categoryExpenses->sum('total_harga');
+            }
+        }
+
+        // Expenses breakdown by store
+        $expensesByStore = [];
+        foreach ($stores as $store) {
+            $storeExpenses = $expenses->where('pos_toko_id', $store->id)->sum('total_harga');
+            if ($storeExpenses > 0 || !$storeId) {
+                $expensesByStore[$store->nama] = $storeExpenses;
+            }
+        }
+
+        // Daily expenses (for trend analysis)
+        $dailyExpenses = [];
+        $groupedByDate = $expenses->groupBy(function($item) {
+            return $item->created_at->format('Y-m-d');
+        });
+
+        foreach ($groupedByDate as $date => $dateExpenses) {
+            $dailyExpenses[$date] = $dateExpenses->sum('total_harga');
+        }
+
+        ksort($dailyExpenses);
+
+        // Top expense categories
+        $topExpenseTypes = collect($expensesByCategory)
+            ->sortDesc()
+            ->take(5)
+            ->all();
+
+        return view('reports.expense', [
+            'expenses' => $expenses,
+            'totalExpenses' => $totalExpenses,
+            'totalExpenseCount' => $totalExpenseCount,
+            'averageExpense' => $averageExpense,
+            'expensesByCategory' => $expensesByCategory,
+            'expensesByStore' => $expensesByStore,
+            'dailyExpenses' => $dailyExpenses,
+            'topExpenseTypes' => $topExpenseTypes,
+            'period' => $period,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'storeId' => $storeId,
+            'categoryId' => $categoryId,
+            'stores' => $stores,
+            'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * Export operating expenses report to Excel
+     */
+    public function exportExpense(Request $request)
+    {
+        $user = auth()->user();
+        $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
+
+        if (!$ownerId) {
+            return redirect()->route('login')->with('error', 'Owner tidak ditemukan');
+        }
+
+        return Excel::download(
+            new \App\Exports\ExpenseReportExport($request, $ownerId),
+            'Laporan_Operasional_Expense_' . date('Y-m-d') . '.xlsx'
+        );
     }
 }
