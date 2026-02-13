@@ -26,6 +26,10 @@ use App\Http\Controllers\Api\TradeInController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\ExpenseCategoryController;
+use App\Http\Controllers\Api\ColorController;
+use App\Http\Controllers\Api\StorageController;
+use App\Http\Controllers\Api\RamController;
+use App\Http\Controllers\Api\ExpenseTransactionController;
 use App\Models\Langganan;
 
 /*
@@ -86,6 +90,34 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/expense-categories/{id}', [ExpenseCategoryController::class, 'show']);
     Route::put('/expense-categories/{id}', [ExpenseCategoryController::class, 'update']);
     Route::delete('/expense-categories/{id}', [ExpenseCategoryController::class, 'destroy']);
+
+    // Colors API Routes
+    Route::get('/colors', [ColorController::class, 'index']);
+    Route::post('/colors', [ColorController::class, 'store']);
+    Route::get('/colors/{id}', [ColorController::class, 'show']);
+    Route::put('/colors/{id}', [ColorController::class, 'update']);
+    Route::delete('/colors/{id}', [ColorController::class, 'destroy']);
+
+    // Storage API Routes
+    Route::get('/storages', [StorageController::class, 'index']);
+    Route::post('/storages', [StorageController::class, 'store']);
+    Route::get('/storages/{id}', [StorageController::class, 'show']);
+    Route::put('/storages/{id}', [StorageController::class, 'update']);
+    Route::delete('/storages/{id}', [StorageController::class, 'destroy']);
+
+    // RAM API Routes
+    Route::get('/rams', [RamController::class, 'index']);
+    Route::post('/rams', [RamController::class, 'store']);
+    Route::get('/rams/{id}', [RamController::class, 'show']);
+    Route::put('/rams/{id}', [RamController::class, 'update']);
+    Route::delete('/rams/{id}', [RamController::class, 'destroy']);
+
+    // Expense Transaction API Routes
+    Route::get('/expense-transactions', [ExpenseTransactionController::class, 'index']);
+    Route::post('/expense-transactions', [ExpenseTransactionController::class, 'store']);
+    Route::get('/expense-transactions/{id}', [ExpenseTransactionController::class, 'show']);
+    Route::put('/expense-transactions/{id}', [ExpenseTransactionController::class, 'update']);
+    Route::delete('/expense-transactions/{id}', [ExpenseTransactionController::class, 'destroy']);
 
     // Customers API Routes
     Route::get('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'index']);
