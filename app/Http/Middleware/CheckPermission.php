@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\PermissionService;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -22,11 +23,12 @@ class CheckPermission
             return redirect('login');
         }
 
-        // Check if user has permission
-        if (!auth()->user()->hasPermission($permission)) {
-            abort(403, 'Unauthorized - Permission not granted');
+        // Check if user has permission using PermissionService
+        if (!PermissionService::check($permission)) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses ke halaman ini.');
         }
 
         return $next($request);
     }
 }
+
