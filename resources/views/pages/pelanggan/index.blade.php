@@ -8,7 +8,10 @@
 @endpush
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+<!-- Access Denied Overlay Component -->
+@include('components.access-denied-overlay', ['module' => 'Customer', 'hasAccessRead' => $hasAccessRead])
+
+<div class="mt-3 px-[11px] pr-[10px] @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Pelanggan Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -34,6 +37,7 @@
                 </form>
                 
                 <!-- Bulk Delete Button (hidden by default) -->
+                @permission('customer.delete')
                 <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
                         onclick="confirmBulkDelete()">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -42,8 +46,10 @@
                     </svg>
                     Delete Selected
                 </button>
+                @endpermission
                 
                 <!-- Add New Button -->
+                @permission('customer.create')
                 <a href="{{ route('pelanggan.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -52,6 +58,7 @@
                     </svg>
                     Add New Customer
                 </a>
+                @endpermission
             </div>
         </div>
 
@@ -60,11 +67,15 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
+                        @permission('customer.update')
+                        @permission('customer.delete')
                         <th class="py-3 text-left" style="width: 40px;">
                             <input type="checkbox" id="selectAllCheckbox" 
                                    class="rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer"
                                    onchange="toggleSelectAll(this)">
                         </th>
+                        @endpermission
+                        @endpermission
                         <th class="py-3 text-left col-no">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">No</p>
                         </th>
@@ -80,19 +91,27 @@
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Alamat</p>
                         </th>
+                        @permission('customer.update')
+                        @permission('customer.delete')
                         <th class="py-3 text-center col-actions">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Aksi</p>
                         </th>
+                        @endpermission
+                        @endpermission
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($pelanggan as $index => $item)
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('pelanggan.edit', $item) }}">
+                        @permission('customer.update')
+                        @permission('customer.delete')
                         <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
                             <input type="checkbox" class="pelanggan-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
                                    value="{{ $item->id }}" 
                                    onchange="updateBulkDeleteButton()">
                         </td>
+                        @endpermission
+                        @endpermission
                         <td class="py-4 col-no">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($pelanggan->currentPage() - 1) * $pelanggan->perPage() + $loop->iteration }}</p>
                         </td>
@@ -108,19 +127,23 @@
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ Str::limit($item->alamat, 30) ?? '-' }}</p>
                         </td>
+                        @permission('customer.update')
+                        @permission('customer.delete')
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-pelanggan-id="{{ $item->id }}" data-pelanggan-name="{{ $item->nama }}" data-pelanggan-edit="{{ route('pelanggan.edit', $item) }}" data-pelanggan-destroy="{{ route('pelanggan.destroy', $item) }}">
+                                <button class="btn-actions-menu relative" data-pelanggan-id="{{ $item->id }}" data-pelanggan-name="{{ $item->nama }}" data-pelanggan-edit="{{ route('pelanggan.edit', $item) }}" data-pelanggan-destroy="{{ route('pelanggan.destroy', $item) }}" data-can-update="{{ $canUpdate ? 'true' : 'false' }}" data-can-delete="{{ $canDelete ? 'true' : 'false' }}">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
                                 </button>
                             </div>
                         </td>
+                        @endpermission
+                        @endpermission
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="py-12 text-center">
+                        <td colspan="{{ $hasActions ? '7' : '6' }}" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -192,6 +215,7 @@
 
 <!-- Action Dropdown - Inline -->
 <div id="actionDropdown" class="actions-dropdown">
+    @if($canUpdate)
     <button id="editMenuItem" class="actions-dropdown-item edit">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
             <path fill="none" d="M0 0h24v24H0z"></path>
@@ -199,6 +223,8 @@
         </svg>
         <span>Edit</span>
     </button>
+    @endif
+    @if($canDelete)
     <button id="deleteMenuItem" class="actions-dropdown-item delete">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
             <path fill="none" d="M0 0h24v24H0z"></path>
@@ -206,6 +232,7 @@
         </svg>
         <span>Hapus</span>
     </button>
+    @endif
 </div>
 
 <!-- Bulk Delete Form -->
