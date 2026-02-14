@@ -133,6 +133,7 @@
             <!-- Action Buttons -->
             <div class="mt-8 flex items-center justify-between border-t border-gray-200 dark:border-white/10 pt-6">
                 <!-- Delete Button -->
+                @permission('customer.delete')
                 <button type="button" 
                         onclick="if(confirm('Are you sure you want to delete this customer? This action cannot be undone.')) { document.getElementById('delete-form').submit(); }"
                         class="flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700">
@@ -142,12 +143,16 @@
                     </svg>
                     Delete Customer
                 </button>
+                @else
+                <div></div>
+                @endpermission
 
                 <div class="flex items-center gap-3">
                     <a href="{{ route('pelanggan.index') }}" 
                        class="rounded-xl bg-gray-100 px-6 py-3 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
                         Cancel
                     </a>
+                    @permission('customer.update')
                     <button type="submit" 
                             class="flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -156,6 +161,7 @@
                         </svg>
                         Update Customer
                     </button>
+                    @endpermission
                 </div>
             </div>
         </form>
