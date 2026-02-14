@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosPelanggan;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,6 +17,10 @@ class PelangganController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+
+        // Check permission read
+        $hasAccessRead = PermissionService::check('customer.read');
+
         $ownerId = $user->owner ? $user->owner->id : null;
 
         $pelanggan = PosPelanggan::where('owner_id', $ownerId)
@@ -25,7 +30,13 @@ class PelangganController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.pelanggan.index', compact('pelanggan'));
+        // Pass permission flags to view
+        $canCreate = PermissionService::check('customer.create');
+        $canUpdate = PermissionService::check('customer.update');
+        $canDelete = PermissionService::check('customer.delete');
+        $hasActions = $canUpdate || $canDelete;
+
+        return view('pages.pelanggan.index', compact('pelanggan', 'canCreate', 'canUpdate', 'canDelete', 'hasActions', 'hasAccessRead'));
     }
 
     /**
@@ -35,7 +46,19 @@ class PelangganController extends Controller
      */
     public function create()
     {
-        return view('pages.pelanggan.create');
+        // Check permission create
+        if (!PermissionService::check('customer.create')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat customer baru');
+        }
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Get current customer count and max records limit
+        $currentCount = PosPelanggan::where('owner_id', $ownerId)->count();
+        $maxRecords = PermissionService::getMaxRecords('customer.create');
+
+        return view('pages.pelanggan.create', compact('currentCount', 'maxRecords'));
     }
 
     /**
@@ -46,8 +69,23 @@ class PelangganController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission create
+        if (!PermissionService::check('customer.create')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat customer baru');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Check max records limit
+        $currentCount = PosPelanggan::where('owner_id', $ownerId)->count();
+        $maxRecords = PermissionService::getMaxRecords('customer.create');
+
+        if (PermissionService::isReachedLimit('customer.create', $currentCount)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Anda telah mencapai batas maksimal data customer (' . $maxRecords . ' records)');
+        }
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -94,7 +132,16 @@ class PelangganController extends Controller
      */
     public function edit(PosPelanggan $pelanggan)
     {
-        return view('pages.pelanggan.edit', compact('pelanggan'));
+        // Check permission update
+        if (!PermissionService::check('customer.update')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk mengubah customer');
+        }
+
+        // Pass permission flags to view
+        $canUpdate = PermissionService::check('customer.update');
+        $canDelete = PermissionService::check('customer.delete');
+
+        return view('pages.pelanggan.edit', compact('pelanggan', 'canUpdate', 'canDelete'));
     }
 
     /**
@@ -106,6 +153,11 @@ class PelangganController extends Controller
      */
     public function update(Request $request, PosPelanggan $pelanggan)
     {
+        // Check permission update
+        if (!PermissionService::check('customer.update')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk mengubah customer');
+        }
+
         // Model already injected via route model binding
 
         $request->validate([
@@ -136,6 +188,11 @@ class PelangganController extends Controller
      */
     public function destroy(PosPelanggan $pelanggan)
     {
+        // Check permission delete
+        if (!PermissionService::check('customer.delete')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk menghapus customer');
+        }
+
         $pelanggan->delete();
 
         return redirect()->route('pelanggan.index')->with('success', 'Pelanggan berhasil dihapus');
@@ -149,6 +206,11 @@ class PelangganController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission delete
+        if (!PermissionService::check('customer.delete')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk menghapus customer');
+        }
+
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {
