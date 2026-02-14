@@ -118,6 +118,19 @@
                             <p class="mt-1 text-xs text-blue-800 dark:text-blue-400">
                                 Only customer name is required. Phone, email, and address are optional but recommended for better customer management and communication.
                             </p>
+                            @permission('customer.create')
+                                @if($maxRecords > 0)
+                                <p class="mt-2 text-xs text-blue-800 dark:text-blue-400 font-semibold">
+                                    Batas Data: Anda dapat menambahkan hingga <span class="font-bold text-blue-900 dark:text-blue-300">{{ $maxRecords }}</span> customer. 
+                                    Sudah membuat: <span class="font-bold text-blue-900 dark:text-blue-300">{{ $currentCount }}</span> dari <span class="font-bold">{{ $maxRecords }}</span>.
+                                    Sisa: <span class="font-bold text-green-600">{{ max(0, $maxRecords - $currentCount) }}</span>
+                                </p>
+                                @else
+                                <p class="mt-2 text-xs text-blue-800 dark:text-blue-400 font-semibold">
+                                    Tidak ada batasan jumlah customer yang dapat ditambahkan.
+                                </p>
+                                @endif
+                            @endpermission
                         </div>
                     </div>
                 </div>
