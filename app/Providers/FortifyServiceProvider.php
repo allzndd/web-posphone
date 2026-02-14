@@ -65,15 +65,57 @@ class FortifyServiceProvider extends ServiceProvider
             return new class implements LoginResponse {
                 public function toResponse($request)
                 {
-                    if (!auth()->user()->hasVerifiedEmail()) {
-                        return redirect()->route('verification.notice');
-                    }
+                    try {
+                        // Check if user is authenticated first (to avoid null pointer error)
+                        if (!auth()->check()) {
+                            return redirect()->route('login');
+                        }
 
-                    if (auth()->user()->isSuperadmin()) {
-                        return redirect()->route('dashboard-superadmin');
-                    }
+                        $user = auth()->user();
 
-                    return redirect()->intended(route('dashboard'));
+                        // Validate user object
+                        if (!$user) {
+                            \Log::error('LoginResponse: User object is null after auth check');
+                            return redirect()->route('login')->withErrors(['email' => 'Terjadi kesalahan. Silakan login kembali.']);
+                        }
+
+                        // Check email verification with fallback
+                        try {
+                            $isVerified = $user->hasVerifiedEmail();
+                        } catch (\Exception $e) {
+                            \Log::error('LoginResponse: Error checking email verification', [
+                                'user_id' => $user->id,
+                                'error' => $e->getMessage()
+                            ]);
+                            // Fallback: check directly
+                            $isVerified = ($user->email_is_verified == 1);
+                        }
+
+                        if (!$isVerified) {
+                            return redirect()->route('verification.notice');
+                        }
+
+                        // Check role and redirect accordingly
+                        $roleId = (int)($user->role_id ?? 0);
+                        
+                        if ($roleId === 1) {
+                            // Superadmin
+                            return redirect()->route('dashboard-superadmin');
+                        }
+
+                        // Owner (role_id = 2) or Admin (role_id = 3) go to regular dashboard
+                        return redirect()->intended(route('dashboard'));
+                        
+                    } catch (\Exception $e) {
+                        // Log the error
+                        \Log::error('LoginResponse: Unexpected error', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        
+                        // Fallback to dashboard
+                        return redirect()->route('dashboard');
+                    }
                 }
             };
         });
