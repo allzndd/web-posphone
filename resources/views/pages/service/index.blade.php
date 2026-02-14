@@ -53,6 +53,7 @@
                 </button>
                 
                 <!-- Add New Button -->
+                @permission('service.create')
                 <a href="{{ route('service.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -61,6 +62,7 @@
                     </svg>
                     Add New Service
                 </a>
+                @endpermission
             </div>
         </div>
 
@@ -171,12 +173,28 @@
                         
                         <!-- Actions -->
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-service-id="{{ $service->id }}" data-service-name="{{ $service->nama }}" data-service-edit="{{ route('service.edit', $service) }}" data-service-destroy="{{ route('service.destroy', $service) }}">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                            <div class="flex items-center justify-center gap-2">
+                                @permission('service.update')
+                                <a href="{{ route('service.edit', $service) }}"
+                                   class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                                   title="Edit">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                                    </svg>
+                                </a>
+                                @endpermission
+                                
+                                @permission('service.delete')
+                                <button onclick="confirmDelete('{{ route('service.destroy', $service) }}')"
+                                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                                        title="Delete">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
                                     </svg>
                                 </button>
+                                @endpermission
                             </div>
                         </td>
                     </tr>
@@ -313,6 +331,15 @@
 <script>
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.add('hidden');
+}
+
+function confirmDelete(url) {
+    const modal = document.getElementById('deleteConfirmModal');
+    const messageEl = modal.querySelector('p.text-gray-600');
+    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus service ini?';
+    modal.classList.remove('hidden');
+    window.pendingDeleteUrl = url;
+    window.pendingDeleteIds = null;
 }
 
 function toggleSelectAll(checkbox) {

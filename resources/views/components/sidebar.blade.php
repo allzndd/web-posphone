@@ -602,6 +602,23 @@
                 @endif
             </a>
         </li>
+
+        <!-- Permissions -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('permissions.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('permissions*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('permissions*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600' }}">
+                        Permissions
+                    </p>
+                </div>
+                @if(Request::is('permissions*'))
+                    <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+                @endif
+            </a>
+        </li>
         @endif
 
         @if(auth()->user()->isSuperadmin())

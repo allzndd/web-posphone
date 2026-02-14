@@ -220,6 +220,10 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
 
+        // Permissions Management
+        Route::resource('permissions', \App\Http\Controllers\PermissionController::class);
+        Route::delete('permissions/module/destroy', [\App\Http\Controllers\PermissionController::class, 'destroyModule'])->name('permissions.module.destroy');
+
         // Manage Profile - Contact Admin
         Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');
     });

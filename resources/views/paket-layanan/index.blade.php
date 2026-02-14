@@ -42,6 +42,9 @@
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Duration</p>
                         </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Permissions</p>
+                        </th>
                         <th class="py-3 text-center">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Action</p>
                         </th>
@@ -58,6 +61,29 @@
                         </td>
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->duration_text }}</p>
+                        </td>
+                        <td class="py-4">
+                            @php
+                                $permCount = $item->packagePermissions->count();
+                                $permissionsData = $item->packagePermissions->map(function($pp) {
+                                    return [
+                                        'modul' => $pp->permission->modul,
+                                        'aksi' => $pp->permission->aksi,
+                                        'max_records' => $pp->max_records,
+                                    ];
+                                })->toArray();
+                            @endphp
+                            @if($permCount > 0)
+                                <button onclick="showPermissionsModal({{ json_encode($permissionsData) }})" 
+                                   class="inline-flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $permCount }} permissions
+                                </button>
+                            @else
+                                <span class="text-xs text-gray-400 dark:text-gray-500">No permissions</span>
+                            @endif
                         </td>
                         <td class="py-4">
                             <div class="flex items-center justify-center gap-2">
@@ -89,7 +115,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="py-8 text-center">
+                        <td colspan="5" class="py-8 text-center">
                             <p class="text-gray-500 dark:text-gray-400">No service packages found</p>
                         </td>
                     </tr>
@@ -122,6 +148,69 @@ function confirmDelete(url) {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+function showPermissionsModal(permissions) {
+    let permissionsHtml = '';
+    
+    if (permissions && permissions.length > 0) {
+        const aksiColors = {
+            'create': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            'read': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+            'update': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+            'delete': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+        };
+        
+        permissionsHtml = permissions.map(perm => {
+            const aksiColor = aksiColors[perm.aksi] || 'bg-gray-100 text-gray-800';
+            return `
+                <div class="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-navy-700/50">
+                    <div class="flex items-center gap-3">
+                        <div>
+                            <p class="text-sm font-semibold text-navy-700 dark:text-white">${perm.modul}</p>
+                            <span class="inline-block mt-2 rounded-md ${aksiColor} px-2.5 py-1 text-xs font-bold uppercase">${perm.aksi}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Max Records</p>
+                        <p class="text-lg font-bold text-navy-700 dark:text-white">${perm.max_records === 0 ? '∞' : perm.max_records}</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        permissionsHtml = '<p class="py-8 text-center text-gray-500 dark:text-gray-400">No permissions assigned</p>';
+    }
+    
+    const modalHtml = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70" id="permissionsModal">
+            <div class="relative w-full max-w-2xl rounded-xl bg-white shadow-2xl dark:bg-navy-800">
+                <!-- Header -->
+                <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-white/10">
+                    <h3 class="text-lg font-bold text-navy-700 dark:text-white">Assigned Permissions</h3>
+                    <button onclick="document.getElementById('permissionsModal').remove()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Content -->
+                <div class="max-h-96 space-y-3 overflow-y-auto px-6 py-4">
+                    ${permissionsHtml}
+                </div>
+
+                <!-- Footer -->
+                <div class="flex justify-end border-t border-gray-200 px-6 py-4 dark:border-white/10">
+                    <button onclick="document.getElementById('permissionsModal').remove()" class="rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-navy-700 hover:bg-gray-300 dark:bg-navy-700 dark:text-white dark:hover:bg-navy-600 transition duration-200">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 }
 </script>
 @endsection

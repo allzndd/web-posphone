@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'subscription' => \App\Http\Middleware\CheckSubscriptionStatus::class,
         'email.verified' => \App\Http\Middleware\CheckEmailVerified::class,
+        'check.permission' => \App\Http\Middleware\CheckPermission::class,
     ];
 }

@@ -56,4 +56,12 @@ class TipeLayanan extends Model
             return $this->durasi . ' ' . $plural;
         }
     }
+
+    /**
+     * Relasi ke PackagePermission
+     */
+    public function packagePermissions()
+    {
+        return $this->hasMany(PackagePermission::class, 'tipe_layanan_id');
+    }
 }

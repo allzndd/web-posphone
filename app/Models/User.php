@@ -115,6 +115,39 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user has specific permission
+     *
+     * @param string $permission
+     * @return bool
+     */
+    public function hasPermission($permission)
+    {
+        // Superadmin and Admin have all permissions
+        if ($this->isSuperadmin() || $this->isAdmin()) {
+            return true;
+        }
+
+        // For other users, check based on their paket layanan (subscription package)
+        if ($this->isOwner() && $this->owner) {
+            // Get user's subscription package
+            $paketLayanan = $this->owner->paketLayanan;
+            
+            if ($paketLayanan) {
+                // Check if user's package has this permission
+                $hasPermission = $paketLayanan->packagePermissions()
+                    ->whereHas('permission', function ($query) use ($permission) {
+                        $query->where('nama', $permission);
+                    })
+                    ->exists();
+                
+                return $hasPermission;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get the role that the user belongs to.
      */
     public function role()
