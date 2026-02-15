@@ -27,13 +27,22 @@ class ProductBrandController extends Controller
 
             $perPage = $request->get('per_page', 10);
             
-            $query = PosProdukMerk::where('owner_id', $ownerId)
+            // Include global brands (is_global = 1) and owner's brands
+            $query = PosProdukMerk::where(function($q) use ($ownerId) {
+                $q->where('owner_id', $ownerId)
+                  ->orWhere('is_global', 1);
+            })
                 ->withCount('produk')
                 ->orderBy('created_at', 'desc');
 
             // Search by brand name
+            if ($request->filled('merk')) {
+                $query->where('merk', 'like', '%' . $request->merk . '%');
+            }
+
+            // Support old parameter for backward compatibility
             if ($request->filled('nama')) {
-                $query->where('nama', 'like', '%' . $request->nama . '%');
+                $query->where('merk', 'like', '%' . $request->nama . '%');
             }
 
             $brands = $query->paginate($perPage);
@@ -97,7 +106,8 @@ class ProductBrandController extends Controller
     {
         try {
             $validated = $request->validate([
-                'nama' => 'required|string|max:255',
+                'merk' => 'required|string|max:255',
+                'nama' => 'nullable|string|max:255', // Keep nama for compatibility
             ]);
 
             $user = $request->user();
@@ -110,8 +120,12 @@ class ProductBrandController extends Controller
                 ], 403);
             }
 
+            // Use merk as the primary field
+            $merkValue = $validated['merk'];
             $validated['owner_id'] = $ownerId;
-            $validated['slug'] = Str::slug($validated['nama'] . '-' . time());
+            $validated['merk'] = $merkValue;
+            $validated['nama'] = $validated['nama'] ?? $merkValue; // Use merk as nama if not provided
+            $validated['slug'] = Str::slug($merkValue . '-' . time());
 
             $brand = PosProdukMerk::create($validated);
 
@@ -141,7 +155,8 @@ class ProductBrandController extends Controller
     {
         try {
             $validated = $request->validate([
-                'nama' => 'required|string|max:255',
+                'merk' => 'required|string|max:255',
+                'nama' => 'nullable|string|max:255', // Keep nama for compatibility
             ]);
 
             $user = $request->user();
@@ -155,7 +170,14 @@ class ProductBrandController extends Controller
             }
 
             $brand = PosProdukMerk::where('owner_id', $ownerId)->findOrFail($id);
-            $brand->update($validated);
+            
+            // Update merk and nama
+            $merkValue = $validated['merk'];
+            $updateData = [
+                'merk' => $merkValue,
+                'nama' => $validated['nama'] ?? $merkValue, // Use merk as nama if not provided
+            ];
+            $brand->update($updateData);
 
             return response()->json([
                 'success' => true,
