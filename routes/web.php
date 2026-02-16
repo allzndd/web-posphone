@@ -148,6 +148,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         // Settings
         Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
         Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
+        Route::get('/email/verify/{token}', [\App\Http\Controllers\SettingsController::class, 'verifyNewEmail'])->name('email.verify');
         
         // Trade-In (pos_tukar_tambah) - OWNER ONLY
         Route::resource('tukar-tambah', \App\Http\Controllers\TukarTambahController::class);
