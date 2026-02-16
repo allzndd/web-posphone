@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\StorageController;
 use App\Http\Controllers\Api\RamController;
 use App\Http\Controllers\Api\ExpenseTransactionController;
+use App\Http\Controllers\Api\ProductSearchController;
 use App\Models\Langganan;
 
 /*
@@ -51,6 +52,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
+    
+    // Product Search Routes
+    Route::get('/products/search', [ProductSearchController::class, 'search']);
     
     // User Management Routes (Owner only)
     Route::prefix('users')->group(function () {
