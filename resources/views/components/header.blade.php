@@ -161,7 +161,7 @@
                 <div class="flex w-56 flex-col justify-start rounded-[20px] bg-white bg-cover bg-no-repeat shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:text-white dark:shadow-none">
                     <div class="p-4">
                         <div class="flex items-center gap-2">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">👋 Hey, {{ auth()->user()->name }}</p>
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">Hey, {{ auth()->user()->name }}</p>
                         </div>
                     </div>
                     <div class="h-px w-full bg-gray-200 dark:bg-white/20"></div>
