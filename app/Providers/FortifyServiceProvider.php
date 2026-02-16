@@ -14,6 +14,8 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\PasswordResetResponse;
+use Laravel\Fortify\Contracts\RequestPasswordResetLinkResponse;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -48,6 +50,10 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::loginView(fn () => view('pages.auth.login'));
 
         Fortify::registerView(fn () => view('pages.auth.register'));
+
+        Fortify::requestPasswordResetLinkView(fn () => view('auth.forgot-password'));
+
+        Fortify::resetPasswordView(fn ($request) => view('auth.reset-password', ['request' => $request]));
 
         // Override Fortify's default RegisterResponse
         // MUST be in boot() to run AFTER Fortify's own register() bindings
@@ -116,6 +122,25 @@ class FortifyServiceProvider extends ServiceProvider
                         // Fallback to dashboard
                         return redirect()->route('dashboard');
                     }
+                }
+            };
+        });
+
+        // Override password reset responses
+        $this->app->singleton(PasswordResetResponse::class, function () {
+            return new class implements PasswordResetResponse {
+                public function toResponse($request)
+                {
+                    return redirect()->route('login')->with('status', 'Your password has been reset.');
+                }
+            };
+        });
+
+        $this->app->singleton(RequestPasswordResetLinkResponse::class, function () {
+            return new class implements RequestPasswordResetLinkResponse {
+                public function toResponse($request)
+                {
+                    return back()->with('status', 'We have emailed your password reset link!');
                 }
             };
         });
