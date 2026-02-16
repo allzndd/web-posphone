@@ -78,7 +78,7 @@ class CreateNewUser implements CreatesNewUsers
                 'owner_id' => $owner->id,
                 'tipe_layanan_id' => $trialPackage->id,
                 'is_trial' => 1,
-                'is_active' => 0,
+                'is_active' => 1, // ✅ Auto-activate trial subscription
                 'started_date' => $startDate,
                 'end_date' => $endDate,
             ]);
