@@ -8,7 +8,10 @@
 @endpush
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+<!-- Access Denied Overlay Component -->
+@include('components.access-denied-overlay', ['module' => 'Expense', 'hasAccessRead' => $hasAccessRead])
+
+<div class="mt-3 px-[11px] pr-[10px] @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Expenses Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -34,6 +37,7 @@
                 </form>
                 
                 <!-- Bulk Delete Button (hidden by default) -->
+                @permission('expense.delete')
                 <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
                         onclick="confirmBulkDelete()">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -42,16 +46,19 @@
                     </svg>
                     Delete Selected
                 </button>
+                @endpermission
                 
                 <!-- Add New Button -->
+                @permission('expense.create')
                 <a href="{{ route('expense.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
                         <path fill="none" d="M0 0h24v24H0z"></path>
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
                     </svg>
-                    Tambah Expense
+                    Add Expense
                 </a>
+                @endpermission
             </div>
         </div>
 
@@ -144,12 +151,28 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->created_at->format('d M Y') }}</p>
                         </td>
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-expense-id="{{ $item->id }}" data-expense-invoice="{{ $item->invoice }}" data-expense-edit="{{ route('expense.edit', $item) }}" data-expense-destroy="{{ route('expense.destroy', $item) }}">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                            <div class="flex items-center justify-center gap-2">
+                                @permission('expense.update')
+                                <a href="{{ route('expense.edit', $item) }}"
+                                   class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                                   title="Edit">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                                    </svg>
+                                </a>
+                                @endpermission
+                                
+                                @permission('expense.delete')
+                                <button onclick="confirmDelete('{{ route('expense.destroy', $item) }}')"
+                                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                                        title="Delete">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
                                     </svg>
                                 </button>
+                                @endpermission
                             </div>
                         </td>
                     </tr>
@@ -279,8 +302,20 @@
 
 @push('scripts')
 <script>
+function confirmDelete(deleteUrl, itemName) {
+    const modal = document.getElementById('deleteConfirmModal');
+    const messageEl = modal.querySelector('p.text-gray-600');
+    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus <span class="font-bold">' + (itemName || 'expense') + '</span>?';
+    modal.classList.remove('hidden');
+    
+    window.pendingDeleteUrl = deleteUrl;
+    window.pendingDeleteIds = [];
+}
+
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.add('hidden');
+    window.pendingDeleteUrl = null;
+    window.pendingDeleteIds = [];
 }
 
 function toggleSelectAll(checkbox) {
@@ -320,10 +355,11 @@ function confirmBulkDelete() {
     window.pendingDeleteIds = Array.from(checkedBoxes).map(function(cb) {
         return cb.value;
     });
+    window.pendingDeleteUrl = null;
 }
 
-function proceedBulkDelete() {
-    // Check if this is a single delete from dropdown
+function proceedDelete() {
+    // Check if this is a single delete
     if (window.pendingDeleteUrl) {
         const form = document.createElement('form');
         form.method = 'POST';
@@ -347,7 +383,6 @@ function proceedBulkDelete() {
         
         document.body.appendChild(form);
         form.submit();
-        delete window.pendingDeleteUrl;
         return;
     }
     
@@ -367,96 +402,12 @@ function proceedBulkDelete() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
     document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
-    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedDelete);
 
     document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
         if (e.target.id === 'deleteConfirmModal') {
             closeDeleteModal();
         }
-    });
-
-    // Dropdown management
-    let currentButton = null;
-    const actionDropdown = document.getElementById('actionDropdown');
-    const editMenuItem = document.getElementById('editMenuItem');
-    const deleteMenuItem = document.getElementById('deleteMenuItem');
-
-    // Handle action button click
-    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            currentButton = btn;
-            
-            // Position dropdown - account for zoom: 90% (0.9) in app.blade
-            const rect = btn.getBoundingClientRect();
-            const zoomFactor = 0.9;
-            const dropdownWidth = 140;
-            actionDropdown.style.position = 'fixed';
-            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
-            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
-            actionDropdown.style.zIndex = '1001';
-            
-            actionDropdown.classList.add('show');
-        });
-    });
-
-    // Handle edit menu item click
-    editMenuItem.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (currentButton) {
-            const editUrl = currentButton.getAttribute('data-expense-edit');
-            if (editUrl) {
-                window.location.href = editUrl;
-            }
-        }
-        
-        actionDropdown.classList.remove('show');
-    });
-
-    // Handle delete menu item click
-    deleteMenuItem.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (currentButton) {
-            const destroyUrl = currentButton.getAttribute('data-expense-destroy');
-            const expenseId = currentButton.getAttribute('data-expense-id');
-            if (destroyUrl) {
-                const modal = document.getElementById('deleteConfirmModal');
-                const messageEl = modal.querySelector('p.text-gray-600');
-                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus expense ini?';
-                modal.classList.remove('hidden');
-                window.pendingDeleteUrl = destroyUrl;
-                window.pendingDeleteIds = [expenseId];
-            }
-        }
-        
-        actionDropdown.classList.remove('show');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
-            actionDropdown.classList.remove('show');
-        }
-    });
-
-    // Close dropdown with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            actionDropdown.classList.remove('show');
-        }
-    });
-
-    document.querySelectorAll('tr[data-href]').forEach(function(row) {
-        row.addEventListener('click', function(e) {
-            if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.expense-checkbox')) {
-                window.location.href = this.dataset.href;
-            }
-        });
     });
 });
 </script>

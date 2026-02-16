@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosPenyimpanan;
 use App\Models\User;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class PosPenyimpananController extends Controller
@@ -13,6 +14,8 @@ class PosPenyimpananController extends Controller
      */
     public function index(Request $request)
     {
+        $hasAccessRead = PermissionService::check('pos-penyimpanan.read');
+        
         $query = PosPenyimpanan::with('owner');
         
         // If superadmin, only show global items
@@ -37,7 +40,7 @@ class PosPenyimpananController extends Controller
         
         $perPage = $request->get('per_page', 15);
         $posPenyimpanans = $query->orderBy('created_at', 'desc')->paginate($perPage);
-        return view('pages.pos-penyimpanan.index', compact('posPenyimpanans'));
+        return view('pages.pos-penyimpanan.index', compact('posPenyimpanans', 'hasAccessRead'));
     }
 
     /**
@@ -45,6 +48,9 @@ class PosPenyimpananController extends Controller
      */
     public function create()
     {
+        if (!PermissionService::check('pos-penyimpanan.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create penyimpanan');
+        }
         // Only super admin can select owner; for other roles, id_owner is auto-set
         $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-penyimpanan.create', compact('owners'));
@@ -55,6 +61,9 @@ class PosPenyimpananController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionService::check('pos-penyimpanan.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create penyimpanan');
+        }
         $validated = $request->validate([
             'id_owner' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
@@ -95,6 +104,9 @@ class PosPenyimpananController extends Controller
      */
     public function edit(PosPenyimpanan $posPenyimpanan)
     {
+        if (!PermissionService::check('pos-penyimpanan.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit penyimpanan');
+        }
         // Check authorization for owner - only can edit their own items
         if (auth()->user()->role_id === 2 && $posPenyimpanan->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -110,6 +122,9 @@ class PosPenyimpananController extends Controller
      */
     public function update(Request $request, PosPenyimpanan $posPenyimpanan)
     {
+        if (!PermissionService::check('pos-penyimpanan.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit penyimpanan');
+        }
         // Check authorization for owner - only can update their own items, not global items
         if (auth()->user()->role_id === 2 && $posPenyimpanan->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -147,6 +162,9 @@ class PosPenyimpananController extends Controller
      */
     public function destroy(PosPenyimpanan $posPenyimpanan)
     {
+        if (!PermissionService::check('pos-penyimpanan.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete penyimpanan');
+        }
         // Check authorization for owner - only can delete their own items, not global items
         if (auth()->user()->role_id === 2 && $posPenyimpanan->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -163,6 +181,9 @@ class PosPenyimpananController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        if (!PermissionService::check('pos-penyimpanan.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete penyimpanan');
+        }
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {

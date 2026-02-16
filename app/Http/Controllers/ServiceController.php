@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosService;
 use App\Models\PosToko;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -13,6 +14,9 @@ class ServiceController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('service.read');
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -35,7 +39,7 @@ class ServiceController extends Controller
         $services = $query->paginate($perPage);
         $tokos = PosToko::where('owner_id', $ownerId)->orderBy('nama')->get();
 
-        return view('pages.service.index', compact('services', 'tokos'));
+        return view('pages.service.index', compact('services', 'tokos', 'hasAccessRead'));
     }
 
     /**
@@ -43,6 +47,11 @@ class ServiceController extends Controller
      */
     public function create()
     {
+        // Check permission to create
+        if (!PermissionService::check('service.create')) {
+            return redirect()->route('service.index')->with('error', 'Anda tidak memiliki akses untuk membuat service baru.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -56,6 +65,11 @@ class ServiceController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('service.create')) {
+            return redirect()->route('service.index')->with('error', 'Anda tidak memiliki akses untuk membuat service baru.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -89,6 +103,11 @@ class ServiceController extends Controller
      */
     public function edit(PosService $service)
     {
+        // Check permission to update
+        if (!PermissionService::check('service.update')) {
+            return redirect()->route('service.index')->with('error', 'Anda tidak memiliki akses untuk mengedit service.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -102,6 +121,11 @@ class ServiceController extends Controller
      */
     public function update(Request $request, PosService $service)
     {
+        // Check permission to update
+        if (!PermissionService::check('service.update')) {
+            return redirect()->route('service.index')->with('error', 'Anda tidak memiliki akses untuk mengubah service.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -133,6 +157,11 @@ class ServiceController extends Controller
      */
     public function destroy(PosService $service)
     {
+        // Check permission to delete
+        if (!PermissionService::check('service.delete')) {
+            return redirect()->route('service.index')->with('error', 'Anda tidak memiliki akses untuk menghapus service.');
+        }
+
         $service->delete();
 
         return redirect()->route('service.index')
@@ -144,6 +173,11 @@ class ServiceController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('service.delete')) {
+            return redirect()->route('service.index')->with('error', 'Anda tidak memiliki akses untuk menghapus service.');
+        }
+
         $ids = json_decode($request->input('ids'), true);
 
         if (!is_array($ids) || empty($ids)) {

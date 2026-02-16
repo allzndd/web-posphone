@@ -95,11 +95,18 @@
                         </svg>
                         Contoh Hasil
                     </p>
-                    <p class="text-xs text-blue-700 dark:text-blue-300">
-                        Jika pilih halaman <span class="font-mono font-semibold">Service</span> dan centang Create, Read:<br>
-                        • <span class="font-mono">service.create</span><br>
-                        • <span class="font-mono">service.read</span><br><br>
-                        <strong>Daftar halaman otomatis di-scan dari folder:</strong> <span class="font-mono">resources/views/pages/</span>
+                    <p class="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                        <div>Jika pilih halaman <span class="font-mono font-semibold">Service</span> dan centang Create, Read:</div>
+                        <div class="ml-4">• <span class="font-mono">service.create</span></div>
+                        <div class="ml-4">• <span class="font-mono">service.read</span></div>
+                        
+                        <div class="mt-2">Untuk format dengan sub-modul, ketik custom modul (contoh: <span class="font-mono">transaksi.masuk</span>, <span class="font-mono">transaksi.keluar</span>):</div>
+                        <div class="ml-4">• <span class="font-mono">transaksi.masuk.read</span></div>
+                        <div class="ml-4">• <span class="font-mono">transaksi.masuk.create</span></div>
+                        <div class="ml-4">• <span class="font-mono">transaksi.keluar.read</span></div>
+                        <div class="ml-4">• <span class="font-mono">transaksi.keluar.delete</span></div>
+                        
+                        <div class="mt-2"><strong>Daftar halaman otomatis di-scan dari folder:</strong> <span class="font-mono">resources/views/pages/</span></div>
                     </p>
                 </div>
             </div>

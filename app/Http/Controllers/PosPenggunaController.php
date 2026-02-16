@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PosPengguna;
 use App\Models\PosRole;
 use App\Models\PosToko;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -16,6 +17,9 @@ class PosPenggunaController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('pos-pengguna.read');
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -27,7 +31,7 @@ class PosPenggunaController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.pos-pengguna.index', compact('pengguna'));
+        return view('pages.pos-pengguna.index', compact('pengguna', 'hasAccessRead'));
     }
 
     /**
@@ -35,6 +39,11 @@ class PosPenggunaController extends Controller
      */
     public function create()
     {
+        // Check permission to create
+        if (!PermissionService::check('pos-pengguna.create')) {
+            return redirect()->route('pos-pengguna.index')->with('error', 'Anda tidak memiliki akses untuk membuat pengguna baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -49,6 +58,11 @@ class PosPenggunaController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('pos-pengguna.create')) {
+            return redirect()->route('pos-pengguna.index')->with('error', 'Anda tidak memiliki akses untuk membuat pengguna baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -85,6 +99,11 @@ class PosPenggunaController extends Controller
      */
     public function edit(PosPengguna $posPengguna)
     {
+        // Check permission to update
+        if (!PermissionService::check('pos-pengguna.update')) {
+            return redirect()->route('pos-pengguna.index')->with('error', 'Anda tidak memiliki akses untuk mengedit pengguna.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -100,6 +119,11 @@ class PosPenggunaController extends Controller
      */
     public function update(Request $request, PosPengguna $posPengguna)
     {
+        // Check permission to update
+        if (!PermissionService::check('pos-pengguna.update')) {
+            return redirect()->route('pos-pengguna.index')->with('error', 'Anda tidak memiliki akses untuk mengubah pengguna.');
+        }
+
         $pengguna = $posPengguna;
 
         $request->validate([
@@ -132,6 +156,11 @@ class PosPenggunaController extends Controller
      */
     public function destroy(PosPengguna $posPengguna)
     {
+        // Check permission to delete
+        if (!PermissionService::check('pos-pengguna.delete')) {
+            return redirect()->route('pos-pengguna.index')->with('error', 'Anda tidak memiliki akses untuk menghapus pengguna.');
+        }
+
         $pengguna = $posPengguna;
         $pengguna->delete();
 
@@ -143,6 +172,11 @@ class PosPenggunaController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('pos-pengguna.delete')) {
+            return redirect()->route('pos-pengguna.index')->with('error', 'Anda tidak memiliki akses untuk menghapus pengguna.');
+        }
+
         $ids = json_decode($request->ids, true);
         
         if (!is_array($ids) || empty($ids)) {

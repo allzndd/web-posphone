@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosRam;
 use App\Models\User;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class PosRamController extends Controller
@@ -13,6 +14,8 @@ class PosRamController extends Controller
      */
     public function index(Request $request)
     {
+        $hasAccessRead = PermissionService::check('pos-ram.read');
+        
         $query = PosRam::with('owner');
         
         // If superadmin, only show global items
@@ -37,7 +40,7 @@ class PosRamController extends Controller
         
         $perPage = $request->get('per_page', 15);
         $posRams = $query->orderBy('created_at', 'desc')->paginate($perPage);
-        return view('pages.pos-ram.index', compact('posRams'));
+        return view('pages.pos-ram.index', compact('posRams', 'hasAccessRead'));
     }
 
     /**
@@ -45,6 +48,9 @@ class PosRamController extends Controller
      */
     public function create()
     {
+        if (!PermissionService::check('pos-ram.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create RAM');
+        }
         // Only super admin can select owner; for other roles, id_owner is auto-set
         $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-ram.create', compact('owners'));
@@ -55,6 +61,9 @@ class PosRamController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionService::check('pos-ram.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create RAM');
+        }
         $validated = $request->validate([
             'id_owner' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
@@ -95,6 +104,9 @@ class PosRamController extends Controller
      */
     public function edit(PosRam $posRam)
     {
+        if (!PermissionService::check('pos-ram.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit RAM');
+        }
         // Check authorization for owner - only can edit their own items
         if (auth()->user()->role_id === 2 && $posRam->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -110,6 +122,9 @@ class PosRamController extends Controller
      */
     public function update(Request $request, PosRam $posRam)
     {
+        if (!PermissionService::check('pos-ram.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit RAM');
+        }
         // Check authorization for owner - only can update their own items, not global items
         if (auth()->user()->role_id === 2 && $posRam->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -147,6 +162,9 @@ class PosRamController extends Controller
      */
     public function destroy(PosRam $posRam)
     {
+        if (!PermissionService::check('pos-ram.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete RAM');
+        }
         // Check authorization for owner - only can delete their own items, not global items
         if (auth()->user()->role_id === 2 && $posRam->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -163,6 +181,9 @@ class PosRamController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        if (!PermissionService::check('pos-ram.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete RAM');
+        }
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {

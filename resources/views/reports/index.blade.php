@@ -3,7 +3,9 @@
 @section('title', 'Laporan')
 
 @section('main')
-<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3">
+@include('components.access-denied-overlay', ['module' => 'Laporan', 'hasAccessRead' => $hasAccessRead])
+
+<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Reports Grid -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         

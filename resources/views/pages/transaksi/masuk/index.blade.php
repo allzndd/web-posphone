@@ -8,7 +8,8 @@
 @endpush
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+@include('components.access-denied-overlay', ['module' => 'Incoming Transaction', 'hasAccessRead' => $hasAccessRead])
+<div class="mt-3 px-[11px] pr-[10px] @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Transactions Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -44,6 +45,7 @@
                 </button>
                 
                 <!-- Add New Button -->
+                @permission('transaksi.create')
                 <a href="{{ route('transaksi.masuk.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-green-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-green-600 active:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 dark:active:bg-green-800">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -52,6 +54,7 @@
                     </svg>
                     Transaksi Baru
                 </a>
+                @endpermission
             </div>
         </div>
 

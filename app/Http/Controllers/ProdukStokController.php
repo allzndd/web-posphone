@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProdukStok;
 use App\Models\PosProduk;
 use App\Models\PosToko;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class ProdukStokController extends Controller
@@ -14,6 +15,9 @@ class ProdukStokController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('produk-stok.read');
+        
         $perPage = $request->get('per_page', 10);
         $searchTerm = $request->get('search');
         
@@ -33,7 +37,7 @@ class ProdukStokController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($perPage);
 
-        return view('pages.produk-stok.index', compact('stok'));
+        return view('pages.produk-stok.index', compact('stok', 'hasAccessRead'));
     }
 
     /**
@@ -41,6 +45,11 @@ class ProdukStokController extends Controller
      */
     public function create()
     {
+        // Check permission to create
+        if (!PermissionService::check('produk-stok.create')) {
+            return redirect()->route('produk-stok.index')->with('error', 'Anda tidak memiliki akses untuk membuat stok baru.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
         
@@ -60,6 +69,11 @@ class ProdukStokController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('produk-stok.create')) {
+            return redirect()->route('produk-stok.index')->with('error', 'Anda tidak memiliki akses untuk membuat stok baru.');
+        }
+
         $validated = $request->validate([
             'pos_produk_id' => 'required|exists:pos_produk,id',
             'pos_toko_id' => 'required|exists:pos_toko,id',
@@ -103,6 +117,11 @@ class ProdukStokController extends Controller
      */
     public function edit(ProdukStok $produkStok)
     {
+        // Check permission to update
+        if (!PermissionService::check('produk-stok.update')) {
+            return redirect()->route('produk-stok.index')->with('error', 'Anda tidak memiliki akses untuk mengedit stok.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
         
@@ -122,6 +141,11 @@ class ProdukStokController extends Controller
      */
     public function update(Request $request, ProdukStok $produkStok)
     {
+        // Check permission to update
+        if (!PermissionService::check('produk-stok.update')) {
+            return redirect()->route('produk-stok.index')->with('error', 'Anda tidak memiliki akses untuk mengubah stok.');
+        }
+
         $validated = $request->validate([
             'pos_produk_id' => 'required|exists:pos_produk,id',
             'pos_toko_id' => 'required|exists:pos_toko,id',
@@ -160,6 +184,11 @@ class ProdukStokController extends Controller
      */
     public function destroy(ProdukStok $produkStok)
     {
+        // Check permission to delete
+        if (!PermissionService::check('produk-stok.delete')) {
+            return redirect()->route('produk-stok.index')->with('error', 'Anda tidak memiliki akses untuk menghapus stok.');
+        }
+
         $produkStok->delete();
 
         return redirect()->route('produk-stok.index')
@@ -171,6 +200,11 @@ class ProdukStokController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('produk-stok.delete')) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus stok.');
+        }
+
         $ids = json_decode($request->ids, true);
         
         if (!is_array($ids) || empty($ids)) {

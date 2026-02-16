@@ -64,8 +64,11 @@
                         </td>
                         <td class="py-4">
                             @php
-                                $permCount = $item->packagePermissions->count();
-                                $permissionsData = $item->packagePermissions->map(function($pp) {
+                                $validPermissions = $item->packagePermissions->filter(function($pp) {
+                                    return $pp->permission !== null;
+                                });
+                                $permCount = $validPermissions->count();
+                                $permissionsData = $validPermissions->map(function($pp) {
                                     return [
                                         'modul' => $pp->permission->modul,
                                         'aksi' => $pp->permission->aksi,

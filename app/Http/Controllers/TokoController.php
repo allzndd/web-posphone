@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosToko;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,6 +14,9 @@ class TokoController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('toko.read');
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -23,7 +27,7 @@ class TokoController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.toko.index', compact('tokos'));
+        return view('pages.toko.index', compact('tokos', 'hasAccessRead'));
     }
 
     /**
@@ -31,6 +35,11 @@ class TokoController extends Controller
      */
     public function create()
     {
+        // Check permission to create
+        if (!PermissionService::check('toko.create')) {
+            return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk membuat toko baru.');
+        }
+
         return view('pages.toko.create');
     }
 
@@ -39,6 +48,11 @@ class TokoController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('toko.create')) {
+            return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk membuat toko baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -86,6 +100,11 @@ class TokoController extends Controller
      */
     public function edit(PosToko $toko)
     {
+        // Check permission to update
+        if (!PermissionService::check('toko.update')) {
+            return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk mengedit toko.');
+        }
+
         return view('pages.toko.edit', compact('toko'));
     }
 
@@ -94,6 +113,11 @@ class TokoController extends Controller
      */
     public function update(Request $request, PosToko $toko)
     {
+        // Check permission to update
+        if (!PermissionService::check('toko.update')) {
+            return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk mengubah toko.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -120,6 +144,11 @@ class TokoController extends Controller
      */
     public function destroy(PosToko $toko)
     {
+        // Check permission to delete
+        if (!PermissionService::check('toko.delete')) {
+            return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk menghapus toko.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -138,6 +167,11 @@ class TokoController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('toko.delete')) {
+            return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk menghapus toko.');
+        }
+
         $ids = json_decode($request->ids, true);
         
         if (!is_array($ids) || empty($ids)) {

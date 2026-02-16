@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosProduk;
 use App\Models\PosProdukMerk;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,6 +17,9 @@ class ProdukController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('produk.read');
+        
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -27,7 +31,7 @@ class ProdukController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.produk.index', compact('produk'));
+        return view('pages.produk.index', compact('produk', 'hasAccessRead'));
     }
 
     /**
@@ -37,6 +41,11 @@ class ProdukController extends Controller
      */
     public function create()
     {
+        // Check permission to create
+        if (!PermissionService::check('produk.create')) {
+            return redirect()->route('produk.index')->with('error', 'Anda tidak memiliki akses untuk membuat produk baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -53,6 +62,11 @@ class ProdukController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('produk.create')) {
+            return redirect()->route('produk.index')->with('error', 'Anda tidak memiliki akses untuk membuat produk baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -168,6 +182,11 @@ class ProdukController extends Controller
      */
     public function edit(PosProduk $produk)
     {
+        // Check permission to update
+        if (!PermissionService::check('produk.update')) {
+            return redirect()->route('produk.index')->with('error', 'Anda tidak memiliki akses untuk mengedit produk.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -185,6 +204,11 @@ class ProdukController extends Controller
      */
     public function update(Request $request, PosProduk $produk)
     {
+        // Check permission to update
+        if (!PermissionService::check('produk.update')) {
+            return redirect()->route('produk.index')->with('error', 'Anda tidak memiliki akses untuk mengubah produk.');
+        }
+
         $request->validate([
             'nama' => 'nullable|string|max:255',
             'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
@@ -259,6 +283,11 @@ class ProdukController extends Controller
      */
     public function destroy(PosProduk $produk)
     {
+        // Check permission to delete
+        if (!PermissionService::check('produk.delete')) {
+            return redirect()->route('produk.index')->with('error', 'Anda tidak memiliki akses untuk menghapus produk.');
+        }
+
         $produk->delete();
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
@@ -269,6 +298,11 @@ class ProdukController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('produk.delete')) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menghapus produk.');
+        }
+
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {

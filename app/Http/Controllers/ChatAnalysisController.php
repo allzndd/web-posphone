@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\AIChatbotService;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class ChatAnalysisController extends Controller
@@ -16,11 +17,25 @@ class ChatAnalysisController extends Controller
 
     public function index()
     {
-        return view('pages.chat.index');
+        // Check read permission
+        $hasAccessRead = PermissionService::check('chat.read');
+        
+        return view('pages.chat.index', compact('hasAccessRead'));
     }
 
     public function ask(Request $request)
     {
+        // Check permission to create/send chat message
+        // Check both chat.ask (if exists) and chat.create for compatibility
+        $hasPermission = PermissionService::check('chat.ask') || PermissionService::check('chat.create');
+        
+        if (!$hasPermission) {
+            return response()->json([
+                'ok' => false,
+                'error' => 'Anda tidak memiliki akses untuk mengirim pertanyaan.'
+            ], 403);
+        }
+
         $data = $request->validate([
             'message' => ['required', 'string', 'max:1000']
         ]);

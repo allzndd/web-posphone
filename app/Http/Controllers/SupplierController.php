@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosSupplier;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -13,6 +14,8 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
+        $hasAccessRead = PermissionService::check('supplier.read');
+        
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
         
@@ -32,7 +35,7 @@ class SupplierController extends Controller
 
         $suppliers = $query->paginate($perPage);
 
-        return view('pages.supplier.index', compact('suppliers'));
+        return view('pages.supplier.index', compact('suppliers', 'hasAccessRead'));
     }
 
     /**
@@ -40,6 +43,9 @@ class SupplierController extends Controller
      */
     public function create()
     {
+        if (!PermissionService::check('supplier.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create suppliers');
+        }
         return view('pages.supplier.create');
     }
 
@@ -48,6 +54,9 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionService::check('supplier.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create suppliers');
+        }
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'nomor_hp' => 'nullable|string|max:45',
@@ -71,6 +80,9 @@ class SupplierController extends Controller
      */
     public function edit(PosSupplier $supplier)
     {
+        if (!PermissionService::check('supplier.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit suppliers');
+        }
         return view('pages.supplier.edit', compact('supplier'));
     }
 
@@ -79,6 +91,9 @@ class SupplierController extends Controller
      */
     public function update(Request $request, PosSupplier $supplier)
     {
+        if (!PermissionService::check('supplier.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit suppliers');
+        }
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'nomor_hp' => 'nullable|string|max:45',
@@ -100,6 +115,9 @@ class SupplierController extends Controller
      */
     public function destroy(PosSupplier $supplier)
     {
+        if (!PermissionService::check('supplier.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete suppliers');
+        }
         $supplier->delete();
 
         return redirect()->route('supplier.index')
@@ -111,6 +129,9 @@ class SupplierController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        if (!PermissionService::check('supplier.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete suppliers');
+        }
         $ids = json_decode($request->ids, true);
         
         if (!is_array($ids) || empty($ids)) {

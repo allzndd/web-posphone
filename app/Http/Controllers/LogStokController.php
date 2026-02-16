@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LogStok;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class LogStokController extends Controller
@@ -12,6 +13,9 @@ class LogStokController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('log-stok.read');
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
         $perPage = $request->get('per_page', 10);
@@ -42,6 +46,6 @@ class LogStokController extends Controller
 
         $logs = $query->paginate($perPage);
 
-        return view('pages.log-stok.index', compact('logs'));
+        return view('pages.log-stok.index', compact('logs', 'hasAccessRead'));
     }
 }

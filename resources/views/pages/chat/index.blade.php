@@ -162,7 +162,8 @@
     display: none !important;
   }
 </style>
-<div class="h-full" data-page="chat">
+@include('components.access-denied-overlay', ['module' => 'Chat Analisis', 'hasAccessRead' => $hasAccessRead])
+<div class="h-full" data-page="chat" @if(!$hasAccessRead) style="opacity: 0.3; pointer-events: none;" @endif>
     <div class="bg-white h-full overflow-hidden">
         <div class="chat-container">
             <div id="chat-log" class="chat-log"></div>
@@ -173,18 +174,27 @@
                 <button type="button" class="btn btn-brand-outline sugg">Cek stok produk</button>
             </div>
             <div class="chat-input-bar">
+                @php
+                    $hasAccessAsk = \App\Services\PermissionService::check('chat.ask') || \App\Services\PermissionService::check('chat.create');
+                @endphp
                 <form id="chat-form">
                     <div class="flex gap-2">
                         <input id="chat-input" type="text" 
                                class="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-navy-700 outline-none focus:border-brand-500" 
                                placeholder="Ketik pertanyaan Anda…" 
+                               {{ !$hasAccessAsk ? 'disabled' : '' }}
                                required 
                                maxlength="500">
-                        <button class="px-6 py-3 bg-brand-500 text-white rounded-xl font-medium hover:bg-brand-600 transition-colors" type="submit">
+                        <button class="px-6 py-3 bg-brand-500 text-white rounded-xl font-medium hover:bg-brand-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                                type="submit"
+                                {{ !$hasAccessAsk ? 'disabled' : '' }}>
                             <span class="btn-send-text"><i class="fas fa-paper-plane mr-2"></i>Kirim</span>
                             <span class="btn-send-spinner"><i class="fas fa-spinner fa-spin mr-2"></i>Mengirim…</span>
                         </button>
                     </div>
+                    @if(!$hasAccessAsk)
+                    <p class="text-sm text-gray-500 mt-2 italic">✓ Anda memiliki akses membaca chat, tapi tidak memiliki permission untuk mengirim pertanyaan. Hubungi admin untuk enable permission chat.create atau chat.ask.</p>
+                    @endif
                 </form>
             </div>
         </div>
@@ -285,6 +295,13 @@ document.addEventListener('DOMContentLoaded', function(){
 
   form.addEventListener('submit', async function(e){
     e.preventDefault();
+    
+    // Check if user has permission to ask (form will be disabled if no permission)
+    if (input.disabled) {
+      alert('Anda tidak memiliki permission untuk mengirim pertanyaan. Hubungi admin untuk enable permission chat.create atau chat.ask.');
+      return;
+    }
+    
     const message = input.value.trim();
     if(!message) return;
     appendBubble(message, 'me');

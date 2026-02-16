@@ -223,6 +223,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         // Permissions Management
         Route::resource('permissions', \App\Http\Controllers\PermissionController::class);
         Route::delete('permissions/module/destroy', [\App\Http\Controllers\PermissionController::class, 'destroyModule'])->name('permissions.module.destroy');
+        Route::delete('permissions/bulk-delete', [\App\Http\Controllers\PermissionController::class, 'bulkDelete'])->name('permissions.bulk-delete');
 
         // Manage Profile - Contact Admin
         Route::get('manage-profil/contact-admin', [ManageProfilController::class, 'contactAdmin'])->name('manage-profil.contact-admin.index');

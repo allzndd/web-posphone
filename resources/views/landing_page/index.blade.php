@@ -385,10 +385,15 @@
                     <a href="#pricing" class="text-white/70 hover:text-white transition-all duration-300 font-medium">Pricing</a>
                 </div>
 
-                <!-- CTA Button -->
-                <a href="{{ route('login') }}" class="bg-[#3b82f6] hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 inline-block text-center">
-                    Coba Gratis
-                </a>
+                <!-- CTA Buttons -->
+                <div class="flex items-center gap-4">
+                    <a href="{{ route('login') }}" class="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 py-2.5 rounded-full font-semibold transition-all duration-300 hover:scale-105 inline-block text-center">
+                        Login
+                    </a>
+                    <a href="{{ route('register') }}" class="bg-[#3b82f6] hover:bg-blue-600 text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 inline-block text-center">
+                        Coba Gratis
+                    </a>
+                </div>
             </div>
         </div>
     </nav>

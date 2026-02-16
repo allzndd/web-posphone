@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosRole;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,6 +14,9 @@ class PosRoleController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('pos-role.read');
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -23,7 +27,7 @@ class PosRoleController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.pos-role.index', compact('roles'));
+        return view('pages.pos-role.index', compact('roles', 'hasAccessRead'));
     }
 
     /**
@@ -31,6 +35,11 @@ class PosRoleController extends Controller
      */
     public function create()
     {
+        // Check permission to create
+        if (!PermissionService::check('pos-role.create')) {
+            return redirect()->route('pos-role.index')->with('error', 'Anda tidak memiliki akses untuk membuat role baru.');
+        }
+
         return view('pages.pos-role.create');
     }
 
@@ -39,6 +48,11 @@ class PosRoleController extends Controller
      */
     public function store(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('pos-role.create')) {
+            return redirect()->route('pos-role.index')->with('error', 'Anda tidak memiliki akses untuk membuat role baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -77,6 +91,11 @@ class PosRoleController extends Controller
      */
     public function edit(PosRole $posRole)
     {
+        // Check permission to update
+        if (!PermissionService::check('pos-role.update')) {
+            return redirect()->route('pos-role.index')->with('error', 'Anda tidak memiliki akses untuk mengedit role.');
+        }
+
         $role = $posRole;
         return view('pages.pos-role.edit', compact('role'));
     }
@@ -86,6 +105,11 @@ class PosRoleController extends Controller
      */
     public function update(Request $request, PosRole $posRole)
     {
+        // Check permission to update
+        if (!PermissionService::check('pos-role.update')) {
+            return redirect()->route('pos-role.index')->with('error', 'Anda tidak memiliki akses untuk mengubah role.');
+        }
+
         $role = $posRole;
 
         $request->validate([
@@ -104,6 +128,11 @@ class PosRoleController extends Controller
      */
     public function destroy(PosRole $posRole)
     {
+        // Check permission to delete
+        if (!PermissionService::check('pos-role.delete')) {
+            return redirect()->route('pos-role.index')->with('error', 'Anda tidak memiliki akses untuk menghapus role.');
+        }
+
         $posRole->delete();
 
         return redirect()->route('pos-role.index')->with('success', 'Role berhasil dihapus');
@@ -114,6 +143,11 @@ class PosRoleController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('pos-role.delete')) {
+            return redirect()->route('pos-role.index')->with('error', 'Anda tidak memiliki akses untuk menghapus role.');
+        }
+
         $ids = json_decode($request->ids, true);
         
         if (!is_array($ids) || empty($ids)) {

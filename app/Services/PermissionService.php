@@ -47,19 +47,13 @@ class PermissionService
                     })
                     ->exists();
                 
-                // Jika permission tidak ditemukan di database, anggap permission belum dikonfigurasi
-                // Return true (allow) untuk development/temporary access
+                // Jika permission tidak ditemukan di package permissions, DENY akses
+                // (sebelumnya logic ini salah - return true untuk permission yang belum ada di DB)
                 if (!$hasPermission) {
-                    // Check apakah permission sama sekali tidak ada di permissions table
-                    $permissionExists = \DB::table('permissions')
-                        ->where('nama', $permission)
-                        ->exists();
-                    
-                    // Jika permission belum pernah dibuat, anggap allow (temporary)
-                    return !$permissionExists;
+                    return false; // DENY - permission tidak dikonfigurasi di paket ini
                 }
                 
-                return true;
+                return true; // ALLOW - permission ditemukan di package
             }
         }
 

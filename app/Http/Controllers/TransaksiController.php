@@ -9,6 +9,7 @@ use App\Models\PosPelanggan;
 use App\Models\PosSupplier;
 use App\Models\PosProduk;
 use App\Models\PosService;
+use App\Services\PermissionService;
 use App\Traits\UpdatesStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -86,6 +87,9 @@ class TransaksiController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('transaksi.read');
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -100,7 +104,7 @@ class TransaksiController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.transaksi.index', compact('transaksi'));
+        return view('pages.transaksi.index', compact('transaksi', 'hasAccessRead'));
     }
 
     /**
@@ -288,6 +292,9 @@ class TransaksiController extends Controller
 
     public function indexMasuk(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('transaksi.masuk.read');
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -313,11 +320,16 @@ class TransaksiController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.transaksi.masuk.index', compact('transaksi'));
+        return view('pages.transaksi.masuk.index', compact('transaksi', 'hasAccessRead'));
     }
 
     public function createMasuk()
     {
+        // Check permission to create
+        if (!PermissionService::check('transaksi.masuk.create')) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Anda tidak memiliki akses untuk membuat transaksi baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -347,6 +359,11 @@ class TransaksiController extends Controller
 
     public function storeMasuk(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('transaksi.masuk.create')) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Anda tidak memiliki akses untuk membuat transaksi baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -474,6 +491,11 @@ class TransaksiController extends Controller
 
     public function editMasuk($id)
     {
+        // Check permission to update
+        if (!PermissionService::check('transaksi.masuk.update')) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Anda tidak memiliki akses untuk mengedit transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -492,6 +514,11 @@ class TransaksiController extends Controller
 
     public function updateMasuk(Request $request, $id)
     {
+        // Check permission to update
+        if (!PermissionService::check('transaksi.masuk.update')) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Anda tidak memiliki akses untuk mengubah transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -525,6 +552,11 @@ class TransaksiController extends Controller
 
     public function destroyMasuk($id)
     {
+        // Check permission to delete
+        if (!PermissionService::check('transaksi.masuk.delete')) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Anda tidak memiliki akses untuk menghapus transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -542,6 +574,11 @@ class TransaksiController extends Controller
      */
     public function bulkDestroyMasuk(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('transaksi.masuk.delete')) {
+            return redirect()->route('transaksi.masuk.index')->with('error', 'Anda tidak memiliki akses untuk menghapus transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -565,6 +602,9 @@ class TransaksiController extends Controller
 
     public function indexKeluar(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('transaksi.keluar.read');
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -590,11 +630,16 @@ class TransaksiController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.transaksi.keluar.index', compact('transaksi'));
+        return view('pages.transaksi.keluar.index', compact('transaksi', 'hasAccessRead'));
     }
 
     public function createKeluar()
     {
+        // Check permission to create
+        if (!PermissionService::check('transaksi.keluar.create')) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'Anda tidak memiliki akses untuk membuat transaksi baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -634,6 +679,11 @@ class TransaksiController extends Controller
 
     public function storeKeluar(Request $request)
     {
+        // Check permission to create
+        if (!PermissionService::check('transaksi.keluar.create')) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'Anda tidak memiliki akses untuk membuat transaksi baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -738,6 +788,11 @@ class TransaksiController extends Controller
 
     public function editKeluar($id)
     {
+        // Check permission to update
+        if (!PermissionService::check('transaksi.keluar.update')) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'Anda tidak memiliki akses untuk mengedit transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -756,6 +811,11 @@ class TransaksiController extends Controller
 
     public function updateKeluar(Request $request, $id)
     {
+        // Check permission to update
+        if (!PermissionService::check('transaksi.keluar.update')) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'Anda tidak memiliki akses untuk mengubah transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -789,6 +849,11 @@ class TransaksiController extends Controller
 
     public function destroyKeluar($id)
     {
+        // Check permission to delete
+        if (!PermissionService::check('transaksi.keluar.delete')) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'Anda tidak memiliki akses untuk menghapus transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -806,6 +871,11 @@ class TransaksiController extends Controller
      */
     public function bulkDestroyKeluar(Request $request)
     {
+        // Check permission to delete
+        if (!PermissionService::check('transaksi.keluar.delete')) {
+            return redirect()->route('transaksi.keluar.index')->with('error', 'Anda tidak memiliki akses untuk menghapus transaksi.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 

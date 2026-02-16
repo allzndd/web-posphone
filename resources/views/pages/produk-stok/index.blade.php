@@ -9,7 +9,8 @@
 
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+@include('components.access-denied-overlay', ['module' => 'Produk Stok', 'hasAccessRead' => $hasAccessRead])
+<div class="mt-3 px-[11px] pr-[10px] @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Product Stock Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -35,6 +36,7 @@
                 </form>
                 
                 <!-- Bulk Delete Button (hidden by default) -->
+                @permission('produk-stok.delete')
                 <button id="bulkDeleteBtn" class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 dark:active:bg-red-800 hidden"
                         onclick="confirmBulkDelete()">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -43,6 +45,7 @@
                     </svg>
                     Delete Selected
                 </button>
+                @endpermission
             </div>
         </div>
 
@@ -111,12 +114,28 @@
                         
                         <!-- Actions -->
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-stok-id="{{ $item->id }}" data-stok-product="{{ $item->produk->display_name ?? 'Unknown' }}" data-stok-edit="{{ route('produk-stok.edit', $item->id) }}" data-stok-destroy="{{ route('produk-stok.destroy', $item->id) }}">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
+                            <div class="flex items-center justify-center gap-2">
+                                @permission('produk-stok.update')
+                                <a href="{{ route('produk-stok.edit', $item->id) }}"
+                                   class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                                   title="Edit">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                                    </svg>
+                                </a>
+                                @endpermission
+                                
+                                @permission('produk-stok.delete')
+                                <button onclick="confirmDelete('{{ route('produk-stok.destroy', $item->id) }}')"
+                                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                                        title="Delete">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
                                     </svg>
                                 </button>
+                                @endpermission
                             </div>
                         </td>
                     </tr>
@@ -190,24 +209,6 @@
     </div>
 </div>
 
-<!-- Action Dropdown - Inline -->
-<div id="actionDropdown" class="actions-dropdown">
-    <button id="editMenuItem" class="actions-dropdown-item edit">
-        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
-            <path fill="none" d="M0 0h24v24H0z"></path>
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
-        </svg>
-        <span>Edit</span>
-    </button>
-    <button id="deleteMenuItem" class="actions-dropdown-item delete">
-        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
-            <path fill="none" d="M0 0h24v24H0z"></path>
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-        </svg>
-        <span>Delete</span>
-    </button>
-</div>
-
 <!-- Bulk Delete Form -->
 <form id="bulkDeleteForm" method="POST" style="display: none;">
     @csrf
@@ -239,8 +240,20 @@
 
 @push('scripts')
 <script>
+function confirmDelete(deleteUrl, itemName) {
+    const modal = document.getElementById('deleteConfirmModal');
+    const messageEl = modal.querySelector('p.text-gray-700');
+    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus <span class="font-bold">' + (itemName || 'stok') + '</span>?';
+    modal.classList.remove('hidden');
+    
+    window.pendingDeleteUrl = deleteUrl;
+    window.pendingDeleteIds = [];
+}
+
 function closeDeleteModal() {
     document.getElementById('deleteConfirmModal').classList.add('hidden');
+    window.pendingDeleteUrl = null;
+    window.pendingDeleteIds = [];
 }
 
 function toggleSelectAll(checkbox) {
@@ -262,31 +275,28 @@ function updateBulkDeleteButton() {
     }
 }
 
-function confirmBulkDelete(ids = null) {
-    let selectedIds = [];
+function confirmBulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.stok-checkbox:checked');
+    const count = checkedBoxes.length;
     
-    if (ids) {
-        selectedIds = ids;
-    } else {
-        const checkboxes = document.querySelectorAll('.stok-checkbox:checked');
-        selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
-    }
-    
-    if (selectedIds.length === 0) {
-        alert('Please select at least one stock item to delete');
+    if (count === 0) {
+        alert('Pilih minimal satu item untuk dihapus');
         return;
     }
     
     const modal = document.getElementById('deleteConfirmModal');
-    const itemCount = document.getElementById('deleteItemCount');
-    itemCount.textContent = selectedIds.length > 1 ? selectedIds.length + ' items' : selectedIds.length + ' item';
-    
+    const messageEl = modal.querySelector('p.text-gray-700');
+    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus <span class="font-bold text-red-600 dark:text-red-400">' + count + ' item</span>?';
     modal.classList.remove('hidden');
-    window.pendingDeleteIds = selectedIds;
+    
+    window.pendingDeleteIds = Array.from(checkedBoxes).map(function(cb) {
+        return cb.dataset.id;
+    });
+    window.pendingDeleteUrl = null;
 }
 
-function proceedBulkDelete() {
-    // Check if this is a single delete from dropdown
+function proceedDelete() {
+    // Check if this is a single delete
     if (window.pendingDeleteUrl) {
         const form = document.createElement('form');
         form.method = 'POST';
@@ -310,15 +320,16 @@ function proceedBulkDelete() {
         
         document.body.appendChild(form);
         form.submit();
-        delete window.pendingDeleteUrl;
         return;
     }
     
     // Otherwise it's a bulk delete
-    const ids = window.pendingDeleteIds;
-    if (!ids || ids.length === 0) return;
-    
-    document.getElementById('bulkIds').value = JSON.stringify(ids);
+    if (!window.pendingDeleteIds || window.pendingDeleteIds.length === 0) {
+        alert('Pilih minimal satu item untuk dihapus');
+        return;
+    }
+
+    document.getElementById('bulkIds').value = JSON.stringify(window.pendingDeleteIds);
     
     const form = document.getElementById('bulkDeleteForm');
     form.action = '{{ route('produk-stok.bulk-destroy') }}';
@@ -328,96 +339,12 @@ function proceedBulkDelete() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
     document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
-    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedDelete);
 
     document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
         if (e.target.id === 'deleteConfirmModal') {
             closeDeleteModal();
         }
-    });
-
-    // Dropdown management
-    let currentButton = null;
-    const actionDropdown = document.getElementById('actionDropdown');
-    const editMenuItem = document.getElementById('editMenuItem');
-    const deleteMenuItem = document.getElementById('deleteMenuItem');
-
-    // Handle action button click
-    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            currentButton = btn;
-            
-            // Position dropdown - account for zoom: 90% (0.9) in app.blade
-            const rect = btn.getBoundingClientRect();
-            const zoomFactor = 0.9;
-            const dropdownWidth = 140;
-            actionDropdown.style.position = 'fixed';
-            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
-            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
-            actionDropdown.style.zIndex = '1001';
-            
-            actionDropdown.classList.add('show');
-        });
-    });
-
-    // Handle edit menu item click
-    editMenuItem.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (currentButton) {
-            const editUrl = currentButton.getAttribute('data-stok-edit');
-            if (editUrl) {
-                window.location.href = editUrl;
-            }
-        }
-        
-        actionDropdown.classList.remove('show');
-    });
-
-    // Handle delete menu item click
-    deleteMenuItem.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (currentButton) {
-            const destroyUrl = currentButton.getAttribute('data-stok-destroy');
-            const stokId = currentButton.getAttribute('data-stok-id');
-            if (destroyUrl) {
-                const modal = document.getElementById('deleteConfirmModal');
-                const itemCount = document.getElementById('deleteItemCount');
-                itemCount.textContent = 'this stock item';
-                modal.classList.remove('hidden');
-                window.pendingDeleteUrl = destroyUrl;
-                window.pendingDeleteIds = [stokId];
-            }
-        }
-        
-        actionDropdown.classList.remove('show');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
-            actionDropdown.classList.remove('show');
-        }
-    });
-
-    // Close dropdown with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            actionDropdown.classList.remove('show');
-        }
-    });
-
-    document.querySelectorAll('tr[data-href]').forEach(function(row) {
-        row.addEventListener('click', function(e) {
-            if (!e.target.closest('.btn-actions-menu') && !e.target.closest('.stok-checkbox')) {
-                window.location.href = this.dataset.href;
-            }
-        });
     });
 });
 </script>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosWarna;
 use App\Models\User;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class PosWarnaController extends Controller
@@ -13,6 +14,8 @@ class PosWarnaController extends Controller
      */
     public function index(Request $request)
     {
+        $hasAccessRead = PermissionService::check('pos-warna.read');
+        
         $query = PosWarna::with('owner');
         
         // If superadmin, only show global items
@@ -37,7 +40,7 @@ class PosWarnaController extends Controller
         
         $perPage = $request->get('per_page', 15);
         $posWarnas = $query->orderBy('created_at', 'desc')->paginate($perPage);
-        return view('pages.pos-warna.index', compact('posWarnas'));
+        return view('pages.pos-warna.index', compact('posWarnas', 'hasAccessRead'));
     }
 
     /**
@@ -45,6 +48,9 @@ class PosWarnaController extends Controller
      */
     public function create()
     {
+        if (!PermissionService::check('pos-warna.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create colors');
+        }
         // Only super admin can select owner; for other roles, id_owner is auto-set
         $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-warna.create', compact('owners'));
@@ -55,6 +61,9 @@ class PosWarnaController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionService::check('pos-warna.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create colors');
+        }
         $validated = $request->validate([
             'id_owner' => 'nullable|integer',
             'warna' => 'required|string|max:100',
@@ -95,6 +104,9 @@ class PosWarnaController extends Controller
      */
     public function edit(PosWarna $posWarna)
     {
+        if (!PermissionService::check('pos-warna.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit colors');
+        }
         // Check authorization for owner - only can edit their own items
         if (auth()->user()->role_id === 2 && $posWarna->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -110,6 +122,9 @@ class PosWarnaController extends Controller
      */
     public function update(Request $request, PosWarna $posWarna)
     {
+        if (!PermissionService::check('pos-warna.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit colors');
+        }
         // Check authorization for owner - only can update their own items, not global items
         if (auth()->user()->role_id === 2 && $posWarna->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -147,6 +162,9 @@ class PosWarnaController extends Controller
      */
     public function destroy(PosWarna $posWarna)
     {
+        if (!PermissionService::check('pos-warna.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete colors');
+        }
         // Check authorization for owner - only can delete their own items, not global items
         if (auth()->user()->role_id === 2 && $posWarna->id_owner !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -163,6 +181,9 @@ class PosWarnaController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        if (!PermissionService::check('pos-warna.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete colors');
+        }
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {

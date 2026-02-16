@@ -36,12 +36,37 @@
             </div>
             @endif
 
+            <!-- Bulk Delete Button -->
+            <div id="bulkActionContainer" class="mb-4 hidden flex items-center gap-3">
+                <span id="selectedCount" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    0 selected
+                </span>
+                <button onclick="confirmBulkDelete()" 
+                        class="flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700">
+                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
+                    </svg>
+                    Delete Selected
+                </button>
+                <button onclick="clearSelection()" 
+                        class="rounded-xl bg-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition duration-200 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+                    Clear
+                </button>
+            </div>
+
             @php
                 $groupedPermissions = $permissions->groupBy('modul');
             @endphp
 
+            <form id="bulkDeleteForm" method="POST" action="{{ route('permissions.bulk-delete') }}" style="display: none;">
+                @csrf
+                @method('DELETE')
+                <input type="hidden" id="selectedIds" name="ids" value="[]">
+            </form>
+
             @forelse($groupedPermissions as $modul => $perms)
-            <div class="mb-6 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden">
+            <div class="mb-6 rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden"
                 <!-- Module Header -->
                 <div class="bg-gradient-to-r from-brand-500 to-brand-600 px-6 py-3">
                     <div class="flex items-center justify-between">
@@ -54,6 +79,12 @@
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-navy-900">
                         <tr class="border-b border-gray-200 dark:border-white/10">
+                            <th class="py-3 px-6 text-left">
+                                <input type="checkbox" 
+                                       class="select-all-permissions h-4 w-4 rounded border-gray-300 text-brand-500 cursor-pointer"
+                                       data-modul="{{ $modul }}"
+                                       title="Select all in this module">
+                            </th>
                             <th class="py-3 px-6 text-left">
                                 <p class="text-xs font-bold text-gray-600 dark:text-white uppercase">Nama Permission</p>
                             </th>
@@ -70,7 +101,13 @@
                     </thead>
                     <tbody>
                         @foreach($perms as $permission)
-                        <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
+                        <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors permission-row">
+                            <td class="py-3 px-6">
+                                <input type="checkbox" 
+                                       class="permission-checkbox h-4 w-4 rounded border-gray-300 text-brand-500 cursor-pointer"
+                                       value="{{ $permission->id }}"
+                                       data-modul="{{ $modul }}">
+                            </td>
                             <td class="py-3 px-6">
                                 <p class="text-sm font-medium text-navy-700 dark:text-white">{{ $permission->nama }}</p>
                             </td>
@@ -134,6 +171,85 @@
 </div>
 
 <script>
+// Get all selected permission IDs
+function getSelectedIds() {
+    const checkboxes = document.querySelectorAll('.permission-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Update bulk action button visibility and count
+function updateBulkActionUI() {
+    const selectedIds = getSelectedIds();
+    const bulkContainer = document.getElementById('bulkActionContainer');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (selectedIds.length > 0) {
+        bulkContainer.classList.remove('hidden');
+        selectedCount.textContent = `${selectedIds.length} selected`;
+    } else {
+        bulkContainer.classList.add('hidden');
+    }
+}
+
+// Initialize event listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle individual permission checkbox click
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function(e) {
+            e.stopPropagation();
+            updateBulkActionUI();
+        });
+    });
+
+    // Handle select all checkbox for each module
+    document.querySelectorAll('.select-all-permissions').forEach(selectAllCheckbox => {
+        selectAllCheckbox.addEventListener('change', function() {
+            const modul = this.dataset.modul;
+            const isChecked = this.checked;
+            
+            // Select/deselect all checkboxes in this module
+            document.querySelectorAll(`.permission-checkbox[data-modul="${modul}"]`).forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+            
+            updateBulkActionUI();
+        });
+    });
+
+    // Initial UI update
+    updateBulkActionUI();
+});
+
+// Clear all selections
+function clearSelection() {
+    document.querySelectorAll('.permission-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    document.querySelectorAll('.select-all-permissions').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateBulkActionUI();
+}
+
+// Confirm and submit bulk delete
+function confirmBulkDelete() {
+    const selectedIds = getSelectedIds();
+    
+    if (selectedIds.length === 0) {
+        alert('Pilih minimal satu permission untuk dihapus');
+        return;
+    }
+    
+    if (confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} permission ini? Tindakan ini tidak dapat dibatalkan.`)) {
+        // Set the selected IDs in the hidden form
+        document.getElementById('selectedIds').value = JSON.stringify(selectedIds);
+        
+        // Submit the form
+        document.getElementById('bulkDeleteForm').submit();
+    }
+}
+
+// Single delete confirmation
 function confirmDelete(url) {
     if (confirm('Apakah Anda yakin ingin menghapus permission ini?')) {
         let form = document.createElement('form');

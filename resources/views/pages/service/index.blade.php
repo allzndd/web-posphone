@@ -17,7 +17,8 @@
 @endpush
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+@include('components.access-denied-overlay', ['module' => 'Service', 'hasAccessRead' => $hasAccessRead])
+<div class="mt-3 px-[11px] pr-[10px] @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Services Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->

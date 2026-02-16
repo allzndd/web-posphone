@@ -10,6 +10,7 @@ use App\Models\PosProdukMerk;
 use App\Models\PosProdukStok;
 use App\Models\PosPelanggan;
 use App\Models\PosTukarTambah;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,8 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
+        $hasAccessRead = PermissionService::check('report.read');
+        
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -29,7 +32,7 @@ class ReportController extends Controller
             return redirect()->route('login')->with('error', 'Owner tidak ditemukan');
         }
 
-        return view('reports.index');
+        return view('reports.index', compact('hasAccessRead'));
     }
 
     /**
@@ -37,6 +40,10 @@ class ReportController extends Controller
      */
     public function financial(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -260,6 +267,10 @@ class ReportController extends Controller
      */
     public function exportFinancial(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.financial')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+        
         // Similar implementation to get financial data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
@@ -270,6 +281,10 @@ class ReportController extends Controller
      */
     public function sales(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -357,6 +372,10 @@ class ReportController extends Controller
      */
     public function exportSales(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.sales')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+        
         // Similar implementation to get sales data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
@@ -368,6 +387,10 @@ class ReportController extends Controller
      */
     public function customers(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -431,6 +454,10 @@ class ReportController extends Controller
      */
     public function exportCustomers(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.customers')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+        
         // Similar implementation to get customers data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
@@ -441,6 +468,10 @@ class ReportController extends Controller
      */
     public function stock(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -494,6 +525,10 @@ class ReportController extends Controller
      */
     public function exportStock(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.stock')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+        
         // Similar implementation to get stock data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
@@ -504,6 +539,10 @@ class ReportController extends Controller
      */
     public function products(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -575,6 +614,10 @@ class ReportController extends Controller
      */
     public function exportProducts(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.products')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+        
         // Similar implementation to get products data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
@@ -585,6 +628,10 @@ class ReportController extends Controller
      */
     public function tradeIn(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -681,6 +728,10 @@ class ReportController extends Controller
      */
     public function exportTradeIn(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.trade-in')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+        
         // Similar implementation to get trade-in data and export
         // For now, returning a placeholder
         return response()->json(['message' => 'Export functionality pending']);
@@ -689,11 +740,12 @@ class ReportController extends Controller
     /**
      * Display the operating expenses report
      */
-    /**
-     * Display the operating expenses report
-     */
     public function expense(Request $request)
     {
+        if (!PermissionService::check('report.read')) {
+            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 
@@ -821,6 +873,10 @@ class ReportController extends Controller
      */
     public function exportExpense(Request $request)
     {
+        if (!PermissionService::check('report.export')) {
+            return redirect()->route('reports.expense')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
 

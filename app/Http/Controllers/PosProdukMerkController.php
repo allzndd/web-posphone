@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosProdukMerk;
 use App\Models\User;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class PosProdukMerkController extends Controller
@@ -15,6 +16,10 @@ class PosProdukMerkController extends Controller
      */
     public function index()
     {
+        $hasAccessRead = PermissionService::check('pos-produk-merk.read');
+        $canDelete = PermissionService::check('pos-produk-merk.delete');
+        $hasActions = $hasAccessRead || $canDelete;
+        
         $query = PosProdukMerk::with('owner');
         
         // If superadmin, only show global items
@@ -53,7 +58,7 @@ class PosProdukMerkController extends Controller
         
         $perPage = request('per_page', 10);
         $merks = $query->paginate($perPage);
-        return view('pages.pos-produk-merk.index', compact('merks'));
+        return view('pages.pos-produk-merk.index', compact('merks', 'hasAccessRead', 'canDelete', 'hasActions'));
     }
 
     /**
@@ -63,6 +68,9 @@ class PosProdukMerkController extends Controller
      */
     public function create()
     {
+        if (!PermissionService::check('pos-produk-merk.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create product brands');
+        }
         // Get distinct merk values - show all for superadmin, filtered for owner/admin
         if (auth()->user()->role_id === 1) {
             // Superadmin: show all merks
@@ -100,6 +108,9 @@ class PosProdukMerkController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionService::check('pos-produk-merk.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create product brands');
+        }
         $validated = $request->validate([
             'merk' => 'required|string|max:255',
             'nama' => 'required|string|max:255',
@@ -146,8 +157,12 @@ class PosProdukMerkController extends Controller
      */
     public function edit(PosProdukMerk $posProdukMerk)
     {
-        // Check authorization for owner - only can edit their own items
-        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== auth()->id()) {
+        // Allow edit if user has read permission
+        if (!PermissionService::check('pos-produk-merk.read')) {
+            return redirect('/')->with('error', 'You do not have permission to access product brands');
+        }
+        // Check authorization for owner - only can edit their own items or global items
+        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== null && $posProdukMerk->owner_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
         
@@ -190,8 +205,12 @@ class PosProdukMerkController extends Controller
      */
     public function update(Request $request, PosProdukMerk $posProdukMerk)
     {
-        // Check authorization for owner - only can update their own items, not global items
-        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== auth()->id()) {
+        // Allow update if user has read permission
+        if (!PermissionService::check('pos-produk-merk.read')) {
+            return redirect('/')->with('error', 'You do not have permission to access product brands');
+        }
+        // Check authorization for owner - only can update their own items or global items
+        if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== null && $posProdukMerk->owner_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -230,6 +249,9 @@ class PosProdukMerkController extends Controller
      */
     public function destroy(PosProdukMerk $posProdukMerk)
     {
+        if (!PermissionService::check('pos-produk-merk.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete product brands');
+        }
         // Check authorization for owner - only can delete their own items, not global items
         if (auth()->user()->role_id === 2 && $posProdukMerk->owner_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -246,6 +268,9 @@ class PosProdukMerkController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        if (!PermissionService::check('pos-produk-merk.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete product brands');
+        }
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {

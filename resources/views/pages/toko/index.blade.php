@@ -8,7 +8,8 @@
 @endpush
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+@include('components.access-denied-overlay', ['module' => 'Store', 'hasAccessRead' => $hasAccessRead])
+<div class="mt-3 px-[11px] pr-[10px] @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Stores Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -44,6 +45,7 @@
                 </button>
                 
                 <!-- Add New Button -->
+                @permission('toko.create')
                 <a href="{{ route('toko.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -52,6 +54,7 @@
                     </svg>
                     Add New Store
                 </a>
+                @endpermission
             </div>
         </div>
 
@@ -188,6 +191,7 @@
 
 <!-- Action Dropdown - Inline -->
 <div id="actionDropdown" class="actions-dropdown">
+    @permission('toko.update')
     <button id="editMenuItem" class="actions-dropdown-item edit">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
             <path fill="none" d="M0 0h24v24H0z"></path>
@@ -195,6 +199,8 @@
         </svg>
         <span>Edit</span>
     </button>
+    @endpermission
+    @permission('toko.delete')
     <button id="deleteMenuItem" class="actions-dropdown-item delete">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
             <path fill="none" d="M0 0h24v24H0z"></path>
@@ -202,6 +208,7 @@
         </svg>
         <span>Delete</span>
     </button>
+    @endpermission
 </div>
 
 <!-- Bulk Delete Form -->

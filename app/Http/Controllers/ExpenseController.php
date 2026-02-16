@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PosTransaksi;
 use App\Models\PosToko;
 use App\Models\PosKategoriExpense;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -76,6 +77,9 @@ class ExpenseController extends Controller
      */
     public function index(Request $request)
     {
+        // Check read permission
+        $hasAccessRead = PermissionService::check('expense.read');
+        
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -123,7 +127,7 @@ class ExpenseController extends Controller
             ->orWhere('is_global', 1)
             ->get();
 
-        return view('pages.expense.index', compact('expenses', 'tokos', 'kategoris'));
+        return view('pages.expense.index', compact('expenses', 'tokos', 'kategoris', 'hasAccessRead'));
     }
 
     /**
@@ -133,6 +137,11 @@ class ExpenseController extends Controller
      */
     public function create()
     {
+        // Check create permission
+        if (!PermissionService::check('expense.create')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat expense baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -155,8 +164,25 @@ class ExpenseController extends Controller
      */
     public function store(Request $request)
     {
+        // Check create permission
+        if (!PermissionService::check('expense.create')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat expense baru.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Check if reached limit
+        $currentCount = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->whereNotNull('pos_kategori_expense_id')
+            ->count();
+
+        if (PermissionService::isReachedLimit('expense.create', $currentCount)) {
+            return redirect()->back()
+                ->with('error', 'Anda sudah mencapai batas maksimal expense yang diizinkan.')
+                ->withInput();
+        }
 
         $validated = $request->validate([
             'pos_toko_id' => 'required|exists:pos_toko,id',
@@ -205,6 +231,11 @@ class ExpenseController extends Controller
      */
     public function edit($id)
     {
+        // Check update permission
+        if (!PermissionService::check('expense.update')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk mengubah expense.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -231,6 +262,11 @@ class ExpenseController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Check update permission
+        if (!PermissionService::check('expense.update')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk mengubah expense.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -282,6 +318,11 @@ class ExpenseController extends Controller
      */
     public function destroy($id)
     {
+        // Check delete permission
+        if (!PermissionService::check('expense.delete')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk menghapus expense.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -312,6 +353,11 @@ class ExpenseController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        // Check delete permission
+        if (!PermissionService::check('expense.delete')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk menghapus expense.');
+        }
+
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 

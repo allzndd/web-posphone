@@ -8,7 +8,8 @@
 @endpush
 
 @section('main')
-<div class="mt-3 px-[11px] pr-[10px]">
+@include('components.access-denied-overlay', ['module' => 'Product Brand', 'hasAccessRead' => $hasAccessRead])
+<div class="mt-3 px-[11px] pr-[10px]" @if(!$hasAccessRead) style="opacity: 0.3; pointer-events: none;" @endif>
     <!-- Product Name Table Card -->
     <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
         <!-- Card Header -->
@@ -44,6 +45,7 @@
                 </button>
 
                 <!-- Add New Button -->
+                @permission('pos-produk-merk.create')
                 <a href="{{ route('pos-produk-merk.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
@@ -52,6 +54,7 @@
                     </svg>
                     Tambah Produk
                 </a>
+                @endpermission
             </div>
         </div>
 
@@ -106,11 +109,13 @@
                         </td>
                         <td class="py-4" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center">
+                                @if($hasActions)
                                 <button class="btn-actions-menu relative" data-merk-id="{{ $merk->id }}" data-merk-name="{{ $merk->nama }}" data-merk-edit="{{ route('pos-produk-merk.edit', $merk) }}" data-merk-destroy="{{ route('pos-produk-merk.destroy', $merk) }}">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
                                 </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -193,6 +198,7 @@
 
 <!-- Action Dropdown - Inline -->
 <div id="actionDropdown" class="actions-dropdown">
+    @permission('pos-produk-merk.read')
     <button id="editMenuItem" class="actions-dropdown-item edit">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
             <path fill="none" d="M0 0h24v24H0z"></path>
@@ -200,6 +206,8 @@
         </svg>
         <span>Edit</span>
     </button>
+    @endpermission
+    @permission('pos-produk-merk.delete')
     <button id="deleteMenuItem" class="actions-dropdown-item delete">
         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
             <path fill="none" d="M0 0h24v24H0z"></path>
@@ -207,6 +215,7 @@
         </svg>
         <span>Delete</span>
     </button>
+    @endpermission
 </div>
 
 <!-- Bulk Delete Form -->
@@ -364,38 +373,42 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle edit menu item click
-    editMenuItem.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (currentButton) {
-            const editUrl = currentButton.getAttribute('data-merk-edit');
-            if (editUrl) {
-                window.location.href = editUrl;
+    if (editMenuItem) {
+        editMenuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (currentButton) {
+                const editUrl = currentButton.getAttribute('data-merk-edit');
+                if (editUrl) {
+                    window.location.href = editUrl;
+                }
             }
-        }
-        
-        actionDropdown.classList.remove('show');
-    });
+            
+            actionDropdown.classList.remove('show');
+        });
+    }
 
     // Handle delete menu item click
-    deleteMenuItem.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (currentButton) {
-            const destroyUrl = currentButton.getAttribute('data-merk-destroy');
-            if (destroyUrl) {
-                const modal = document.getElementById('deleteConfirmModal');
-                const messageEl = modal.querySelector('p.text-gray-600');
-                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus brand ini?';
-                modal.classList.remove('hidden');
-                window.pendingDeleteUrl = destroyUrl;
+    if (deleteMenuItem) {
+        deleteMenuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (currentButton) {
+                const destroyUrl = currentButton.getAttribute('data-merk-destroy');
+                if (destroyUrl) {
+                    const modal = document.getElementById('deleteConfirmModal');
+                    const messageEl = modal.querySelector('p.text-gray-600');
+                    messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus brand ini?';
+                    modal.classList.remove('hidden');
+                    window.pendingDeleteUrl = destroyUrl;
+                }
             }
-        }
-        
-        actionDropdown.classList.remove('show');
-    });
+            
+            actionDropdown.classList.remove('show');
+        });
+    }
 
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {

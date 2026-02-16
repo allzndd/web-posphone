@@ -191,4 +191,32 @@ class PermissionController extends Controller
                 ->with('error', 'Gagal menghapus permissions: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Bulk delete multiple permissions
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|json',
+        ]);
+
+        try {
+            $ids = json_decode($request->ids, true);
+            
+            if (!is_array($ids) || empty($ids)) {
+                return redirect()->route('permissions.index')
+                    ->with('error', 'Tidak ada permission yang dipilih');
+            }
+
+            // Delete permissions
+            Permission::whereIn('id', $ids)->delete();
+
+            return redirect()->route('permissions.index')
+                ->with('success', 'Berhasil menghapus ' . count($ids) . ' permission(s)');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus permissions: ' . $e->getMessage());
+        }
+    }
 }

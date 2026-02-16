@@ -10,6 +10,7 @@ use App\Models\PosProdukMerk;
 use App\Models\PosTransaksi;
 use App\Models\PosTransaksiItem;
 use App\Traits\UpdatesStock;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,9 @@ class TukarTambahController extends Controller
     
     public function index(Request $request)
     {
+        // Check permission read
+        $hasAccessRead = PermissionService::check('tukar-tambah.read');
+        
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
         
@@ -60,11 +64,22 @@ class TukarTambahController extends Controller
         $tokos = PosToko::where('owner_id', $ownerId)->get();
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
 
-        return view('pages.tukar-tambah.index', compact('tukarTambahs', 'tokos', 'pelanggans'));
+        // Pass permission flags to view
+        $canCreate = PermissionService::check('tukar-tambah.create');
+        $canUpdate = PermissionService::check('tukar-tambah.update');
+        $canDelete = PermissionService::check('tukar-tambah.delete');
+        $hasActions = $canUpdate || $canDelete;
+
+        return view('pages.tukar-tambah.index', compact('tukarTambahs', 'tokos', 'pelanggans', 'canCreate', 'canUpdate', 'canDelete', 'hasActions', 'hasAccessRead'));
     }
 
     public function create()
     {
+        // Check permission create
+        if (!PermissionService::check('tukar-tambah.create')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat trade-in baru');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -78,6 +93,11 @@ class TukarTambahController extends Controller
 
     public function store(Request $request)
     {
+        // Check permission create
+        if (!PermissionService::check('tukar-tambah.create')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat trade-in baru');
+        }
+
         $validated = $request->validate([
             'pos_toko_id' => 'required|exists:pos_toko,id',
             'pos_pelanggan_id' => 'nullable|exists:pos_pelanggan,id',
@@ -263,6 +283,11 @@ class TukarTambahController extends Controller
 
     public function edit(PosTukarTambah $tukarTambah)
     {
+        // Check permission update
+        if (!PermissionService::check('tukar-tambah.update')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk mengubah trade-in');
+        }
+
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
@@ -279,6 +304,11 @@ class TukarTambahController extends Controller
 
     public function update(Request $request, PosTukarTambah $tukarTambah)
     {
+        // Check permission update
+        if (!PermissionService::check('tukar-tambah.update')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk mengubah trade-in');
+        }
+
         $validated = $request->validate([
             'pos_toko_id' => 'required|exists:pos_toko,id',
             'pos_pelanggan_id' => 'nullable|exists:pos_pelanggan,id',
@@ -407,6 +437,11 @@ class TukarTambahController extends Controller
 
     public function destroy(PosTukarTambah $tukarTambah)
     {
+        // Check permission delete
+        if (!PermissionService::check('tukar-tambah.delete')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk menghapus trade-in');
+        }
+
         DB::beginTransaction();
         try {
             // Delete related transactions and their items

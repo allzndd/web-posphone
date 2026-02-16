@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosKategoriExpense;
 use App\Models\User;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
 class PosKategoriExpenseController extends Controller
@@ -13,6 +14,8 @@ class PosKategoriExpenseController extends Controller
      */
     public function index()
     {
+        $hasAccessRead = PermissionService::check('pos-kategori-expense.read');
+        
         $query = PosKategoriExpense::with('owner');
         
         // If superadmin, only show global items
@@ -49,7 +52,7 @@ class PosKategoriExpenseController extends Controller
         
         $perPage = request('per_page', 10);
         $kategoriExpenses = $query->paginate($perPage);
-        return view('pages.pos-kategori-expense.index', compact('kategoriExpenses'));
+        return view('pages.pos-kategori-expense.index', compact('kategoriExpenses', 'hasAccessRead'));
     }
 
     /**
@@ -57,6 +60,9 @@ class PosKategoriExpenseController extends Controller
      */
     public function create()
     {
+        if (!PermissionService::check('pos-kategori-expense.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create expense categories');
+        }
         // Only super admin can select owner; for other roles, owner_id is auto-set
         $owners = auth()->user()->role_id === 1 ? User::where('role_id', 2)->get() : collect();
         return view('pages.pos-kategori-expense.create', compact('owners'));
@@ -67,6 +73,9 @@ class PosKategoriExpenseController extends Controller
      */
     public function store(Request $request)
     {
+        if (!PermissionService::check('pos-kategori-expense.create')) {
+            return redirect('/')->with('error', 'You do not have permission to create expense categories');
+        }
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
         ]);
@@ -106,6 +115,9 @@ class PosKategoriExpenseController extends Controller
      */
     public function edit(PosKategoriExpense $posKategoriExpense)
     {
+        if (!PermissionService::check('pos-kategori-expense.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit expense categories');
+        }
         // Check authorization for owner - only can edit their own items
         if (auth()->user()->role_id === 2 && $posKategoriExpense->owner_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -121,6 +133,9 @@ class PosKategoriExpenseController extends Controller
      */
     public function update(Request $request, PosKategoriExpense $posKategoriExpense)
     {
+        if (!PermissionService::check('pos-kategori-expense.update')) {
+            return redirect('/')->with('error', 'You do not have permission to edit expense categories');
+        }
         // Check authorization for owner - only can update their own items, not global items
         if (auth()->user()->role_id === 2 && $posKategoriExpense->owner_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -157,6 +172,9 @@ class PosKategoriExpenseController extends Controller
      */
     public function destroy(PosKategoriExpense $posKategoriExpense)
     {
+        if (!PermissionService::check('pos-kategori-expense.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete expense categories');
+        }
         // Check authorization for owner - only can delete their own items, not global items
         if (auth()->user()->role_id === 2 && $posKategoriExpense->owner_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
@@ -173,6 +191,9 @@ class PosKategoriExpenseController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        if (!PermissionService::check('pos-kategori-expense.delete')) {
+            return redirect('/')->with('error', 'You do not have permission to delete expense categories');
+        }
         $ids = json_decode($request->input('ids'), true);
         
         if (!is_array($ids) || empty($ids)) {
