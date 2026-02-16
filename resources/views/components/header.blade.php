@@ -27,11 +27,53 @@
     <div class="relative mt-[3px] flex h-[61px] w-full flex-grow items-center justify-around gap-2 rounded-full bg-white px-2 py-2 shadow-xl shadow-shadow-500 dark:!bg-navy-800 dark:shadow-none md:w-[365px] md:flex-grow-0 md:gap-1 xl:w-[365px] xl:gap-2 xl:ml-auto">
         
         <!-- Search -->
-        <div class="hidden sm:flex h-full items-center rounded-full bg-lightPrimary text-navy-700 dark:bg-navy-900 dark:text-white xl:w-[225px]">
+        <div x-data="productSearch()" class="hidden sm:flex h-full items-center rounded-full bg-lightPrimary text-navy-700 dark:bg-navy-900 dark:text-white xl:w-[225px] relative">
             <p class="pl-3 pr-2 text-xl">
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="h-4 w-4 text-gray-400 dark:text-white" xmlns="http://www.w3.org/2000/svg"><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path></svg>
             </p>
-            <input type="text" placeholder="Search..." class="block h-full w-full rounded-full bg-lightPrimary text-sm font-medium text-navy-700 outline-none placeholder:!text-gray-400 dark:bg-navy-900 dark:text-white dark:placeholder:!text-white sm:w-fit" />
+            <input 
+                type="text" 
+                placeholder="Search produk..." 
+                @input="search($event)" 
+                @focus="open = true"
+                @click.away="open = false"
+                class="block h-full w-full rounded-full bg-lightPrimary text-sm font-medium text-navy-700 outline-none placeholder:!text-gray-400 dark:bg-navy-900 dark:text-white dark:placeholder:!text-white sm:w-fit" />
+            
+            <!-- Search Results Dropdown -->
+            <div x-show="open && results.length > 0" 
+                 @click.away="open = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 transform scale-95"
+                 x-transition:enter-end="opacity-100 transform scale-100"
+                 class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-navy-800 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                <template x-for="product in results" :key="product.id">
+                    <a :href="product.url" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-navy-700 border-b border-gray-200 dark:border-navy-600 last:border-b-0 transition">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-navy-700 dark:text-white" x-text="product.nama"></p>
+                            <div class="flex gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <span x-show="product.warna" x-text="'Warna: ' + product.warna"></span>
+                                <span x-show="product.penyimpanan" x-text="'Storage: ' + product.penyimpanan + 'GB'"></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-brand-500" x-text="'Rp ' + formatCurrency(product.harga_jual)"></p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" x-text="'IMEI: ' + (product.imei || 'N/A')"></p>
+                        </div>
+                    </a>
+                </template>
+            </div>
+
+            <!-- No Results Message -->
+            <div x-show="open && searchQuery && results.length === 0 && !loading" 
+                 @click.away="open = false"
+                 class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-navy-800 rounded-lg shadow-xl z-50 p-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Produk tidak ditemukan</p>
+            </div>
+
+            <!-- Loading State -->
+            <div x-show="loading" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-navy-800 rounded-lg shadow-xl z-50 p-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Mencari...</p>
+            </div>
         </div>
 
         <!-- Notification Icon -->
@@ -146,3 +188,70 @@
         @csrf
     </form>
 </nav>
+
+<script>
+function productSearch() {
+    return {
+        searchQuery: '',
+        results: [],
+        open: false,
+        loading: false,
+        searchTimeout: null,
+
+        async search(event) {
+            this.searchQuery = event.target.value;
+            clearTimeout(this.searchTimeout);
+
+            if (this.searchQuery.length < 1) {
+                this.results = [];
+                return;
+            }
+
+            this.loading = true;
+
+            // Debounce search to avoid too many requests
+            this.searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/products/search?q=${encodeURIComponent(this.searchQuery)}&limit=10`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'Authorization': `Bearer ${this.getToken()}`
+                        }
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        this.results = data.data;
+                    } else {
+                        this.results = [];
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.results = [];
+                } finally {
+                    this.loading = false;
+                }
+            }, 300);
+        },
+
+        getToken() {
+            // Get token from meta tag atau localStorage
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            if (metaToken) return metaToken.getAttribute('content');
+            
+            const storedToken = localStorage.getItem('api_token');
+            if (storedToken) return storedToken;
+            
+            return '';
+        },
+
+        formatCurrency(value) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'decimal',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+    };
+}
+</script>
