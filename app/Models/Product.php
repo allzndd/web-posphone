@@ -10,6 +10,8 @@ class Product extends Model
 {
     use HasFactory;
 
+    protected $table = 'pos_produk';
+
     protected  $fillable = [
         'name',
         'slug',
