@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\StorageController;
 use App\Http\Controllers\Api\RamController;
 use App\Http\Controllers\Api\ExpenseTransactionController;
 use App\Http\Controllers\Api\ProductSearchController;
+use App\Http\Controllers\Api\AppVersionController;
 use App\Http\Controllers\ChatAnalysisController;
 use App\Models\Langganan;
 
@@ -48,6 +49,9 @@ use App\Models\Langganan;
 // Auth Routes (Public)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Public Routes (no auth required)
+Route::get('/app-versions', [AppVersionController::class, 'getByPlatform']);
 
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
