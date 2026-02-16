@@ -610,7 +610,7 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
-            ->with(['toko', 'supplier'])
+            ->with(['toko', 'supplier', 'items.produk'])
             ->when($request->input('search'), function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('invoice', 'like', '%' . $search . '%')
