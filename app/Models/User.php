@@ -74,6 +74,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the user's name attribute.
+     *
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        return $this->attributes['nama'] ?? null;
+    }
+
+    /**
      * Check if user is owner
      *
      * @return bool
