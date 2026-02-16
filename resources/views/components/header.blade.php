@@ -35,12 +35,11 @@
         </div>
 
         <!-- Notification Icon -->
-        <div x-data="{ open: false }" class="relative cursor-pointer">
+        {{-- <div x-data="{ open: false }" class="relative cursor-pointer">
             <p @click="open = !open" class="cursor-pointer">
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4 text-gray-600 dark:text-white" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"></path></svg>
             </p>
             
-            <!-- Notification Dropdown -->
             <div x-show="open" @click.away="open = false" style="display: none;"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 transform scale-95"
@@ -68,15 +67,14 @@
                     </div>
                 </button>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Info Icon -->
-        <div x-data="{ open: false }" class="relative cursor-pointer">
+        {{-- <div x-data="{ open: false }" class="relative cursor-pointer">
             <p @click="open = !open" class="cursor-pointer">
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4 text-gray-600 dark:text-white" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"></path></svg>
             </p>
             
-            <!-- Info Dropdown -->
             <div x-show="open" @click.away="open = false" style="display: none;"
                  x-transition:enter="transition ease-out duration-300"
                  x-transition:enter-start="opacity-0 transform scale-95"
@@ -98,7 +96,7 @@
                     Try Horizon Free!
                 </a>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Theme Toggle (Moon/Sun) -->
         <div class="cursor-pointer text-gray-600" onclick="toggleDarkMode()">
