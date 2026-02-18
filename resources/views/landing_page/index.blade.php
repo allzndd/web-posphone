@@ -447,8 +447,8 @@
 
                 <!-- CTA Buttons -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-                    <a href="{{ route('login') }}" class="group bg-[#3b82f6] hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 flex items-center space-x-3">
-                        <span>Mulai Gratis 14 Hari</span>
+                    <a href="{{ route('register') }}" class="group bg-[#3b82f6] hover:bg-blue-600 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 flex items-center space-x-3">
+                        <span>Mulai Gratis 15 Hari</span>
                         <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                         </svg>
@@ -595,7 +595,294 @@
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- About Section -->
+    <section id="about" class="relative py-32 px-6 lg:px-8 bg-gradient-to-b from-[#0A1A3D] to-[#051033]">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <!-- Left Content -->
+                <div class="space-y-8">
+                    <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full glass-effect bg-white/5 border border-white/10 hover-lift w-fit">
+                        <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                        <span class="text-sm text-white/80 font-medium">Tentang Kami</span>
+                    </div>
+
+                    <div>
+                        <h2 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                            Solusi POS <span class="text-blue-500">Terpercaya</span> untuk Bisnis Anda
+                        </h2>
+                        <p class="text-xl text-white/70 leading-relaxed mb-8">
+                            Kami memahami tantangan yang dihadapi toko smartphone modern. Dengan pengalaman lebih dari 5 tahun di industri retail teknologi, kami menghadirkan sistem POS yang dirancang khusus untuk memenuhi kebutuhan spesifik bisnis smartphone Anda.
+                        </p>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <div class="text-3xl font-bold text-blue-400 mb-2">1000+</div>
+                            <div class="text-sm text-white/60">Pengguna Aktif</div>
+                        </div>
+                        <div class="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <div class="text-3xl font-bold text-blue-400 mb-2">500M+</div>
+                            <div class="text-sm text-white/60">Transaksi Terproses</div>
+                        </div>
+                        <div class="glass-effect bg-white/5 border border-white/10 rounded-2xl p-6">
+                            <div class="text-3xl font-bold text-blue-400 mb-2">5+</div>
+                            <div class="text-sm text-white/60">Tahun Berpengalaman</div>
+                        </div>
+                    </div>
+
+                    <!-- Values -->
+                    <div class="space-y-4 pt-4">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg mb-1">Inovasi Berkelanjutan</h4>
+                                <p class="text-white/60">Kami terus mengembangkan fitur baru berdasarkan feedback pelanggan</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg mb-1">Dukungan 24/7</h4>
+                                <p class="text-white/60">Tim support kami siap membantu Anda kapan saja dibutuhkan</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg mb-1">Keamanan Data Terjamin</h4>
+                                <p class="text-white/60">Enkripsi tingkat enterprise untuk melindungi data bisnis Anda</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Image/Illustration -->
+                <div class="relative h-96 lg:h-full min-h-[500px] group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent rounded-3xl group-hover:from-blue-500/30 group-hover:via-blue-600/20 transition-all duration-500"></div>
+                    
+                    <!-- Animated Shapes -->
+                    <div class="absolute inset-0 rounded-3xl overflow-hidden">
+                        <!-- Floating Cards Effect -->
+                        <div class="absolute top-10 left-10 w-40 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-2xl shadow-blue-500/30 transform -rotate-6 group-hover:rotate-0 transition-transform duration-500">
+                            <div class="text-white/80 text-sm mb-3">Penjualan Hari Ini</div>
+                            <div class="text-white font-bold text-2xl">Rp 5.2M</div>
+                        </div>
+
+                        <div class="absolute bottom-20 right-10 w-40 h-32 glass-effect bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl transform rotate-6 group-hover:rotate-0 transition-transform duration-500">
+                            <div class="text-white/80 text-sm mb-3">Stok Produk</div>
+                            <div class="text-white font-bold text-2xl">245 Unit</div>
+                        </div>
+
+                        <!-- Center Circle -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-32 h-32 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-full opacity-80 blur-xl group-hover:scale-105 transition-transform duration-500"></div>
+                            <svg class="absolute w-20 h-20 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="relative py-32 px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full glass-effect bg-white/5 border border-white/10 mb-6 hover-lift">
+                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    <span class="text-sm text-white/80 font-medium">Paket Berlangganan</span>
+                </div>
+                <h2 class="text-5xl md:text-6xl font-bold text-white mb-6">
+                    Harga <span class="text-blue-500">Terjangkau</span> untuk Semua
+                </h2>
+                <p class="text-xl text-white/60 max-w-2xl mx-auto">
+                    Dapatkan semua fitur POS profesional dengan harga yang kompetitif. Tidak ada biaya tersembunyi, cukup bayar sesuai kebutuhan Anda.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Basic Plan -->
+                <div class="group glass-effect bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 hover-lift hover:border-blue-500/50 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-bold text-white mb-2">Paket Starter</h3>
+                        <p class="text-white/60 text-sm mb-6">Cocok untuk toko kecil hingga menengah</p>
+                        
+                        <div class="mb-8">
+                            <span class="text-5xl font-bold text-white">Rp 0</span>
+                            <span class="text-white/60 ml-2">/bulan</span>
+                            <p class="text-white/50 text-sm mt-2">Uji coba gratis 15 hari</p>
+                        </div>
+
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Manajemen Penjualan</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Inventori Dasar</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">1 Pengguna</span>
+                            </li>
+                        </ul>
+
+                        <a href="{{ route('register') }}" class="w-full glass-effect bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-2xl font-bold border border-white/20 hover:border-white/40 transition-all duration-300 inline-block text-center">
+                            Coba Gratis
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pro Plan - Featured -->
+                <div class="group glass-effect bg-white/10 border-2 border-blue-500/50 rounded-3xl p-8 hover:bg-white/15 transition-all duration-300 hover-lift hover:border-blue-400 relative overflow-hidden md:scale-105 md:shadow-2xl md:shadow-blue-500/20">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <!-- Popular Badge -->
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full text-white text-xs font-bold">
+                        PALING POPULER
+                    </div>
+
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-bold text-white mb-2">Paket Pro</h3>
+                        <p class="text-white/60 text-sm mb-6">Paket lengkap untuk toko modern</p>
+                        
+                        <div class="mb-8">
+                            <span class="text-5xl font-bold text-white">Rp 800K</span>
+                            <span class="text-white/60 ml-2">/bulan</span>
+                            <p class="text-white/50 text-sm mt-2">Hemat 20% dengan pembayaran tahunan</p>
+                        </div>
+
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Semua fitur di Starter</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Laporan Lengkap</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Hingga 5 Pengguna</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Prioritas Support</span>
+                            </li>
+                        </ul>
+
+                        <a href="{{ route('register') }}" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/30 inline-block text-center">
+                            Langganan Sekarang
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="group glass-effect bg-white/5 border border-white/10 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 hover-lift hover:border-blue-500/50 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-bold text-white mb-2">Paket Enterprise</h3>
+                        <p class="text-white/60 text-sm mb-6">Untuk jaringan toko dengan kebutuhan khusus</p>
+                        
+                        <div class="mb-8">
+                            <span class="text-5xl font-bold text-white">Custom</span>
+                            <span class="text-white/60 ml-2">Hubungi Kami</span>
+                            <p class="text-white/50 text-sm mt-2">Solusi disesuaikan dengan kebutuhan bisnis</p>
+                        </div>
+
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Unlimited Pengguna</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Fitur Custom</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">Dedicated Support</span>
+                            </li>
+                            <li class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-white/80">SLA Guarantee</span>
+                            </li>
+                        </ul>
+
+                        <a href="mailto:support@posphone.com?subject=Enterprise%20Plan%20Inquiry" class="w-full glass-effect bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-2xl font-bold border border-white/20 hover:border-white/40 transition-all duration-300 inline-block text-center">
+                            Hubungi Sales
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ or Additional Info -->
+            <div class="mt-20 text-center">
+                <p class="text-white/60 mb-4">Semua paket termasuk:</p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <div class="flex items-center space-x-2 text-white/70">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>SSL Encryption</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-white/70">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Daily Backups</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-white/70">
+                        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>99.9% Uptime</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
     <footer class="relative py-16 px-6 lg:px-8 border-t border-white/10">
         <div class="max-w-7xl mx-auto">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
