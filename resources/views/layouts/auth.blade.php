@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>@yield('title') &mdash; M iPhone Group</title>
+    <link rel="icon" href="{{ asset('img/favicon2.jpg') }}" type="image/jpeg">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
