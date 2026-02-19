@@ -23,7 +23,18 @@ class ReportController extends Controller
      */
     public function index(Request $request)
     {
-        $hasAccessRead = PermissionService::check('report.read');
+        // Check individual report permissions
+        $hasAccessSales = PermissionService::check('report.sales.read');
+        $hasAccessFinancial = PermissionService::check('report.financial.read');
+        $hasAccessProducts = PermissionService::check('report.products.read');
+        $hasAccessStock = PermissionService::check('report.stock.read');
+        $hasAccessTradeIn = PermissionService::check('report.trade-in.read');
+        $hasAccessCustomers = PermissionService::check('report.customers.read');
+        $hasAccessExpense = PermissionService::check('report.expense.read');
+        
+        // Check if user has access to at least one report
+        $hasAccessRead = $hasAccessSales || $hasAccessFinancial || $hasAccessProducts || 
+                         $hasAccessStock || $hasAccessTradeIn || $hasAccessCustomers || $hasAccessExpense;
         
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -32,7 +43,16 @@ class ReportController extends Controller
             return redirect()->route('login')->with('error', 'Owner tidak ditemukan');
         }
 
-        return view('reports.index', compact('hasAccessRead'));
+        return view('reports.index', compact(
+            'hasAccessRead',
+            'hasAccessSales',
+            'hasAccessFinancial',
+            'hasAccessProducts',
+            'hasAccessStock',
+            'hasAccessTradeIn',
+            'hasAccessCustomers',
+            'hasAccessExpense'
+        ));
     }
 
     /**
@@ -40,9 +60,7 @@ class ReportController extends Controller
      */
     public function financial(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.financial.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -235,6 +253,7 @@ class ReportController extends Controller
         }
 
         return view('reports.financial', [
+            'hasAccessRead' => $hasAccessRead,
             'totalRevenue' => $totalRevenue,
             'totalSalesCount' => max(1, $totalSalesCount), // At least show 1 if there are any items
             'totalHPP' => $totalHPP,
@@ -267,7 +286,7 @@ class ReportController extends Controller
      */
     public function exportFinancial(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.financial.export')) {
             return redirect()->route('reports.financial')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
         
@@ -281,9 +300,7 @@ class ReportController extends Controller
      */
     public function sales(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.sales.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -354,6 +371,7 @@ class ReportController extends Controller
         $averageTransaction = $totalTransactions > 0 ? round($totalSales / $totalTransactions, 0) : 0;
 
         return view('reports.sales', [
+            'hasAccessRead' => $hasAccessRead,
             'transactions' => $transactions,
             'totalTransactions' => $totalTransactions,
             'totalSales' => $totalSales,
@@ -372,7 +390,7 @@ class ReportController extends Controller
      */
     public function exportSales(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.sales.export')) {
             return redirect()->route('reports.sales')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
         
@@ -387,9 +405,7 @@ class ReportController extends Controller
      */
     public function customers(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.customers.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -440,6 +456,7 @@ class ReportController extends Controller
         $averageValue = $totalCustomers > 0 ? round($totalValue / $totalCustomers, 2) : 0;
 
         return view('reports.customers', [
+            'hasAccessRead' => $hasAccessRead,
             'customers' => $customers,
             'totalCustomers' => $totalCustomers,
             'totalPurchases' => $totalPurchases,
@@ -454,7 +471,7 @@ class ReportController extends Controller
      */
     public function exportCustomers(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.customers.export')) {
             return redirect()->route('reports.customers')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
         
@@ -468,9 +485,7 @@ class ReportController extends Controller
      */
     public function stock(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.stock.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -509,6 +524,7 @@ class ReportController extends Controller
         $outOfStock = $stocks->where('stok', 0)->count();
 
         return view('reports.stock', [
+            'hasAccessRead' => $hasAccessRead,
             'stocks' => $stocks,
             'totalItems' => $totalItems,
             'totalStock' => $totalStock,
@@ -525,7 +541,7 @@ class ReportController extends Controller
      */
     public function exportStock(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.stock.export')) {
             return redirect()->route('reports.stock')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
         
@@ -539,9 +555,7 @@ class ReportController extends Controller
      */
     public function products(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.products.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -598,6 +612,7 @@ class ReportController extends Controller
         }
 
         return view('reports.products', [
+            'hasAccessRead' => $hasAccessRead,
             'products' => $products,
             'totalProducts' => $totalProducts,
             'totalStock' => $totalStock,
@@ -614,7 +629,7 @@ class ReportController extends Controller
      */
     public function exportProducts(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.products.export')) {
             return redirect()->route('reports.products')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
         
@@ -628,9 +643,7 @@ class ReportController extends Controller
      */
     public function tradeIn(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.trade-in.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -710,6 +723,7 @@ class ReportController extends Controller
         $totalValue = $totalTradeInValue + $totalAdditionalPayment;
 
         return view('reports.trade-in', [
+            'hasAccessRead' => $hasAccessRead,
             'tradeIns' => $tradeIns,
             'totalTradeIns' => $totalTradeIns,
             'totalTradeInValue' => $totalTradeInValue,
@@ -728,7 +742,7 @@ class ReportController extends Controller
      */
     public function exportTradeIn(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.trade-in.export')) {
             return redirect()->route('reports.trade-in')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
         
@@ -742,9 +756,7 @@ class ReportController extends Controller
      */
     public function expense(Request $request)
     {
-        if (!PermissionService::check('report.read')) {
-            return redirect()->route('reports.index')->with('error', 'Anda tidak memiliki akses ke laporan ini.');
-        }
+        $hasAccessRead = PermissionService::check('report.expense.read');
 
         $user = auth()->user();
         $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
@@ -850,6 +862,7 @@ class ReportController extends Controller
             ->all();
 
         return view('reports.expense', [
+            'hasAccessRead' => $hasAccessRead,
             'expenses' => $expenses,
             'totalExpenses' => $totalExpenses,
             'totalExpenseCount' => $totalExpenseCount,
@@ -873,7 +886,7 @@ class ReportController extends Controller
      */
     public function exportExpense(Request $request)
     {
-        if (!PermissionService::check('report.export')) {
+        if (!PermissionService::check('report.expense.export')) {
             return redirect()->route('reports.expense')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
 

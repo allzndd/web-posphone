@@ -3,9 +3,9 @@
 @section('title', 'Laporan Stok')
 
 @section('main')
-@include('components.access-denied-overlay', ['module' => 'Laporan Stok', 'hasAccessRead' => false])
+@include('components.access-denied-overlay', ['module' => 'Laporan Stok', 'hasAccessRead' => $hasAccessRead])
 
-<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!isset($hasAccessRead) || !$hasAccessRead) opacity-30 pointer-events-none @endif">
+<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-4 mb-5">
         <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">

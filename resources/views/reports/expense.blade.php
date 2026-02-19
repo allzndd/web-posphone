@@ -3,9 +3,9 @@
 @section('title', 'Laporan Operasional Expense')
 
 @section('main')
-@include('components.access-denied-overlay', ['module' => 'Laporan Operasional Expense', 'hasAccessRead' => false])
+@include('components.access-denied-overlay', ['module' => 'Laporan Operasional Expense', 'hasAccessRead' => $hasAccessRead])
 
-<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!isset($hasAccessRead) || !$hasAccessRead) opacity-30 pointer-events-none @endif">
+<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4 mb-5">
         <!-- Total Expenses -->

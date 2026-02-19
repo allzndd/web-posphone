@@ -3,9 +3,9 @@
 @section('title', 'Ringkasan Keuangan')
 
 @section('main')
-@include('components.access-denied-overlay', ['module' => 'Laporan Keuangan', 'hasAccessRead' => false])
+@include('components.access-denied-overlay', ['module' => 'Laporan Keuangan', 'hasAccessRead' => $hasAccessRead])
 
-<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!isset($hasAccessRead) || !$hasAccessRead) opacity-30 pointer-events-none @endif">
+<div class="p-3 md:pt-[100px] md:pl-3 md:pr-3 @if(!$hasAccessRead) opacity-30 pointer-events-none @endif">
     <!-- Core Metrics Summary -->
     <div class="mb-5">
         <h5 class="text-xl font-bold text-navy-700 dark:text-white mb-4">Core Metrics</h5>
