@@ -20,6 +20,17 @@ class TipeLayananSeeder extends Seeder
             ]
         );
 
+        // Create Free Tier package
+        TipeLayanan::updateOrCreate(
+            ['slug' => 'free'],
+            [
+                'nama' => 'Free Tier',
+                'harga' => 0,
+                'durasi' => 0, // No duration limit
+                'durasi_satuan' => 'bulan',
+            ]
+        );
+
         // You can add other packages here if needed
     }
 }

@@ -66,4 +66,57 @@ class Langganan extends Model
     {
         return $this->end_date < now();
     }
+
+    /**
+     * Check if subscription is trial and expired
+     */
+    public function isTrialExpired()
+    {
+        return $this->is_trial == 1 && $this->isExpired();
+    }
+
+    /**
+     * Downgrade subscription to free tier
+     */
+    public function downgradeToFreeTier()
+    {
+        try {
+            // Get free tier package
+            $freePackage = TipeLayanan::where('slug', 'free')->first();
+            
+            if (!$freePackage) {
+                // If free tier doesn't exist, create it
+                $freePackage = TipeLayanan::create([
+                    'nama' => 'Free Tier',
+                    'slug' => 'free',
+                    'harga' => 0,
+                    'durasi' => 0,
+                    'durasi_satuan' => 'bulan',
+                ]);
+            }
+
+            // Update subscription to free tier
+            $this->update([
+                'tipe_layanan_id' => $freePackage->id,
+                'is_trial' => 0,
+                'is_active' => 1, // Keep active to allow access to free tier features
+                'end_date' => null, // No expiration for free tier
+            ]);
+
+            \Log::info('Subscription downgraded to free tier', [
+                'langganan_id' => $this->id,
+                'owner_id' => $this->owner_id,
+                'tipe_layanan_id' => $freePackage->id,
+            ]);
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error('Failed to downgrade to free tier: ' . $e->getMessage(), [
+                'langganan_id' => $this->id,
+                'owner_id' => $this->owner_id,
+            ]);
+
+            return false;
+        }
+    }
 }

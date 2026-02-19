@@ -46,23 +46,25 @@ class CheckSubscriptionStatus
         // Check if subscription is expired
         $now = Carbon::now();
         if ($subscription->end_date && Carbon::parse($subscription->end_date)->lt($now)) {
-            // Auto-update to inactive if expired
-            $subscription->update([
-                'is_active' => 0,
-                'is_trial' => 0,
-            ]);
-
-            return redirect()->route('pembayaran.expired')
-                ->with('error', 'Your subscription has expired. Please renew to continue.');
+            // Auto-downgrade to free tier instead of blocking
+            $isDowngraded = $subscription->downgradeToFreeTier();
+            
+            if ($isDowngraded) {
+                return redirect()->route('dashboard')
+                    ->with('warning', 'Your subscription has expired. You have been downgraded to Free Tier. Upgrade anytime to unlock more features.');
+            } else {
+                return redirect()->route('pembayaran.expired')
+                    ->with('error', 'Your subscription has expired. Please contact support.');
+            }
         }
 
-        // Check if subscription is inactive
+        // If subscription is inactive but not trial, allow free tier access
         if ($subscription->is_active == 0 && $subscription->is_trial == 0) {
-            return redirect()->route('pembayaran.expired')
-                ->with('error', 'Your subscription is inactive. Please subscribe to continue.');
+            // Already on free tier, allow access
+            return $next($request);
         }
 
-        // Subscription is valid (either trial or active)
+        // Subscription is valid (either trial, paid, or free tier)
         return $next($request);
     }
 }
