@@ -7,6 +7,7 @@
         name="viewport">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') &mdash; MIPHONE GROUP</title>
+    <link rel="icon" href="{{ asset('img/favicon2.jpg') }}" type="image/jpeg">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
