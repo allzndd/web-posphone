@@ -65,6 +65,31 @@
                     >{{ old('alamat') }}</textarea>
                 </div>
 
+                <!-- Modal (Capital) Field -->
+                <div class="md:col-span-2">
+                    <label for="modal" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                        Capital (Modal)
+                    </label>
+                    <div class="relative">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">{{ get_currency_symbol() }}</span>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="modal"
+                            name="modal" 
+                            value="{{ old('modal') }}"
+                            placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 pl-12 pr-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('modal') !border-red-500 @enderror"
+
+                        >
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Enter the initial capital/fund for this store</p>
+                    @error('modal')
+                        <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
             </div>
 
             <!-- Action Buttons -->
@@ -89,9 +114,101 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-focus on name field
-    document.getElementById('nama').focus();
-});
+(function() {
+    const currency = '{{ get_currency() }}';
+
+    function formatThousands(rawDigits) {
+        // rawDigits = string of digits only (no separators)
+        if (!rawDigits) return '';
+        if (currency === 'IDR') {
+            // Use dot as thousand separator (Indonesian locale)
+            return parseInt(rawDigits, 10).toLocaleString('id-ID');
+        } else {
+            // Use comma as thousand separator (US locale)
+            return rawDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+    }
+
+    function formatInitialValue(rawValue) {
+        // Called on page load with plain numeric string from DB / old()
+        if (!rawValue || rawValue === '0.00' || rawValue === '0') return '';
+        if (currency === 'IDR') {
+            let num = parseInt(rawValue, 10);
+            return isNaN(num) ? '' : num.toLocaleString('id-ID');
+        } else {
+            let num = parseFloat(rawValue);
+            return isNaN(num) ? '' : num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    }
+
+    function getRawValue(formattedValue) {
+        // Strip all formatting separators to get clean numeric string for submission
+        if (currency === 'IDR') {
+            return formattedValue.replace(/\./g, '');
+        } else {
+            return formattedValue.replace(/,/g, '');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-focus on name field
+        document.getElementById('nama').focus();
+
+        const modalInput = document.getElementById('modal');
+        if (!modalInput) return;
+
+        // Format the initial value from old() if any
+        if (modalInput.value) {
+            modalInput.value = formatInitialValue(modalInput.value);
+        }
+
+        modalInput.addEventListener('input', function() {
+            const selStart = this.selectionStart;
+            const oldLen   = this.value.length;
+
+            if (currency === 'IDR') {
+                // Strip everything except digits
+                let digits = this.value.replace(/\D/g, '');
+                if (!digits) { this.value = ''; return; }
+                let formatted = formatThousands(digits);
+                this.value = formatted;
+                // Reposition cursor accounting for added/removed separators
+                let diff = formatted.length - oldLen;
+                let newPos = Math.max(0, selStart + diff);
+                this.setSelectionRange(newPos, newPos);
+            } else {
+                // USD / MYR: allow digits + one decimal point
+                let clean = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\..*/g, '$1');
+                if (!clean) { this.value = ''; return; }
+                let parts = clean.split('.');
+                let intPart = parts[0] ? formatThousands(parts[0]) : '';
+                this.value = parts.length > 1 ? intPart + '.' + parts[1] : intPart;
+                let diff = this.value.length - oldLen;
+                let newPos = Math.max(0, selStart + diff);
+                this.setSelectionRange(newPos, newPos);
+            }
+        });
+
+        modalInput.addEventListener('blur', function() {
+            if (!this.value) return;
+            if (currency === 'USD' || currency === 'MYR') {
+                // On blur: enforce 2 decimal places
+                let raw = this.value.replace(/,/g, '');
+                let num = parseFloat(raw);
+                if (!isNaN(num)) {
+                    this.value = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+            }
+        });
+
+        // Strip formatting before submit so server receives plain number
+        const mainForm = modalInput.closest('form');
+        if (mainForm) {
+            mainForm.addEventListener('submit', function() {
+                modalInput.value = getRawValue(modalInput.value);
+            });
+        }
+    });
+})();
 </script>
 @endpush
