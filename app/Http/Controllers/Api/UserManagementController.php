@@ -40,12 +40,23 @@ class UserManagementController extends Controller
                 ], 404);
             }
 
+            // Get pagination parameters
+            $perPage = $request->input('per_page', 10);
+            $page = $request->input('page', 1);
+
             // Get all admin users (role_id = 3)
             // Since we don't have a parent_owner_id field, we'll get all admins
             // In production, you should add a 'created_by' or 'parent_owner_id' field
-            $admins = User::where('role_id', 3)
+            $query = User::where('role_id', 3)
                 ->with('owner.toko') // Load store relationship
-                ->orderBy('created_at', 'desc')
+                ->orderBy('created_at', 'desc');
+
+            // Get total count
+            $total = $query->count();
+
+            // Apply pagination
+            $admins = $query->skip(($page - 1) * $perPage)
+                ->take($perPage)
                 ->get()
                 ->map(function ($admin) {
                     $toko = $admin->owner && $admin->owner->toko ? $admin->owner->toko->first() : null;
@@ -65,6 +76,12 @@ class UserManagementController extends Controller
                 'success' => true,
                 'message' => 'Admin users retrieved successfully',
                 'data' => $admins,
+                'pagination' => [
+                    'current_page' => (int) $page,
+                    'per_page' => (int) $perPage,
+                    'total' => $total,
+                    'last_page' => (int) ceil($total / $perPage),
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
