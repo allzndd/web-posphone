@@ -7,12 +7,12 @@
     
     <!-- Left: Breadcrumb & Title -->
     <div class="ml-[6px] hidden xl:block">
-        <div class="h-6 w-[224px] pt-1">
-            <a class="text-sm font-normal text-navy-700 dark:text-white dark:hover:text-white" href="{{ route('dashboard') }}">
+        <div class="h-6 w-[500px] pt-1 truncate">
+            <a class="text-sm font-normal text-navy-700 dark:text-white dark:hover:text-white truncate inline-block" href="{{ route('dashboard') }}">
                 Pages
                 <span class="mx-1 text-sm text-navy-700 hover:text-navy-700 dark:text-white"> / </span>
             </a>
-            <a class="text-sm font-normal capitalize text-navy-700 dark:text-white dark:hover:text-white" href="#">
+            <a class="text-sm font-normal capitalize text-navy-700 dark:text-white dark:hover:text-white truncate inline-block max-w-[300px]" href="#">
                 @yield('title', 'Dashboard')
             </a>
         </div>
