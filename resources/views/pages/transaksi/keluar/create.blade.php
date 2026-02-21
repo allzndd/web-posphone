@@ -58,6 +58,16 @@
         background: #1b2559;
         border-bottom-color: rgba(255,255,255,0.1);
     }
+    
+    /* Disable number input spinner buttons to prevent accidental clicks */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
     .custom-dropdown-search input {
         width: 100%;
         padding: 6px 10px;
@@ -391,6 +401,14 @@
                         Accessories
                     </div>
                 </button>
+                <button type="button" onclick="switchModalProductType('service')" id="modal-tab-service" class="modal-product-type-tab border-b-2 border-transparent px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        Service
+                    </div>
+                </button>
             </nav>
         </div>
         
@@ -405,7 +423,7 @@
                     
                     <div class="grid grid-cols-1 gap-4">
                         <!-- Brand and Product Type Selection (Horizontal) -->
-                        <div>
+                        <div id="modal-brand-type-section">
                             <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
                                 Brand & Type <span class="text-red-500">*</span>
                             </label>
@@ -466,6 +484,66 @@
                                       rows="3"
                                       placeholder="Enter product description..."
                                       class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 resize-none"></textarea>
+                        </div>
+
+                        <!-- Service Fields Section (Service Only) -->
+                        <div id="modal-service-fields" class="hidden">
+                            <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-green-500 pl-3">Service Details</h5>
+                            
+                            <div class="grid grid-cols-1 gap-4">
+                                <!-- Service Name -->
+                                <div>
+                                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                        Service Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="quick_service_name"
+                                           name="service_name"
+                                           placeholder="e.g., Phone Screen Repair, Battery Replacement, Software Update"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                </div>
+
+                                <!-- Service Duration -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                            Duration <span class="text-xs text-gray-500">(Optional)</span>
+                                        </label>
+                                        <input type="number" id="quick_service_duration"
+                                               name="service_duration"
+                                               min="0"
+                                               placeholder="e.g., 1, 7, 30"
+                                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                            Period <span class="text-xs text-gray-500">(Optional)</span>
+                                        </label>
+                                        <div class="custom-dropdown">
+                                            <select id="quick_service_period"
+                                                    name="service_period"
+                                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                                                <option value="">Select Period</option>
+                                                <option value="days">Days</option>
+                                                <option value="weeks">Weeks</option>
+                                                <option value="months">Months</option>
+                                                <option value="years">Years</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Service Description -->
+                                <div>
+                                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                                        Service Description <span class="text-xs text-gray-500">(Optional)</span>
+                                    </label>
+                                    <textarea id="quick_service_description"
+                                              name="service_description"
+                                              rows="3"
+                                              placeholder="Enter detailed service description..."
+                                              class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 resize-none"></textarea>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -742,45 +820,64 @@ function addItem() {
     
     itemDiv.innerHTML = `
         <div class="flex items-start gap-3">
-            <div class="flex-1 grid grid-cols-1 md:grid-cols-5 gap-3">
-                <input type="hidden" name="items[${itemCounter}][type]" value="product">
-                <div class="md:col-span-2">
-                    <div class="flex items-end gap-2">
-                        <div class="flex-1">
-                            <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Product</label>
-                            <div class="custom-dropdown" id="productDropdownWrapper-${itemCounter}">
-                                <input type="hidden" name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" value="">
-                                <div class="custom-dropdown-trigger w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm cursor-pointer flex items-center justify-between hover:bg-gray-50 dark:hover:bg-navy-700" onclick="toggleProductDropdown(${itemCounter})">
-                                    <span id="productDropdownLabel-${itemCounter}" class="text-gray-400 text-sm">Select Product</span>
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                                    </svg>
-                                </div>
-                                <div class="custom-dropdown-menu hidden" id="productDropdownMenu-${itemCounter}">
-                                    <div class="custom-dropdown-search">
-                                        <input type="text" id="productSearchInput-${itemCounter}" placeholder="Search product..." class="w-full" oninput="filterProductDropdown(${itemCounter})">
-                                    </div>
-                                    <div id="productDropdownItems-${itemCounter}"></div>
-                                </div>
+            <div class="flex-1">
+                <!-- Product Type Selector -->
+                <div class="mb-4 pb-3 border-b border-gray-200 dark:border-white/10">
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-2 block">Product Type</label>
+                    <div class="flex gap-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="items[${itemCounter}][product_type]" value="electronic" checked onchange="updateItemProductType(${itemCounter}, 'electronic')" class="w-4 h-4">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Electronic</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="items[${itemCounter}][product_type]" value="accessories" onchange="updateItemProductType(${itemCounter}, 'accessories')" class="w-4 h-4">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Accessories</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="items[${itemCounter}][product_type]" value="service" onchange="updateItemProductType(${itemCounter}, 'service')" class="w-4 h-4">
+                            <span class="text-sm text-gray-700 dark:text-gray-300">Service</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input type="hidden" name="items[${itemCounter}][type]" value="product">
+                    <input type="hidden" name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" value="">
+                    
+                    <div id="productDropdownWrapper-${itemCounter}" class="md:col-span-2 custom-dropdown relative">
+                        <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Product</label>
+                        <div id="productDropdownTrigger-${itemCounter}" onclick="toggleProductDropdown(${itemCounter})" class="custom-dropdown-trigger w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm cursor-pointer">
+                            <span id="productDropdownLabel-${itemCounter}" class="truncate text-gray-400">Select or create product</span>
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                        <div id="productDropdownMenu-${itemCounter}" class="custom-dropdown-menu hidden">
+                            <div class="custom-dropdown-search">
+                                <input type="text" id="productSearchInput-${itemCounter}" placeholder="Search product..." oninput="filterProductDropdown(${itemCounter})" autocomplete="off">
+                            </div>
+                            <div id="productDropdownItems-${itemCounter}">
+                                <!-- Items populated by JS -->
                             </div>
                         </div>
-                        <button type="button" onclick="openProductModal(${itemCounter})" class="rounded-lg bg-brand-500 px-3 py-2 text-xs font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
+                        <button type="button" onclick="closeAllDropdowns(); openProductModal(${itemCounter})" class="absolute right-2 top-7 rounded-lg bg-brand-500 px-2 py-1 text-xs font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
                             + New
                         </button>
                     </div>
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Qty</label>
-                    <input type="number" name="items[${itemCounter}][quantity]" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="1" min="1" onchange="calculateSubtotal(${itemCounter})" required>
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Unit Price</label>
-                    <input type="number" name="items[${itemCounter}][harga_satuan]" id="unit-price-${itemCounter}" class="item-price w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="0" step="0.01" onchange="calculateSubtotal(${itemCounter})">
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Subtotal</label>
-                    <input type="text" id="subtotal-display-${itemCounter}" class="item-subtotal w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900 px-3 py-2 text-sm font-semibold text-red-600 dark:text-red-400" readonly value="${currencySymbol} 0">
-                    <input type="hidden" name="items[${itemCounter}][subtotal]" id="subtotal-value-${itemCounter}" value="0">
+                    
+                    <div>
+                        <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Qty</label>
+                        <input type="number" name="items[${itemCounter}][quantity]" id="qty-input-${itemCounter}" class="item-qty w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="1" min="1" onchange="calculateSubtotal(${itemCounter})">
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Unit Price</label>
+                        <input type="number" name="items[${itemCounter}][harga_satuan]" id="unit-price-${itemCounter}" class="item-price w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" value="0" step="0.01" onchange="calculateSubtotal(${itemCounter})">
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Subtotal</label>
+                        <input type="text" id="subtotal-display-${itemCounter}" class="item-subtotal w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900 px-3 py-2 text-sm font-semibold text-red-600 dark:text-red-400" readonly value="${currencySymbol} 0">
+                        <input type="hidden" name="items[${itemCounter}][subtotal]" id="subtotal-value-${itemCounter}" value="0">
+                    </div>
                 </div>
             </div>
             <button type="button" onclick="removeItem(${itemCounter})" class="mt-6 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition">
@@ -797,8 +894,16 @@ function addItem() {
     populateProducts(itemCounter);
 }
 
+// Update product type value (just for form submission)
+function updateItemProductType(itemId, type) {
+    // No need to do anything else - radio button is already capturing the value
+    // This function is here for potential future enhancements
+}
+
 function populateProducts(itemId) {
     const container = document.getElementById(`productDropdownItems-${itemId}`);
+    
+    if (!container) return; // Exit if container not found
     
     if (products.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">No products found</div>';
@@ -823,8 +928,12 @@ function populateProducts(itemId) {
 }
 
 function filterProductDropdown(itemId) {
-    const search = document.getElementById(`productSearchInput-${itemId}`).value.toLowerCase();
+    const searchInput = document.getElementById(`productSearchInput-${itemId}`);
     const container = document.getElementById(`productDropdownItems-${itemId}`);
+    
+    if (!searchInput || !container) return; // Exit if elements not found
+    
+    const search = searchInput.value.toLowerCase();
     
     if (products.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">No products found</div>';
@@ -859,6 +968,9 @@ function filterProductDropdown(itemId) {
 
 function toggleProductDropdown(itemId) {
     const menu = document.getElementById(`productDropdownMenu-${itemId}`);
+    if (!menu) return; // Exit if menu not found
+    
+    // Close all other dropdowns first
     document.querySelectorAll('[id^="productDropdownMenu-"]').forEach(m => {
         if (m.id !== `productDropdownMenu-${itemId}`) {
             m.classList.add('hidden');
@@ -866,37 +978,90 @@ function toggleProductDropdown(itemId) {
     });
     menu.classList.toggle('hidden');
     if (!menu.classList.contains('hidden')) {
-        document.getElementById(`productSearchInput-${itemId}`).value = '';
-        populateProducts(itemId);
-        setTimeout(() => document.getElementById(`productSearchInput-${itemId}`).focus(), 50);
+        const searchInput = document.getElementById(`productSearchInput-${itemId}`);
+        if (searchInput) {
+            searchInput.value = '';
+            populateProducts(itemId);
+            setTimeout(() => searchInput.focus(), 50);
+        }
     }
+}
+
+function closeAllDropdowns() {
+    document.querySelectorAll('[id^="productDropdownMenu-"]').forEach(menu => {
+        menu.classList.add('hidden');
+    });
 }
 
 function selectProduct(itemId, productId, description) {
-    document.getElementById(`item-select-${itemId}`).value = productId;
-    document.getElementById(`productDropdownLabel-${itemId}`).textContent = description;
-    document.getElementById(`productDropdownLabel-${itemId}`).classList.remove('text-gray-400');
-    document.getElementById(`productDropdownLabel-${itemId}`).classList.add('text-navy-700', 'dark:text-white');
-    document.getElementById(`productDropdownMenu-${itemId}`).classList.add('hidden');
+    // Set hidden product ID
+    const itemSelectElem = document.getElementById(`item-select-${itemId}`);
+    const labelElem = document.getElementById(`productDropdownLabel-${itemId}`);
+    const menuElem = document.getElementById(`productDropdownMenu-${itemId}`);
+    
+    if (itemSelectElem) {
+        itemSelectElem.value = productId;
+    }
+    if (labelElem) {
+        labelElem.textContent = description;
+        labelElem.classList.remove('text-gray-400');
+        labelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    // IMPORTANT: Hide the dropdown menu
+    if (menuElem) {
+        menuElem.classList.add('hidden');
+    }
     
     const product = products.find(p => p.id == productId);
     if (product) {
+        // Set product type radio button if product_type is available
+        if (product.product_type) {
+            const typeRadio = document.querySelector(`#item-${itemId} input[name="items[${itemId}][product_type]"][value="${product.product_type}"]`);
+            if (typeRadio) {
+                typeRadio.checked = true;
+                updateItemProductType(itemId, product.product_type);
+            }
+        }
+        
+        // Set price from product
         const priceInput = document.getElementById(`unit-price-${itemId}`);
-        priceInput.value = product.harga_beli || product.harga_jual;
+        if (priceInput) {
+            priceInput.value = product.harga_beli || product.harga_jual || 0;
+            
+            // Make sure dropdown stays hidden after setting values
+            setTimeout(() => {
+                const menu = document.getElementById(`productDropdownMenu-${itemId}`);
+                if (menu) menu.classList.add('hidden');
+            }, 0);
+        }
+        
+        // Calculate subtotal with current quantity (don't modify quantity)
         calculateSubtotal(itemId);
     }
+
 }
 
 function calculateSubtotal(itemId) {
-    const qtyInput = document.querySelector(`#item-${itemId} .item-qty`);
+    // Find qty input
+    let qtyInput = document.getElementById(`qty-input-${itemId}`);
+    
+    if (!qtyInput) {
+        return;
+    }
+    
     const priceInput = document.getElementById(`unit-price-${itemId}`);
     const subtotalDisplay = document.getElementById(`subtotal-display-${itemId}`);
     const subtotalValue = document.getElementById(`subtotal-value-${itemId}`);
+    
+    if (!priceInput || !subtotalDisplay || !subtotalValue) {
+        return;
+    }
     
     const qty = parseFloat(qtyInput.value) || 0;
     const price = parseFloat(priceInput.value) || 0;
     const subtotal = qty * price;
     
+    // Update display
     subtotalDisplay.value = `${currencySymbol} ${formatNumber(subtotal)}`;
     subtotalValue.value = subtotal;
     
@@ -925,8 +1090,8 @@ function removeItem(itemId) {
 
 // Switch Product Type in Modal
 function switchModalProductType(type) {
+    currentModalProductType = type; // Store current product type
     document.getElementById('modal_product_type').value = type;
-    console.log('Modal Product Type changed to:', type); // Debug log
     
     const tabs = document.querySelectorAll('.modal-product-type-tab');
     tabs.forEach(tab => {
@@ -941,20 +1106,52 @@ function switchModalProductType(type) {
     const specificationsSection = document.getElementById('modal-specifications-section');
     const imeiField = document.getElementById('quick_imei');
     const imeiMarker = document.getElementById('modal-imei-required-marker');
+    const brandTypeSection = document.getElementById('modal-brand-type-section');
+    const serviceFields = document.getElementById('modal-service-fields');
     
     if (type === 'electronic') {
-        specificationsSection.classList.remove('hidden');
+        // Electronic: Show brand dropdown, type dropdown, and specs
+        if (brandTypeSection) brandTypeSection.classList.remove('hidden');
+        if (specificationsSection) specificationsSection.classList.remove('hidden');
+        if (serviceFields) serviceFields.classList.add('hidden');
         imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.remove('hidden');
-    } else {
-        specificationsSection.classList.add('hidden');
-        imeiField.required = false;
+        // Initialize with filtered data for electronic
+        initializeMerkDropdownForProductType('electronic');
+    } else if (type === 'accessories') {
+        // Accessories: Show brand dropdown and type dropdown only (no specs)
+        if (brandTypeSection) brandTypeSection.classList.remove('hidden');
+        if (specificationsSection) specificationsSection.classList.add('hidden');
+        if (serviceFields) serviceFields.classList.add('hidden');
+        if (imeiField) imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.add('hidden');
-        imeiField.value = '';
-        document.getElementById('quick_warna').value = '';
-        document.getElementById('quick_ram').value = '';
-        document.getElementById('quick_penyimpanan').value = '';
-        document.getElementById('quick_battery_health').value = '';
+        if (imeiField) imeiField.value = '';
+        const warnaElem = document.getElementById('quick_warna');
+        const ramElem = document.getElementById('quick_ram');
+        const penyimpananElem = document.getElementById('quick_penyimpanan');
+        const batteryElem = document.getElementById('quick_battery_health');
+        if (warnaElem) warnaElem.value = '';
+        if (ramElem) ramElem.value = '';
+        if (penyimpananElem) penyimpananElem.value = '';
+        if (batteryElem) batteryElem.value = '';
+        // Initialize with filtered data for accessories
+        initializeMerkDropdownForProductType('accessories');
+    } else if (type === 'service') {
+        // Service: Hide brand/type dropdowns and specs, show service-specific fields
+        if (brandTypeSection) brandTypeSection.classList.add('hidden');
+        if (specificationsSection) specificationsSection.classList.add('hidden');
+        if (serviceFields) serviceFields.classList.remove('hidden');
+        if (imeiField) imeiField.required = false;
+        if (imeiMarker) imeiMarker.classList.add('hidden');
+        if (imeiField) imeiField.value = '';
+        const warnaElem = document.getElementById('quick_warna');
+        const ramElem = document.getElementById('quick_ram');
+        const penyimpananElem = document.getElementById('quick_penyimpanan');
+        const batteryElem = document.getElementById('quick_battery_health');
+        if (warnaElem) warnaElem.value = '';
+        if (ramElem) ramElem.value = '';
+        if (penyimpananElem) penyimpananElem.value = '';
+        if (batteryElem) batteryElem.value = '';
     }
 }
 
@@ -965,23 +1162,45 @@ console.log('All Merks data:', allMerks);
 // ============= CUSTOM DROPDOWN FUNCTIONS =============
 let currentBrandItems = [];
 let currentTypeItems = [];
+let currentModalProductType = 'electronic'; // Track current product type in modal
 
 // Initialize brand dropdown with unique merks
 function initializeMerkDropdown() {
-    const uniqueMerks = [...new Set(allMerks.map(item => item.merk).filter(Boolean))].sort();
+    // Get current product type from modal
+    const currentType = document.getElementById('modal_product_type').value || 'electronic';
+    initializeMerkDropdownForProductType(currentType);
+}
+
+// Initialize brand dropdown with unique merks filtered by product type
+function initializeMerkDropdownForProductType(productType) {
+    // Filter allMerks by product_type
+    const filteredMerks = productType === 'service' 
+        ? [] 
+        : allMerks.filter(item => item.product_type === productType);
+    
+    const uniqueMerks = [...new Set(filteredMerks.map(item => item.merk).filter(Boolean))].sort();
     currentBrandItems = uniqueMerks;
     
     // Reset hidden input & label
-    document.getElementById('quick_merk_select').value = '';
-    document.getElementById('brandDropdownLabel').textContent = 'Select Brand';
-    document.getElementById('brandDropdownLabel').classList.add('text-gray-400');
-    document.getElementById('brandDropdownLabel').classList.remove('text-navy-700', 'dark:text-white');
+    const merkSelectElem = document.getElementById('quick_merk_select');
+    const brandLabelElem = document.getElementById('brandDropdownLabel');
+    const typeIdElem = document.getElementById('quick_pos_produk_merk_id');
+    const typeLabelElem = document.getElementById('typeDropdownLabel');
+    
+    if (merkSelectElem) merkSelectElem.value = '';
+    if (brandLabelElem) {
+        brandLabelElem.textContent = 'Select Brand';
+        brandLabelElem.classList.add('text-gray-400');
+        brandLabelElem.classList.remove('text-navy-700', 'dark:text-white');
+    }
     
     // Reset type dropdown
-    document.getElementById('quick_pos_produk_merk_id').value = '';
-    document.getElementById('typeDropdownLabel').textContent = 'Select Type';
-    document.getElementById('typeDropdownLabel').classList.add('text-gray-400');
-    document.getElementById('typeDropdownLabel').classList.remove('text-navy-700', 'dark:text-white');
+    if (typeIdElem) typeIdElem.value = '';
+    if (typeLabelElem) {
+        typeLabelElem.textContent = 'Select Type';
+        typeLabelElem.classList.add('text-gray-400');
+        typeLabelElem.classList.remove('text-navy-700', 'dark:text-white');
+    }
     
     renderBrandItems(uniqueMerks);
     renderTypeItems([]);
@@ -989,6 +1208,8 @@ function initializeMerkDropdown() {
 
 function renderBrandItems(items) {
     const container = document.getElementById('brandDropdownItems');
+    if (!container) return; // Exit if container not found
+    
     if (items.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">No brands found</div>';
         return;
@@ -1000,6 +1221,8 @@ function renderBrandItems(items) {
 
 function renderTypeItems(items) {
     const container = document.getElementById('typeDropdownItems');
+    if (!container) return; // Exit if container not found
+    
     if (items.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">Select brand first</div>';
         return;
@@ -1012,24 +1235,36 @@ function renderTypeItems(items) {
 function toggleBrandDropdown() {
     const menu = document.getElementById('brandDropdownMenu');
     const typeMenu = document.getElementById('typeDropdownMenu');
-    typeMenu.classList.add('hidden');
-    menu.classList.toggle('hidden');
-    if (!menu.classList.contains('hidden')) {
-        document.getElementById('brandSearchInput').value = '';
-        filterBrandDropdown();
-        setTimeout(() => document.getElementById('brandSearchInput').focus(), 50);
+    
+    if (typeMenu) typeMenu.classList.add('hidden');
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            const searchInput = document.getElementById('brandSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterBrandDropdown();
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
     }
 }
 
 function toggleTypeDropdown() {
     const menu = document.getElementById('typeDropdownMenu');
     const brandMenu = document.getElementById('brandDropdownMenu');
-    brandMenu.classList.add('hidden');
-    menu.classList.toggle('hidden');
-    if (!menu.classList.contains('hidden')) {
-        document.getElementById('typeSearchInput').value = '';
-        filterTypeDropdown();
-        setTimeout(() => document.getElementById('typeSearchInput').focus(), 50);
+    
+    if (brandMenu) brandMenu.classList.add('hidden');
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            const searchInput = document.getElementById('typeSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterTypeDropdown();
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
     }
 }
 
@@ -1046,33 +1281,51 @@ function filterTypeDropdown() {
 }
 
 function selectBrand(brand) {
-    document.getElementById('quick_merk_select').value = brand;
-    document.getElementById('brandDropdownLabel').textContent = brand;
-    document.getElementById('brandDropdownLabel').classList.remove('text-gray-400');
-    document.getElementById('brandDropdownLabel').classList.add('text-navy-700', 'dark:text-white');
-    document.getElementById('brandDropdownMenu').classList.add('hidden');
+    const merkSelectElem = document.getElementById('quick_merk_select');
+    const brandLabelElem = document.getElementById('brandDropdownLabel');
+    const brandMenuElem = document.getElementById('brandDropdownMenu');
+    
+    if (merkSelectElem) merkSelectElem.value = brand;
+    if (brandLabelElem) {
+        brandLabelElem.textContent = brand;
+        brandLabelElem.classList.remove('text-gray-400');
+        brandLabelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    if (brandMenuElem) brandMenuElem.classList.add('hidden');
     
     // Trigger type dropdown update
     handleMerkChange();
 }
 
 function selectType(id, nama) {
-    document.getElementById('quick_pos_produk_merk_id').value = id;
-    document.getElementById('typeDropdownLabel').textContent = nama;
-    document.getElementById('typeDropdownLabel').classList.remove('text-gray-400');
-    document.getElementById('typeDropdownLabel').classList.add('text-navy-700', 'dark:text-white');
-    document.getElementById('typeDropdownMenu').classList.add('hidden');
+    const typeIdElem = document.getElementById('quick_pos_produk_merk_id');
+    const typeLabelElem = document.getElementById('typeDropdownLabel');
+    const typeMenuElem = document.getElementById('typeDropdownMenu');
+    
+    if (typeIdElem) typeIdElem.value = id;
+    if (typeLabelElem) {
+        typeLabelElem.textContent = nama;
+        typeLabelElem.classList.remove('text-gray-400');
+        typeLabelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    if (typeMenuElem) typeMenuElem.classList.add('hidden');
 }
 
 // Handle Brand/Merk Selection Change
 function handleMerkChange() {
-    const selectedMerk = document.getElementById('quick_merk_select').value;
+    const merkSelectElem = document.getElementById('quick_merk_select');
+    const selectedMerk = merkSelectElem ? merkSelectElem.value : '';
     
     // Reset type
-    document.getElementById('quick_pos_produk_merk_id').value = '';
-    document.getElementById('typeDropdownLabel').textContent = 'Select Type';
-    document.getElementById('typeDropdownLabel').classList.add('text-gray-400');
-    document.getElementById('typeDropdownLabel').classList.remove('text-navy-700', 'dark:text-white');
+    const typeIdElem = document.getElementById('quick_pos_produk_merk_id');
+    const typeLabelElem = document.getElementById('typeDropdownLabel');
+    
+    if (typeIdElem) typeIdElem.value = '';
+    if (typeLabelElem) {
+        typeLabelElem.textContent = 'Select Type';
+        typeLabelElem.classList.add('text-gray-400');
+        typeLabelElem.classList.remove('text-navy-700', 'dark:text-white');
+    }
     
     if (selectedMerk === '') {
         currentTypeItems = [];
@@ -1080,8 +1333,11 @@ function handleMerkChange() {
         return;
     }
     
-    // Filter merks by selected brand
-    const filteredMerks = allMerks.filter(item => item.merk === selectedMerk);
+    // Filter merks by selected brand AND current product type
+    const filteredMerks = allMerks.filter(item => 
+        item.merk === selectedMerk && 
+        item.product_type === currentModalProductType
+    );
     currentTypeItems = filteredMerks;
     renderTypeItems(filteredMerks);
 }
@@ -1133,6 +1389,8 @@ function initializeColorDropdown() {
 
 function renderColorItems(items) {
     const container = document.getElementById('colorDropdownItems');
+    if (!container) return; // Exit if container not found
+    
     if (items.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">No colors found</div>';
         return;
@@ -1144,15 +1402,26 @@ function renderColorItems(items) {
 
 function toggleColorDropdown() {
     const menu = document.getElementById('colorDropdownMenu');
-    document.getElementById('brandDropdownMenu').classList.add('hidden');
-    document.getElementById('typeDropdownMenu').classList.add('hidden');
-    document.getElementById('ramDropdownMenu').classList.add('hidden');
-    document.getElementById('storageDropdownMenu').classList.add('hidden');
-    menu.classList.toggle('hidden');
-    if (!menu.classList.contains('hidden')) {
-        document.getElementById('colorSearchInput').value = '';
-        filterColorDropdown();
-        setTimeout(() => document.getElementById('colorSearchInput').focus(), 50);
+    const brandMenu = document.getElementById('brandDropdownMenu');
+    const typeMenu = document.getElementById('typeDropdownMenu');
+    const ramMenu = document.getElementById('ramDropdownMenu');
+    const storageMenu = document.getElementById('storageDropdownMenu');
+    
+    if (brandMenu) brandMenu.classList.add('hidden');
+    if (typeMenu) typeMenu.classList.add('hidden');
+    if (ramMenu) ramMenu.classList.add('hidden');
+    if (storageMenu) storageMenu.classList.add('hidden');
+    
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            const searchInput = document.getElementById('colorSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterColorDropdown();
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
     }
 }
 
@@ -1164,12 +1433,20 @@ function filterColorDropdown() {
 
 function selectColor(id, warna) {
     console.log('selectColor called with id:', id, 'warna:', warna);
-    document.getElementById('quick_warna').value = id;
-    console.log('quick_warna value after setting:', document.getElementById('quick_warna').value);
-    document.getElementById('colorDropdownLabel').textContent = warna;
-    document.getElementById('colorDropdownLabel').classList.remove('text-gray-400');
-    document.getElementById('colorDropdownLabel').classList.add('text-navy-700', 'dark:text-white');
-    document.getElementById('colorDropdownMenu').classList.add('hidden');
+    const warnaElem = document.getElementById('quick_warna');
+    const labelElem = document.getElementById('colorDropdownLabel');
+    const menuElem = document.getElementById('colorDropdownMenu');
+    
+    if (warnaElem) {
+        warnaElem.value = id;
+        console.log('quick_warna value after setting:', warnaElem.value);
+    }
+    if (labelElem) {
+        labelElem.textContent = warna;
+        labelElem.classList.remove('text-gray-400');
+        labelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    if (menuElem) menuElem.classList.add('hidden');
 }
 
 // RAM Dropdown Functions
@@ -1183,6 +1460,8 @@ function initializeRamDropdown() {
 
 function renderRamItems(items) {
     const container = document.getElementById('ramDropdownItems');
+    if (!container) return; // Exit if container not found
+    
     if (items.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">No RAM options found</div>';
         return;
@@ -1194,15 +1473,26 @@ function renderRamItems(items) {
 
 function toggleRamDropdown() {
     const menu = document.getElementById('ramDropdownMenu');
-    document.getElementById('brandDropdownMenu').classList.add('hidden');
-    document.getElementById('typeDropdownMenu').classList.add('hidden');
-    document.getElementById('colorDropdownMenu').classList.add('hidden');
-    document.getElementById('storageDropdownMenu').classList.add('hidden');
-    menu.classList.toggle('hidden');
-    if (!menu.classList.contains('hidden')) {
-        document.getElementById('ramSearchInput').value = '';
-        filterRamDropdown();
-        setTimeout(() => document.getElementById('ramSearchInput').focus(), 50);
+    const brandMenu = document.getElementById('brandDropdownMenu');
+    const typeMenu = document.getElementById('typeDropdownMenu');
+    const colorMenu = document.getElementById('colorDropdownMenu');
+    const storageMenu = document.getElementById('storageDropdownMenu');
+    
+    if (brandMenu) brandMenu.classList.add('hidden');
+    if (typeMenu) typeMenu.classList.add('hidden');
+    if (colorMenu) colorMenu.classList.add('hidden');
+    if (storageMenu) storageMenu.classList.add('hidden');
+    
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            const searchInput = document.getElementById('ramSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterRamDropdown();
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
     }
 }
 
@@ -1214,12 +1504,20 @@ function filterRamDropdown() {
 
 function selectRam(id, kapasitas) {
     console.log('selectRam called with id:', id, 'kapasitas:', kapasitas);
-    document.getElementById('quick_ram').value = id;
-    console.log('quick_ram value after setting:', document.getElementById('quick_ram').value);
-    document.getElementById('ramDropdownLabel').textContent = kapasitas;
-    document.getElementById('ramDropdownLabel').classList.remove('text-gray-400');
-    document.getElementById('ramDropdownLabel').classList.add('text-navy-700', 'dark:text-white');
-    document.getElementById('ramDropdownMenu').classList.add('hidden');
+    const ramElem = document.getElementById('quick_ram');
+    const labelElem = document.getElementById('ramDropdownLabel');
+    const menuElem = document.getElementById('ramDropdownMenu');
+    
+    if (ramElem) {
+        ramElem.value = id;
+        console.log('quick_ram value after setting:', ramElem.value);
+    }
+    if (labelElem) {
+        labelElem.textContent = kapasitas;
+        labelElem.classList.remove('text-gray-400');
+        labelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    if (menuElem) menuElem.classList.add('hidden');
 }
 
 // Storage Dropdown Functions
@@ -1233,6 +1531,8 @@ function initializeStorageDropdown() {
 
 function renderStorageItems(items) {
     const container = document.getElementById('storageDropdownItems');
+    if (!container) return; // Exit if container not found
+    
     if (items.length === 0) {
         container.innerHTML = '<div class="dropdown-item text-gray-400">No storage options found</div>';
         return;
@@ -1244,15 +1544,26 @@ function renderStorageItems(items) {
 
 function toggleStorageDropdown() {
     const menu = document.getElementById('storageDropdownMenu');
-    document.getElementById('brandDropdownMenu').classList.add('hidden');
-    document.getElementById('typeDropdownMenu').classList.add('hidden');
-    document.getElementById('colorDropdownMenu').classList.add('hidden');
-    document.getElementById('ramDropdownMenu').classList.add('hidden');
-    menu.classList.toggle('hidden');
-    if (!menu.classList.contains('hidden')) {
-        document.getElementById('storageSearchInput').value = '';
-        filterStorageDropdown();
-        setTimeout(() => document.getElementById('storageSearchInput').focus(), 50);
+    const brandMenu = document.getElementById('brandDropdownMenu');
+    const typeMenu = document.getElementById('typeDropdownMenu');
+    const colorMenu = document.getElementById('colorDropdownMenu');
+    const ramMenu = document.getElementById('ramDropdownMenu');
+    
+    if (brandMenu) brandMenu.classList.add('hidden');
+    if (typeMenu) typeMenu.classList.add('hidden');
+    if (colorMenu) colorMenu.classList.add('hidden');
+    if (ramMenu) ramMenu.classList.add('hidden');
+    
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            const searchInput = document.getElementById('storageSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterStorageDropdown();
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
     }
 }
 
@@ -1264,27 +1575,46 @@ function filterStorageDropdown() {
 
 function selectStorage(id, kapasitas) {
     console.log('selectStorage called with id:', id, 'kapasitas:', kapasitas);
-    document.getElementById('quick_penyimpanan').value = id;
-    console.log('quick_penyimpanan value after setting:', document.getElementById('quick_penyimpanan').value);
-    document.getElementById('storageDropdownLabel').textContent = kapasitas;
-    document.getElementById('storageDropdownLabel').classList.remove('text-gray-400');
-    document.getElementById('storageDropdownLabel').classList.add('text-navy-700', 'dark:text-white');
-    document.getElementById('storageDropdownMenu').classList.add('hidden');
+    const penyimpananElem = document.getElementById('quick_penyimpanan');
+    const labelElem = document.getElementById('storageDropdownLabel');
+    const menuElem = document.getElementById('storageDropdownMenu');
+    
+    if (penyimpananElem) {
+        penyimpananElem.value = id;
+        console.log('quick_penyimpanan value after setting:', penyimpananElem.value);
+    }
+    if (labelElem) {
+        labelElem.textContent = kapasitas;
+        labelElem.classList.remove('text-gray-400');
+        labelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    if (menuElem) menuElem.classList.add('hidden');
 }
 
 // Quick Add Product Modal Functions
 function openProductModal(itemId) {
     currentItemIdForModal = itemId;
-    document.getElementById('quickAddProductModal').classList.remove('hidden');
-    document.getElementById('quickProductErrors').classList.add('hidden');
+    const modal = document.getElementById('quickAddProductModal');
+    const form = document.getElementById('quickProductForm');
+    const errorDiv = document.getElementById('quickProductErrors');
+    const productTypeInput = document.getElementById('modal_product_type');
+    const imeiInput = document.getElementById('quick_imei');
+    const specsSection = document.getElementById('modal-specifications-section');
+    const brandSection = document.getElementById('modal-brand-type-section');
+    const serviceSection = document.getElementById('modal-service-fields');
+    
+    if (modal) modal.classList.remove('hidden');
+    if (errorDiv) errorDiv.classList.add('hidden');
     
     // Reset form fields first
-    document.getElementById('quickProductForm').reset();
+    if (form) form.reset();
     
     // Then set defaults and tabs (after reset to prevent reset from overriding)
-    document.getElementById('modal_product_type').value = 'electronic';
-    document.getElementById('quick_imei').required = false;
-    document.getElementById('modal-specifications-section').classList.remove('hidden');
+    if (productTypeInput) productTypeInput.value = 'electronic';
+    if (imeiInput) imeiInput.required = false;
+    if (specsSection) specsSection.classList.remove('hidden');
+    if (brandSection) brandSection.classList.remove('hidden');
+    if (serviceSection) serviceSection.classList.add('hidden');
     
     // Reset tab styles to electronic (active state)
     const tabs = document.querySelectorAll('.modal-product-type-tab');
@@ -1325,7 +1655,7 @@ function submitQuickProduct(event) {
     const merkId = document.getElementById('quick_pos_produk_merk_id').value;
     const productType = document.getElementById('modal_product_type').value;
     
-    if (!merkId) {
+    if (!merkId && productType !== 'service') {
         errorDiv.classList.remove('hidden');
         errorDiv.querySelector('p').textContent = 'Please select a product type';
         submitBtn.disabled = false;
@@ -1338,30 +1668,56 @@ function submitQuickProduct(event) {
         return;
     }
     
+    // Service name is required for service type
+    if (productType === 'service') {
+        const serviceName = document.getElementById('quick_service_name').value;
+        if (!serviceName) {
+            errorDiv.classList.remove('hidden');
+            errorDiv.querySelector('p').textContent = 'Service name is required';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Product
+            `;
+            return;
+        }
+    }
+    
     console.log('Submitting product with type:', productType); // Debug log
     
-    // Auto-generate nama from type label
-    const typeLabel = document.getElementById('typeDropdownLabel').textContent;
-    const nama = (typeLabel && typeLabel !== 'Select Type') ? typeLabel : 'Produk Baru';
-    
-    const formData = {
-        nama: nama,
-        pos_produk_merk_id: merkId,
+    // Build basic form data
+    let formData = {
         product_type: productType,
         harga_beli: parseCurrencyValue(document.getElementById('quick_harga_beli').value),
         harga_jual: parseCurrencyValue(document.getElementById('quick_harga_jual').value),
-        warna: document.getElementById('quick_warna').value,
-        ram: document.getElementById('quick_ram').value,
-        penyimpanan: document.getElementById('quick_penyimpanan').value,
-        battery_health: document.getElementById('quick_battery_health').value,
-        imei: document.getElementById('quick_imei').value,
     };
     
+    // Add type-specific fields
+    if (productType === 'service') {
+        formData.nama = document.getElementById('quick_service_name').value;
+        formData.service_name = document.getElementById('quick_service_name').value;
+        formData.service_duration = document.getElementById('quick_service_duration').value;
+        formData.service_period = document.getElementById('quick_service_period').value;
+        formData.service_description = document.getElementById('quick_service_description').value;
+        formData.deskripsi = document.getElementById('quick_service_description').value;
+    } else {
+        // Electronic or Accessories
+        const typeLabel = document.getElementById('typeDropdownLabel').textContent;
+        const nama = (typeLabel && typeLabel !== 'Select Type') ? typeLabel : 'Produk Baru';
+        
+        formData.nama = nama;
+        formData.pos_produk_merk_id = merkId;
+        formData.warna = document.getElementById('quick_warna').value;
+        formData.ram = document.getElementById('quick_ram').value;
+        formData.penyimpanan = document.getElementById('quick_penyimpanan').value;
+        formData.battery_health = document.getElementById('quick_battery_health').value;
+        formData.imei = document.getElementById('quick_imei').value;
+    }
+    
     console.log('=== FORM DATA DEBUG ===');
-    console.log('quick_warna element:', document.getElementById('quick_warna'));
-    console.log('quick_warna value:', document.getElementById('quick_warna').value);
-    console.log('quick_ram value:', document.getElementById('quick_ram').value);
-    console.log('quick_penyimpanan value:', document.getElementById('quick_penyimpanan').value);
+    console.log('Product Type:', productType);
     console.log('Complete Form Data to send:', formData);
     console.log('=== END DEBUG ===');
     
@@ -1378,16 +1734,28 @@ function submitQuickProduct(event) {
     .then(data => {
         if (data.success) {
             // Add new product to products array
-            products.push({
+            const newProductData = {
                 id: data.data.id,
                 nama: data.data.nama,
-                merk: { nama: data.data.merk_nama },
                 harga_beli: data.data.harga_beli,
                 harga_jual: data.data.harga_jual,
-                ram: data.data.ram,
-                penyimpanan: data.data.penyimpanan,
-                battery_health: data.data.battery_health
-            });
+                product_type: data.data.product_type || productType
+            };
+            
+            // Add brand info if not service
+            if (productType !== 'service') {
+                newProductData.merk = { nama: data.data.merk_nama };
+                newProductData.ram = data.data.ram;
+                newProductData.penyimpanan = data.data.penyimpanan;
+                newProductData.battery_health = data.data.battery_health;
+            } else {
+                // Add service-specific info
+                newProductData.service_duration = data.data.service_duration;
+                newProductData.service_period = data.data.service_period;
+                newProductData.service_description = data.data.service_description;
+            }
+            
+            products.push(newProductData);
             
             // Update dropdown for current item
             if (currentItemIdForModal) {
@@ -1395,9 +1763,17 @@ function submitQuickProduct(event) {
                 let description = newProduct.nama;
                 const specs = [];
                 
-                if (newProduct.ram) specs.push(newProduct.ram + ' GB RAM');
-                if (newProduct.penyimpanan) specs.push(newProduct.penyimpanan + ' GB');
-                if (newProduct.battery_health) specs.push(newProduct.battery_health + '% Battery');
+                if (productType === 'service') {
+                    // Service description
+                    if (newProduct.service_duration && newProduct.service_period) {
+                        specs.push(newProduct.service_duration + ' ' + newProduct.service_period);
+                    }
+                } else {
+                    // Electronic/Accessories specs
+                    if (newProduct.ram) specs.push(newProduct.ram + ' GB RAM');
+                    if (newProduct.penyimpanan) specs.push(newProduct.penyimpanan + ' GB');
+                    if (newProduct.battery_health) specs.push(newProduct.battery_health + '% Battery');
+                }
                 
                 if (specs.length > 0) {
                     description += ' - ' + specs.join(' / ');
@@ -1521,8 +1897,6 @@ document.addEventListener('keydown', function(e) {
 
 // Initialize - add first item on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, initializing...');
-    console.log('Merks data on load:', allMerks);
     addItem();
     
     // Handle form submission with AJAX
@@ -1543,6 +1917,28 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Validate all quantities are valid before submission
+        let hasInvalidQty = false;
+        document.querySelectorAll('[id^="qty-input-"]').forEach(qtyInput => {
+            const qty = parseInt(qtyInput.value, 10);
+            if (isNaN(qty) || qty < 1) {
+                hasInvalidQty = true;
+                alert('Please ensure all items have a valid quantity (minimum 1)');
+                return false;
+            }
+        });
+        
+        if (hasInvalidQty) {
+            return;
+        }
+        
+        // DEBUG: Log all quantity values before FormData
+        console.log('=== QUANTITY DEBUG BEFORE SUBMIT ===');
+        document.querySelectorAll('[id^="qty-input-"]').forEach(qtyInput => {
+            const itemId = qtyInput.id.replace('qty-input-', '');
+            console.log(`Item ${itemId}: qty field value = "${qtyInput.value}"`);
+        });
+        
         // Disable submit button
         const submitBtn = document.getElementById('submitBtn');
         const submitBtnText = document.getElementById('submitBtnText');
@@ -1551,6 +1947,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Prepare form data
         const formData = new FormData(form);
+        
+        // DEBUG: Log all FormData entries for quantities
+        console.log('=== QUANTITY DEBUG FROM FORMDATA ===');
+        for (let [key, value] of formData.entries()) {
+            if (key.includes('[quantity]')) {
+                console.log(`${key} = "${value}"`);
+            }
+        }
         
         // Submit form via AJAX
         fetch(form.action, {

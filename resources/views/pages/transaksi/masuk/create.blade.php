@@ -357,8 +357,8 @@ function updateAllProductDropdowns() {
     // Update all existing item dropdowns
     document.querySelectorAll('.item-type').forEach(select => {
         const itemId = select.closest('[id^="item-"]').id.replace('item-', '');
-        if (select.value === 'product') {
-            handleTypeChange(itemId);
+        if (select.value) {
+            handleProductTypeChange(itemId);
         }
     });
 }
@@ -381,11 +381,13 @@ function addItem() {
     itemDiv.innerHTML = `
         <div class="flex items-start gap-3">
             <div class="flex-1 grid grid-cols-1 md:grid-cols-6 gap-3">
+                <input type="hidden" name="items[${itemCounter}][type]" id="item-type-hidden-${itemCounter}" value="">
                 <div>
-                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Type</label>
-                    <select name="items[${itemCounter}][type]" class="item-type w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleTypeChange(${itemCounter})">
+                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Product Type</label>
+                    <select name="items[${itemCounter}][product_type]" class="item-type w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleProductTypeChange(${itemCounter})">
                         <option value="">Select</option>
-                        <option value="product">Product</option>
+                        <option value="electronic">Electronic</option>
+                        <option value="accessories">Accessories</option>
                         <option value="service">Service</option>
                     </select>
                 </div>
@@ -421,17 +423,32 @@ function addItem() {
     container.appendChild(itemDiv);
 }
 
-function handleTypeChange(itemId) {
+function handleProductTypeChange(itemId) {
     const typeSelect = document.querySelector(`#item-${itemId} .item-type`);
     const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const typeHiddenInput = document.getElementById(`item-type-hidden-${itemId}`);
     const stockInfo = document.getElementById(`stock-info-${itemId}`);
-    const type = typeSelect.value;
+    const productType = typeSelect.value;
     
     itemSelect.innerHTML = '<option value="">Select Item</option>';
-    itemSelect.disabled = !type;
+    itemSelect.disabled = !productType;
     if (stockInfo) stockInfo.classList.add('hidden');
     
-    if (type === 'product') {
+    if (productType === 'service') {
+        // Set hidden type field to service
+        if (typeHiddenInput) typeHiddenInput.value = 'service';
+        
+        services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.id;
+            option.textContent = service.nama;
+            option.dataset.price = service.harga;
+            itemSelect.appendChild(option);
+        });
+    } else if (productType === 'electronic' || productType === 'accessories') {
+        // Set hidden type field to product
+        if (typeHiddenInput) typeHiddenInput.value = 'product';
+        
         // Check if store is selected first
         if (!selectedTokoId) {
             const option = document.createElement('option');
@@ -442,16 +459,16 @@ function handleTypeChange(itemId) {
             return;
         }
         
-        // Filter products by selected store stock
+        // Filter products by selected product type and available stock
         const availableProducts = products.filter(product => {
             const stok = product.stok_per_toko?.[selectedTokoId] || 0;
-            return stok > 0;
+            return stok > 0 && product.product_type === productType;
         });
         
         if (availableProducts.length === 0) {
             const option = document.createElement('option');
             option.value = '';
-            option.textContent = 'No products with available stock in this store';
+            option.textContent = `No ${productType} products with available stock in this store`;
             option.disabled = true;
             itemSelect.appendChild(option);
             return;
@@ -470,14 +487,6 @@ function handleTypeChange(itemId) {
             option.dataset.price = product.harga_jual;
             option.dataset.stock = stok;
             
-            itemSelect.appendChild(option);
-        });
-    } else if (type === 'service') {
-        services.forEach(service => {
-            const option = document.createElement('option');
-            option.value = service.id;
-            option.textContent = service.nama;
-            option.dataset.price = service.harga;
             itemSelect.appendChild(option);
         });
     }

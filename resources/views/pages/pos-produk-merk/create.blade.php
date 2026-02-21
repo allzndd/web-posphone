@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Create Brand')
+@section('title', 'Create Product')
 
 @push('style')
 <!-- Page-specific styles -->
@@ -13,8 +13,8 @@
         <!-- Header -->
         <div class="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-white/10 pb-4">
             <div>
-                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Create New Product Name</h4>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Add a new product name</p>
+                <h4 class="text-xl font-bold text-navy-700 dark:text-white">Create New Product</h4>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Add a new product with type-specific details</p>
             </div>
             <a href="{{ route('pos-produk-merk.index') }}" 
                class="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
@@ -26,55 +26,145 @@
             </a>
         </div>
 
+        <!-- Product Type Tabs -->
+        <div class="mb-6 border-b border-gray-200 dark:border-white/10">
+            <nav class="flex gap-2">
+                <button type="button" onclick="switchProductType('electronic')" id="tab-electronic" 
+                        class="product-type-tab active flex items-center gap-2 border-b-2 border-brand-500 px-4 py-3 text-sm font-bold text-brand-500 dark:text-brand-400 transition-colors">
+                    <span class="text-lg">📱</span> Electronic
+                </button>
+                <button type="button" onclick="switchProductType('accessories')" id="tab-accessories" 
+                        class="product-type-tab flex items-center gap-2 border-b-2 border-transparent px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500 transition-colors">
+                    <span class="text-lg">🎧</span> Accessories
+                </button>
+                <button type="button" onclick="switchProductType('service')" id="tab-service" 
+                        class="product-type-tab flex items-center gap-2 border-b-2 border-transparent px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500 transition-colors">
+                    <span class="text-lg">🔧</span> Service
+                </button>
+            </nav>
+        </div>
+
         <form action="{{ route('pos-produk-merk.store') }}" method="POST">
             @csrf
+            <input type="hidden" name="product_type" id="product_type" value="electronic">
             
             <!-- Form Grid -->
             <div class="grid grid-cols-1 gap-5">
                 
-                <!-- Brand/Merk Field -->
-                <div>
-                    <label for="merk" class="mb-2 flex items-center gap-2 text-sm font-bold text-navy-700 dark:text-white">
-                        Brand <span class="text-red-500">*</span>
-                        <button type="button" id="addNewMerkBtn" 
-                                class="flex items-center gap-1 rounded-md bg-brand-500 px-3 py-1 text-xs font-semibold text-white transition duration-200 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300">
-                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-3 w-3" xmlns="http://www.w3.org/2000/svg">
-                                <path fill="none" d="M0 0h24v24H0z"></path>
-                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
-                            </svg>
-                            Add New
-                        </button>
-                    </label>
-                    <select id="merk" name="merk" 
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('merk') !border-red-500 @enderror">
-                        <option value="" selected>-- Select Brand --</option>
-                        @foreach($merks as $m)
-                            <option value="{{ $m }}" {{ old('merk') == $m ? 'selected' : '' }}>{{ $m }}</option>
-                        @endforeach
-                    </select>
-                    @error('merk')
-                        <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Select an existing brand or add a new one</p>
+                <!-- Brand & Product Name Section (Electronic/Accessories Only) -->
+                <div id="section-brand-product">
+                    <!-- Brand/Merk Field -->
+                    <div>
+                        <label for="merk" class="mb-2 flex items-center gap-2 text-sm font-bold text-navy-700 dark:text-white">
+                            Brand <span class="text-red-500">*</span>
+                            <button type="button" id="addNewMerkBtn" 
+                                    class="flex items-center gap-1 rounded-md bg-brand-500 px-3 py-1 text-xs font-semibold text-white transition duration-200 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-3 w-3" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill="none" d="M0 0h24v24H0z"></path>
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                                </svg>
+                                Add New
+                            </button>
+                        </label>
+                        <select id="merk" name="merk" 
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('merk') !border-red-500 @enderror">
+                            <option value="" selected>-- Select Brand --</option>
+                            @foreach($merks as $m)
+                                <option value="{{ $m }}" {{ old('merk') == $m ? 'selected' : '' }}>{{ $m }}</option>
+                            @endforeach
+                        </select>
+                        @error('merk')
+                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Select an existing brand or add a new one</p>
+                    </div>
+                    
+                    <!-- Product Name Field -->
+                    <div class="mt-4">
+                        <label for="nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                            Product Name <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="nama"
+                            name="nama" 
+                            value="{{ old('nama') }}"
+                            placeholder="e.g., iPhone 15 Pro, Galaxy S24"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('nama') !border-red-500 @enderror"
+                        >
+                        @error('nama')
+                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Enter the specific product model name</p>
+                    </div>
                 </div>
-                
-                <!-- Product Name Field -->
-                <div>
-                    <label for="nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
-                        Product Name <span class="text-red-500">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="nama"
-                        name="nama" 
-                        value="{{ old('nama') }}"
-                        placeholder="e.g., Apple, Samsung, Xiaomi"
-                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('nama') !border-red-500 @enderror"
-                    >
-                    @error('nama')
-                        <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Enter the product brand name (e.g., Apple, Samsung, Oppo, Vivo)</p>
+
+                <!-- Service Section (Service Only) -->
+                <div id="section-service" class="hidden">
+                    <!-- Service Name Field -->
+                    <div>
+                        <label for="service_name" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                            Service Name <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="service_name"
+                            name="service_name" 
+                            value="{{ old('service_name') }}"
+                            placeholder="e.g., Phone Screen Repair, Battery Replacement"
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('service_name') !border-red-500 @enderror"
+                        >
+                        @error('service_name')
+                            <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Enter the service name</p>
+                    </div>
+
+                    <!-- Service Duration & Period -->
+                    <div class="mt-4 grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="service_duration" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                                Duration <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                id="service_duration"
+                                name="service_duration" 
+                                value="{{ old('service_duration') }}"
+                                min="0"
+                                placeholder="e.g., 1, 7, 30"
+                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                            >
+                        </div>
+                        <div>
+                            <label for="service_period" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                                Period <span class="text-xs text-gray-500">(Optional)</span>
+                            </label>
+                            <select id="service_period" name="service_period" 
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0">
+                                <option value="">Select Period</option>
+                                <option value="days" {{ old('service_period') == 'days' ? 'selected' : '' }}>Days</option>
+                                <option value="weeks" {{ old('service_period') == 'weeks' ? 'selected' : '' }}>Weeks</option>
+                                <option value="months" {{ old('service_period') == 'months' ? 'selected' : '' }}>Months</option>
+                                <option value="years" {{ old('service_period') == 'years' ? 'selected' : '' }}>Years</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Service Description -->
+                    <div class="mt-4">
+                        <label for="service_description" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                            Description <span class="text-xs text-gray-500">(Optional)</span>
+                        </label>
+                        <textarea 
+                            id="service_description"
+                            name="service_description"
+                            rows="4"
+                            placeholder="Enter detailed service description..."
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 resize-none"
+                        >{{ old('service_description') }}</textarea>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Provide details about what this service includes</p>
+                    </div>
                 </div>
             </div>
 
@@ -86,7 +176,7 @@
                 </a>
                 <button type="submit" 
                         class="flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
-                    Save Product Name
+                    Save Product
                 </button>
             </div>
         </form>
@@ -129,6 +219,43 @@
 
 @push('scripts')
 <script>
+// Switch product type and show/hide appropriate form sections
+function switchProductType(type) {
+    document.getElementById('product_type').value = type;
+    
+    // Update tab styles
+    const tabs = document.querySelectorAll('.product-type-tab');
+    tabs.forEach(tab => {
+        tab.classList.remove('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+        tab.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    });
+    
+    const activeTab = document.getElementById('tab-' + type);
+    activeTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+    activeTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+    
+    // Show/hide sections based on type
+    const brandProductSection = document.getElementById('section-brand-product');
+    const serviceSection = document.getElementById('section-service');
+    
+    if (type === 'service') {
+        brandProductSection.classList.add('hidden');
+        serviceSection.classList.remove('hidden');
+        // Clear brand/product fields
+        document.getElementById('merk').value = '';
+        document.getElementById('nama').value = '';
+    } else {
+        // Electronic or Accessories
+        brandProductSection.classList.remove('hidden');
+        serviceSection.classList.add('hidden');
+        // Clear service fields
+        document.getElementById('service_name').value = '';
+        document.getElementById('service_duration').value = '';
+        document.getElementById('service_period').value = '';
+        document.getElementById('service_description').value = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const addNewMerkBtn = document.getElementById('addNewMerkBtn');
     const addMerkModal = document.getElementById('addMerkModal');

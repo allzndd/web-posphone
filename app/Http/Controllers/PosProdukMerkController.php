@@ -111,10 +111,33 @@ class PosProdukMerkController extends Controller
         if (!PermissionService::check('pos-produk-merk.create')) {
             return redirect('/')->with('error', 'You do not have permission to create product brands');
         }
-        $validated = $request->validate([
-            'merk' => 'required|string|max:255',
-            'nama' => 'required|string|max:255',
-        ]);
+
+        // Validate based on product type
+        $productType = $request->input('product_type', 'electronic');
+        
+        if ($productType === 'service') {
+            $validated = $request->validate([
+                'product_type' => 'required|in:service',
+                'service_name' => 'required|string|max:255',
+                'service_duration' => 'nullable|numeric|min:0',
+                'service_period' => 'nullable|in:days,weeks,months,years',
+                'service_description' => 'nullable|string|max:1000',
+            ]);
+            
+            $validated['merk'] = 'Service';
+            $validated['nama'] = $validated['service_name'];
+        } else {
+            // Electronic or Accessories
+            $validated = $request->validate([
+                'product_type' => 'nullable|in:electronic,accessories',
+                'merk' => 'required|string|max:255',
+                'nama' => 'required|string|max:255',
+            ]);
+            
+            if (empty($validated['product_type'])) {
+                $validated['product_type'] = 'electronic';
+            }
+        }
 
         // For superadmin, set owner_id to null and is_global to 1
         if (auth()->user()->role_id === 1) {
@@ -135,7 +158,7 @@ class PosProdukMerkController extends Controller
         PosProdukMerk::create($validated);
 
         return redirect()->route('pos-produk-merk.index')
-            ->with('success', 'Produk Merk berhasil ditambahkan');
+            ->with('success', 'Produk berhasil ditambahkan');
     }
 
     /**

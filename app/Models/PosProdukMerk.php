@@ -17,7 +17,12 @@ class PosProdukMerk extends Model
         'merk',
         'nama',
         'slug',
+        'product_type',
         'is_global',
+        'service_name',
+        'service_duration',
+        'service_period',
+        'service_description',
     ];
 
     /**

@@ -647,11 +647,17 @@ class TransaksiController extends Controller
         $suppliers = PosSupplier::where('owner_id', $ownerId)->get();
         $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
         $services = PosService::where('owner_id', $ownerId)->get();
-        // Get global merks or owner-specific merks
-        $merks = \App\Models\PosProdukMerk::where(function($query) use ($ownerId) {
-            $query->where('is_global', 1)
-                  ->orWhere('owner_id', $ownerId);
-        })->get();
+        
+        // Get merks with product_type information
+        // Join products to merks to get product_type
+        $merks = \App\Models\PosProdukMerk::leftJoin('pos_produk', 'pos_produk_merk.id', '=', 'pos_produk.pos_produk_merk_id')
+            ->where(function($query) use ($ownerId) {
+                $query->where('pos_produk_merk.is_global', 1)
+                      ->orWhere('pos_produk_merk.owner_id', $ownerId);
+            })
+            ->select('pos_produk_merk.*', 'pos_produk.product_type')
+            ->distinct()
+            ->get();
         
         // Get global colors or owner-specific colors
         $warnas = \App\Models\PosWarna::where(function($query) use ($ownerId) {
@@ -728,12 +734,15 @@ class TransaksiController extends Controller
                 $pos_produk_id = $itemData['type'] === 'product' ? $itemData['item_id'] : null;
                 $pos_service_id = $itemData['type'] === 'service' ? $itemData['item_id'] : null;
                 
+                // Convert quantity to integer to ensure proper calculation
+                $quantity = (int)($itemData['quantity'] ?? 1);
+                
                 // Create transaction item
                 PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
                     'pos_service_id' => $pos_service_id,
-                    'quantity' => $itemData['quantity'] ?? 1,
+                    'quantity' => $quantity,
                     'harga_satuan' => $itemData['harga_satuan'] ?? 0,
                     'subtotal' => $itemData['subtotal'] ?? 0,
                     'diskon' => $itemData['diskon'] ?? 0,
@@ -744,7 +753,6 @@ class TransaksiController extends Controller
 
                 // Update stock for products (not services)
                 if ($pos_produk_id) {
-                    $quantity = $itemData['quantity'] ?? 1;
                     // Transaksi keluar (purchase) = stock in (add stock)
                     $this->updateProductStock(
                         $ownerId,
@@ -759,12 +767,14 @@ class TransaksiController extends Controller
             }
         }
 
+
         // Check if request is AJAX
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Outgoing transaction has been successfully created',
                 'data' => $transaksi,
+                'items' => $items,
                 'print_url' => route('transaksi.keluar.print', $transaksi->id),
                 'redirect_url' => route('transaksi.keluar.index'),
             ]);

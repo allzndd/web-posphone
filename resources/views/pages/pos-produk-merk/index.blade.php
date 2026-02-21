@@ -78,6 +78,9 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
                         </th>
                         <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Type</p>
+                        </th>
+                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Products Count</p>
                         </th>
                         <th class="py-3 text-center">
@@ -101,6 +104,28 @@
                         </td>
                         <td class="py-4">
                             <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $merk->nama }}</p>
+                        </td>
+                        <td class="py-4">
+                            @php
+                                $typeColors = [
+                                    'electronic' => ['bg-blue-100', 'text-blue-800', 'dark:bg-blue-900/30', 'dark:text-blue-300', 'label' => '📱 Electronic'],
+                                    'accessories' => ['bg-purple-100', 'text-purple-800', 'dark:bg-purple-900/30', 'dark:text-purple-300', 'label' => '🎧 Accessories'],
+                                    'service' => ['bg-green-100', 'text-green-800', 'dark:bg-green-900/30', 'dark:text-green-300', 'label' => '🔧 Service'],
+                                ];
+                                $type = $merk->product_type ?? 'electronic';
+                                $colors = $typeColors[$type] ?? $typeColors['electronic'];
+                            @endphp
+                            <span class="inline-flex items-center rounded-full {{ $colors['bg-blue-100'] ?? ($type === 'accessories' ? 'bg-purple-100' : ($type === 'service' ? 'bg-green-100' : 'bg-blue-100')) }} {{ $colors['text-blue-800'] ?? ($type === 'accessories' ? 'text-purple-800' : ($type === 'service' ? 'text-green-800' : 'text-blue-800')) }} {{ $colors['dark:bg-blue-900/30'] ?? ($type === 'accessories' ? 'dark:bg-purple-900/30' : ($type === 'service' ? 'dark:bg-green-900/30' : 'dark:bg-blue-900/30')) }} {{ $colors['dark:text-blue-300'] ?? ($type === 'accessories' ? 'dark:text-purple-300' : ($type === 'service' ? 'dark:text-green-300' : 'dark:text-blue-300')) }} px-3 py-1 text-xs font-medium">
+                                @if($type === 'electronic')
+                                    📱 Electronic
+                                @elseif($type === 'accessories')
+                                    🎧 Accessories
+                                @elseif($type === 'service')
+                                    🔧 Service
+                                @else
+                                    📱 Electronic
+                                @endif
+                            </span>
                         </td>
                         <td class="py-4">
                             <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
