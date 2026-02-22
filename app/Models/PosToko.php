@@ -26,6 +26,7 @@ class PosToko extends Model
         'nama',
         'slug',
         'alamat',
+        'modal',
     ];
 
     /**
@@ -35,6 +36,7 @@ class PosToko extends Model
      */
     protected $casts = [
         'owner_id' => 'integer',
+        'modal' => 'decimal:2',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

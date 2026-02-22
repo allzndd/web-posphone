@@ -59,12 +59,14 @@ class TokoController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'alamat' => 'nullable|string',
+            'modal' => 'nullable|numeric|min:0|max:9999999999999.99',
         ]);
 
         $toko = PosToko::create([
             'owner_id' => $ownerId,
             'nama' => $request->nama,
             'alamat' => $request->alamat,
+            'modal' => $request->modal,
         ]);
 
         // Check if request is AJAX
@@ -129,11 +131,13 @@ class TokoController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'alamat' => 'nullable|string',
+            'modal' => 'nullable|numeric|min:0|max:9999999999999.99',
         ]);
 
         $toko->update([
             'nama' => $request->nama,
             'alamat' => $request->alamat,
+            'modal' => $request->modal,
         ]);
 
         return redirect()->route('toko.index')->with('success', 'Toko berhasil diperbarui');

@@ -78,6 +78,9 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Address</p>
                         </th>
                         <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Capital (Modal)</p>
+                        </th>
+                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Employees</p>
                         </th>
                         <th class="py-3 text-center">
@@ -102,6 +105,11 @@
                         <td class="py-4">
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ $toko->alamat ?? '-' }}</p>
                         </td>
+                        <td class="py-4 text-left">
+                            <p class="text-sm font-bold text-navy-700 dark:text-white">
+                                {{ $toko->modal !== null ? format_currency($toko->modal) : '-' }}
+                            </p>
+                        </td>
                         <td class="py-4">
                             <span class="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-800 dark:text-blue-300">
                                 {{ $toko->pengguna()->count() }} employees
@@ -119,7 +127,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="py-12 text-center">
+                        <td colspan="7" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
