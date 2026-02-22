@@ -24,7 +24,7 @@ class ProdukController extends Controller
         $ownerId = $user->owner ? $user->owner->id : null;
 
         $produk = PosProduk::where('owner_id', $ownerId)
-            ->with(['merk'])
+            ->with(['merk', 'stok'])
             ->when($request->input('nama'), function ($query, $nama) {
                 return $query->where('nama', 'like', '%' . $nama . '%');
             })
@@ -358,6 +358,7 @@ class ProdukController extends Controller
 
             // Check if product with same characteristics already exists
             // This prevents duplicate products
+            // IMPORTANT: For electronic products with IMEI, IMEI must be unique (each unit is different)
             $existingProduk = PosProduk::where('owner_id', $ownerId)
                 ->where('pos_produk_merk_id', $request->pos_produk_merk_id)
                 ->where('nama', $nama)
@@ -365,6 +366,7 @@ class ProdukController extends Controller
                 ->where('pos_warna_id', !empty($request->warna) ? $request->warna : null)
                 ->where('pos_ram_id', !empty($request->ram) ? $request->ram : null)
                 ->where('pos_penyimpanan_id', !empty($request->penyimpanan) ? $request->penyimpanan : null)
+                ->where('imei', !empty($request->imei) ? $request->imei : null) // IMEI must match for uniqueness
                 ->first();
 
             if ($existingProduk) {
@@ -395,17 +397,9 @@ class ProdukController extends Controller
                 
                 $produk = PosProduk::create($createData);
 
-                // Automatically create stock entry for all stores with quantity 0
-                // Stock will be added by the transaction itself
-                $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
-                foreach ($toko as $store) {
-                    \App\Models\ProdukStok::create([
-                        'owner_id' => $ownerId,
-                        'pos_toko_id' => $store->id,
-                        'pos_produk_id' => $produk->id,
-                        'stok' => 0,
-                    ]);
-                }
+                // DO NOT automatically create produk_stok entries here
+                // produk_stok will be created ONLY when transaction updates stock via UpdatesStock::updateProductStock
+                // This prevents orphaned stok=0 entries when multiple items with same brand are grouped
             }
 
             // Create or update color (warna)

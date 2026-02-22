@@ -400,6 +400,9 @@ class TransaksiController extends Controller
 
         // Process transaction items and update stock if items exist
         if ($request->has('items') && is_array($request->items)) {
+            // Validate stock and group items by brand (merk)
+            $groupedByBrand = [];
+            
             foreach ($request->items as $itemData) {
                 // Skip empty items
                 if (empty($itemData['item_id']) || empty($itemData['type'])) {
@@ -432,7 +435,7 @@ class TransaksiController extends Controller
                     }
                 }
                 
-                // Create transaction item
+                // Create transaction item (one entry per item for history/audit trail)
                 PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
@@ -446,15 +449,44 @@ class TransaksiController extends Controller
                     'pajak' => $itemData['pajak'] ?? 0,
                 ]);
 
-                // Update stock for products (not services)
+                // Group products by brand (merk) for consolidated stock update
                 if ($pos_produk_id) {
-                    $quantity = $itemData['quantity'] ?? 1;
+                    $produk = PosProduk::find($pos_produk_id);
+                    if ($produk) {
+                        $merkId = $produk->pos_produk_merk_id;
+                        $quantity = $itemData['quantity'] ?? 1;
+                        
+                        // Group key: brand/merk ID (same toko for all items in this transaction)
+                        // Store only the FIRST product_id (primary), but accumulate quantities
+                        if (!isset($groupedByBrand[$merkId])) {
+                            $groupedByBrand[$merkId] = [
+                                'pos_produk_id' => $pos_produk_id, // Primary product for this brand
+                                'total_quantity' => 0,
+                            ];
+                        }
+                        
+                        $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+                    }
+                }
+            }
+            
+            // Update stock ONLY for the primary product per brand
+            // This ensures only 1 produk_stok entry per (toko + brand)
+            foreach ($groupedByBrand as $merkId => $data) {
+                // Find the PRIMARY (smallest ID) produk for this merk
+                // This ensures consecutive transactions always update SAME produk_stok entry
+                $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                    ->where('pos_produk_merk_id', $merkId)
+                    ->orderBy('id', 'asc')
+                    ->first();
+                
+                if ($primaryProduk) {
                     // Transaksi masuk (sales) = stock out (reduce stock)
                     $this->updateProductStock(
                         $ownerId,
                         $request->pos_toko_id,
-                        $pos_produk_id,
-                        -$quantity,
+                        $primaryProduk->id, // Use PRIMARY product, not just first in batch
+                        -$data['total_quantity'], // Negative for sales (keluar)
                         'keluar',
                         $request->invoice,
                         'Penjualan produk'
@@ -742,6 +774,11 @@ class TransaksiController extends Controller
                 'total_items' => count($request->items),
             ]);
             
+            // Group items by brand (merk) to consolidate quantities at stock level
+            // Multiple items with same toko + brand = 1 produk_stok entry with consolidated qty
+            // But each IMEI still creates separate pos_produk entry (IMEI is unique identifier)
+            $groupedByBrand = [];
+            
             foreach ($request->items as $index => $itemData) {
                 // Skip empty items
                 if (empty($itemData['item_id']) || empty($itemData['type'])) {
@@ -762,7 +799,8 @@ class TransaksiController extends Controller
                 // Convert quantity to integer to ensure proper calculation
                 $quantity = (int)($itemData['quantity'] ?? 1);
                 
-                // Create transaction item
+                // Create transaction item (one entry per item for history/audit trail)
+                // This preserves transaction detail even when stock is consolidated
                 PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
@@ -776,14 +814,43 @@ class TransaksiController extends Controller
                     'pajak' => $itemData['pajak'] ?? 0,
                 ]);
 
-                // Update stock for products (not services)
+                // Group products by brand (merk) for consolidated stock update
                 if ($pos_produk_id) {
+                    $produk = PosProduk::find($pos_produk_id);
+                    if ($produk) {
+                        $merkId = $produk->pos_produk_merk_id;
+                        
+                        // Group key: brand/merk ID (same toko for all items in this transaction)
+                        // Store only the FIRST product_id (primary), but accumulate quantities
+                        if (!isset($groupedByBrand[$merkId])) {
+                            $groupedByBrand[$merkId] = [
+                                'pos_produk_id' => $pos_produk_id, // Primary product for this brand
+                                'total_quantity' => 0,
+                            ];
+                        }
+                        
+                        $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+                    }
+                }
+            }
+            
+            // Update stock ONLY for the primary product per brand
+            // This ensures only 1 produk_stok entry per (toko + brand)
+            foreach ($groupedByBrand as $merkId => $data) {
+                // Find the PRIMARY (smallest ID) produk for this merk
+                // This ensures consecutive transactions always update SAME produk_stok entry
+                $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                    ->where('pos_produk_merk_id', $merkId)
+                    ->orderBy('id', 'asc')
+                    ->first();
+                
+                if ($primaryProduk) {
                     // Transaksi keluar (purchase) = stock in (add stock)
                     $this->updateProductStock(
                         $ownerId,
                         $request->pos_toko_id,
-                        $pos_produk_id,
-                        $quantity,
+                        $primaryProduk->id, // Use PRIMARY product, not just first in batch
+                        $data['total_quantity'],
                         'masuk',
                         $request->invoice,
                         'Pembelian produk dari supplier'

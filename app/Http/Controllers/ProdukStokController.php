@@ -104,12 +104,59 @@ class ProdukStokController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified resource with all related products (AJAX JSON response).
      */
     public function show(ProdukStok $produkStok)
     {
-        $produkStok->load(['produk', 'toko']);
-        return view('pages.produk-stok.show', compact('produkStok'));
+        // Check if it's an AJAX request
+        if (request()->ajax()) {
+            $produkStok->load(['produk.merk', 'toko']);
+            
+            $primaryProduk = $produkStok->produk;
+            
+            $terkaitProduk = PosProduk::where('owner_id', $produkStok->owner_id)
+                ->where('pos_produk_merk_id', $primaryProduk->pos_produk_merk_id)
+                ->with(['merk', 'warna', 'ram', 'penyimpanan'])
+                ->orderBy('id', 'asc')
+                ->get()
+                ->map(function($produk) {
+                    // Use same logic as halaman produk (produk index)
+                    // RAM: kapasitas (not nama)
+                    $ram = ($produk->pos_ram_id && $produk->ram) ? $produk->ram->kapasitas . ' GB' : '-';
+                    
+                    // Storage: kapasitas (not nama)
+                    $penyimpanan = ($produk->pos_penyimpanan_id && $produk->penyimpanan) ? $produk->penyimpanan->kapasitas . ' GB' : '-';
+                    
+                    // Color: warna field (not nama)
+                    $warna = ($produk->pos_warna_id && $produk->warna) ? $produk->warna->warna : '-';
+                    
+                    return [
+                        'id' => $produk->id,
+                        'nama' => $produk->nama,
+                        'imei' => $produk->imei,
+                        'warna' => $warna,
+                        'ram' => $ram,
+                        'penyimpanan' => $penyimpanan,
+                        'harga_beli' => $produk->harga_beli,
+                        'harga_jual' => $produk->harga_jual,
+                        'battery_health' => $produk->battery_health,
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'produk_stok_id' => $produkStok->id,
+                    'merk_nama' => $primaryProduk->merk->nama ?? 'Unknown',
+                    'toko_nama' => $produkStok->toko->nama ?? '-',
+                    'total_stok' => $produkStok->stok,
+                    'produk_list' => $terkaitProduk,
+                ]
+            ]);
+        }
+        
+        // Non-AJAX request - redirect to index
+        return redirect()->route('produk-stok.index');
     }
 
     /**

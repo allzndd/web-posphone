@@ -178,7 +178,6 @@ use Illuminate\Support\Facades\DB;
                                 @endpermission
                             </div>
                         </td>
-                        </td>
                     </tr>
                     @empty
                     <tr>

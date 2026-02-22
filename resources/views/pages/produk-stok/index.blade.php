@@ -70,9 +70,6 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product</p>
                         </th>
                         <th class="py-3 text-left">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">IMEI</p>
-                        </th>
-                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Store</p>
                         </th>
                         <th class="py-3 text-center">
@@ -85,7 +82,7 @@
                 </thead>
                 <tbody>
                     @forelse($stok as $item)
-                    <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5" onclick="if(!event.target.closest('.stok-checkbox, .btn-actions-menu')) window.location.href='{{ route('produk-stok.edit', $item->id) }}'">
+                    <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer" onclick="if(!event.target.closest('.stok-checkbox, .btn-actions-menu')) openDetailModal({{ $item->id }})">
                         <!-- Checkbox -->
                         <td class="w-12 py-4" onclick="event.stopPropagation()">
                             <input type="checkbox" class="stok-checkbox rounded border-gray-300 dark:border-gray-600 cursor-pointer" data-id="{{ $item->id }}" onchange="updateBulkDeleteButton()">
@@ -101,15 +98,6 @@
                             <div>
                                 <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->produk->display_name ?? 'Unknown Product' }}</p>
                             </div>
-                        </td>
-                        
-                        <!-- IMEI -->
-                        <td class="py-4">
-                            @if($item->produk->imei)
-                                <p class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ $item->produk->imei }}</p>
-                            @else
-                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
-                            @endif
                         </td>
                         
                         <!-- Store -->
@@ -153,7 +141,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="py-12 text-center">
+                        <td colspan="5" class="py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -221,6 +209,50 @@
     </div>
 </div>
 
+<!-- Detail Modal -->
+<div id="detailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10 sticky top-0 bg-white dark:bg-navy-800">
+            <div>
+                <h3 class="text-xl font-bold text-navy-700 dark:text-white">Stock Detail: <span id="detailMerkNama">-</span></h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Store: <span id="detailTokoNama" class="font-semibold">-</span> | 
+                    Total Stock: <span id="detailTotalStok" class="font-semibold">-</span>
+                </p>
+            </div>
+            <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-white/10">
+                            <th class="w-16 py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">NO</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">Product</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">IMEI</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">Color</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">RAM</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">Storage</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">Buy Price</p></th>
+                            <th class="py-3 text-left"><p class="text-sm font-bold text-gray-600 dark:text-white">Sell Price</p></th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailTableBody">
+                        <tr><td colspan="8" class="py-4 text-center"><p class="text-gray-500">Loading...</p></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bulk Delete Form -->
 <form id="bulkDeleteForm" method="POST" style="display: none;">
     @csrf
@@ -252,6 +284,56 @@
 
 @push('scripts')
 <script>
+// Modal Detail Functions
+function openDetailModal(stokId) {
+    const modal = document.getElementById('detailModal');
+    const tableBody = document.getElementById('detailTableBody');
+    tableBody.innerHTML = '<tr><td colspan="8" class="py-4 text-center"><p class="text-gray-500">Loading...</p></td></tr>';
+    modal.classList.remove('hidden');
+    
+    fetch(`{{ route('produk-stok.show', ':id') }}`.replace(':id', stokId), {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const stokData = data.data;
+            document.getElementById('detailMerkNama').textContent = stokData.merk_nama;
+            document.getElementById('detailTokoNama').textContent = stokData.toko_nama;
+            document.getElementById('detailTotalStok').textContent = stokData.total_stok;
+            
+            const rows = stokData.produk_list.map((produk, idx) => `
+                <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5">
+                    <td class="w-16 py-4"><p class="text-sm font-medium text-gray-600 dark:text-gray-400">${idx + 1}</p></td>
+                    <td class="py-4"><div><p class="text-sm font-bold text-navy-700 dark:text-white">${produk.nama || 'Unknown'}</p><p class="text-xs text-gray-500 dark:text-gray-400">ID: ${produk.id}</p></div></td>
+                    <td class="py-4"><p class="text-sm text-gray-600 dark:text-gray-400 font-mono">${produk.imei || '-'}</p></td>
+                    <td class="py-4"><p class="text-sm text-gray-600 dark:text-gray-400">${produk.warna || '-'}</p></td>
+                    <td class="py-4"><p class="text-sm text-gray-600 dark:text-gray-400">${produk.ram || '-'}</p></td>
+                    <td class="py-4"><p class="text-sm text-gray-600 dark:text-gray-400">${produk.penyimpanan || '-'}</p></td>
+                    <td class="py-4"><p class="text-sm font-semibold text-navy-700 dark:text-white">Rp ${new Intl.NumberFormat('id-ID').format(produk.harga_beli)}</p></td>
+                    <td class="py-4"><p class="text-sm font-semibold text-green-600 dark:text-green-400">Rp ${new Intl.NumberFormat('id-ID').format(produk.harga_jual)}</p></td>
+                </tr>
+            `).join('');
+            
+            tableBody.innerHTML = rows || '<tr><td colspan="8" class="py-4 text-center"><p class="text-gray-500">No products found</p></td></tr>';
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="8" class="py-4 text-center"><p class="text-red-500">Error loading data</p></td></tr>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        tableBody.innerHTML = '<tr><td colspan="8" class="py-4 text-center"><p class="text-red-500">Error loading data</p></td></tr>';
+    });
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').classList.add('hidden');
+}
+
+// Delete Functions
 function confirmDelete(deleteUrl, itemName) {
     const modal = document.getElementById('deleteConfirmModal');
     const messageEl = modal.querySelector('p.text-gray-700');
@@ -349,6 +431,24 @@ function proceedDelete() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Detail Modal - Close on background click
+    const detailModal = document.getElementById('detailModal');
+    if (detailModal) {
+        detailModal.addEventListener('click', function(e) {
+            if (e.target.id === 'detailModal') {
+                closeDetailModal();
+            }
+        });
+    }
+    
+    // Detail Modal - Close on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !document.getElementById('detailModal').classList.contains('hidden')) {
+            closeDetailModal();
+        }
+    });
+    
+    // Delete Modal
     document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
     document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
     document.getElementById('modalConfirmBtn').addEventListener('click', proceedDelete);
