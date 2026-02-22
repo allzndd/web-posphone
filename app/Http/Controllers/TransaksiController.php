@@ -14,6 +14,7 @@ use App\Traits\UpdatesStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class TransaksiController extends Controller
 {
@@ -31,37 +32,37 @@ class TransaksiController extends Controller
         $maxRetries = 10;
         $attempt = 0;
         
-        while ($attempt < $maxRetries) {
-            // Use different prefix for incoming vs outgoing
-            $prefix = $isMasuk ? 'INV-IN-' : 'INV-OUT-';
-            
-            // Get last transaction of this type only
-            $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
-                ->where('is_transaksi_masuk', $isMasuk ? 1 : 0)
-                ->where('invoice', 'like', $prefix . '%')
-                ->orderBy('id', 'desc')
-                ->first();
-            
-            $dateStr = date('Ymd');
-            $nextNumber = 1;
-            
-            if ($lastTransaksi && $lastTransaksi->invoice) {
-                // Parse last invoice: INV-IN-YYYYMMDD-XXXX or INV-OUT-YYYYMMDD-XXXX
-                $parts = explode('-', $lastTransaksi->invoice);
-                if (count($parts) === 4) {
-                    $lastDate = $parts[2];
-                    $lastNumber = intval($parts[3]);
-                    
-                    // If same date, increment. Otherwise start from 1
-                    if ($lastDate === $dateStr) {
-                        $nextNumber = $lastNumber + 1;
-                    }
+        // Use different prefix for incoming vs outgoing
+        $prefix = $isMasuk ? 'INV-IN-' : 'INV-OUT-';
+        $dateStr = date('Ymd');
+        
+        // Get last transaction of this type only
+        $lastTransaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', $isMasuk ? 1 : 0)
+            ->where('invoice', 'like', $prefix . '%')
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        $nextNumber = 1;
+        
+        if ($lastTransaksi && $lastTransaksi->invoice) {
+            // Parse last invoice: INV-IN-YYYYMMDD-XXXX or INV-OUT-YYYYMMDD-XXXX
+            $parts = explode('-', $lastTransaksi->invoice);
+            if (count($parts) === 4) {
+                $lastDate = $parts[2];
+                $lastNumber = intval($parts[3]);
+                
+                // If same date, increment. Otherwise start from 1
+                if ($lastDate === $dateStr) {
+                    $nextNumber = $lastNumber + 1;
                 }
             }
-            
+        }
+        
+        while ($attempt < $maxRetries) {
             $invoiceNumber = $prefix . $dateStr . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
             
-            // Check if invoice exists (race condition protection)
+            // Check if invoice exists for this owner (race condition protection)
             $exists = PosTransaksi::where('owner_id', $ownerId)
                 ->where('invoice', $invoiceNumber)
                 ->exists();
@@ -70,13 +71,13 @@ class TransaksiController extends Controller
                 return $invoiceNumber;
             }
             
+            // If exists, try next number
+            $nextNumber++;
             $attempt++;
-            // Small delay to reduce collision
-            usleep(100000); // 0.1 second
+            usleep(50000); // 0.05 second delay
         }
         
         // Fallback: use timestamp if all retries failed
-        $prefix = $isMasuk ? 'INV-IN-' : 'INV-OUT-';
         return $prefix . date('Ymd-His') . '-' . rand(1000, 9999);
     }
     
@@ -162,7 +163,7 @@ class TransaksiController extends Controller
         $request->validate([
             'pos_toko_id' => 'required',
             'is_transaksi_masuk' => 'required|in:0,1',
-            'invoice' => 'required|string|max:45|unique:pos_transaksi,invoice',
+            'invoice' => ['required', 'string', 'max:45', Rule::unique('pos_transaksi', 'invoice')->where('owner_id', $ownerId)],
             'total_harga' => 'required|numeric|min:0',
             'status' => 'required|string|max:45',
             'metode_pembayaran' => 'required|string|max:45',
@@ -243,7 +244,7 @@ class TransaksiController extends Controller
         $request->validate([
             'pos_toko_id' => 'required',
             'is_transaksi_masuk' => 'required|in:0,1',
-            'invoice' => 'required|string|max:45|unique:pos_transaksi,invoice,' . $id,
+            'invoice' => ['required', 'string', 'max:45', Rule::unique('pos_transaksi', 'invoice')->ignore($id)->where('owner_id', $ownerId)],
             'total_harga' => 'required|numeric|min:0',
             'status' => 'required|string|max:45',
             'metode_pembayaran' => 'required|string|max:45',
@@ -377,7 +378,7 @@ class TransaksiController extends Controller
 
         $request->validate([
             'pos_toko_id' => 'required',
-            'invoice' => 'required|string|max:45|unique:pos_transaksi,invoice',
+            'invoice' => ['required', 'string', 'max:45', Rule::unique('pos_transaksi', 'invoice')->where('owner_id', $ownerId)],
             'total_harga' => 'required|numeric|min:0',
             'status' => 'required|string|max:45',
             'metode_pembayaran' => 'required|string|max:45',
@@ -528,7 +529,7 @@ class TransaksiController extends Controller
 
         $request->validate([
             'pos_toko_id' => 'required',
-            'invoice' => 'required|string|max:45|unique:pos_transaksi,invoice,' . $id,
+            'invoice' => ['required', 'string', 'max:45', Rule::unique('pos_transaksi', 'invoice')->ignore($id)->where('owner_id', $ownerId)],
             'total_harga' => 'required|numeric|min:0',
             'status' => 'required|string|max:45',
             'metode_pembayaran' => 'required|string|max:45',
@@ -648,16 +649,26 @@ class TransaksiController extends Controller
         $produks = PosProduk::where('owner_id', $ownerId)->with('merk')->get();
         $services = PosService::where('owner_id', $ownerId)->get();
         
-        // Get merks with product_type information
-        // Join products to merks to get product_type
-        $merks = \App\Models\PosProdukMerk::leftJoin('pos_produk', 'pos_produk_merk.id', '=', 'pos_produk.pos_produk_merk_id')
-            ->where(function($query) use ($ownerId) {
-                $query->where('pos_produk_merk.is_global', 1)
-                      ->orWhere('pos_produk_merk.owner_id', $ownerId);
-            })
-            ->select('pos_produk_merk.*', 'pos_produk.product_type')
+        // Get merks with product_type directly from pos_produk_merk table
+        // Note: Some data uses auth()->id() (User ID), some uses $user->owner->id (Owner model ID)
+        // We need to query both to get all data
+        $userId = Auth::id();
+        $ownerIds = array_filter([$userId, $ownerId]); // Remove null/empty values and duplicates
+        
+        $merks = \App\Models\PosProdukMerk::where('is_global', 1)
+            ->orWhereIn('owner_id', $ownerIds)
             ->distinct()
-            ->get();
+            ->orderBy('merk')
+            ->orderBy('nama')
+            ->get()
+            ->map(function($item) {
+                // If old data doesn't have product_type, default to 'electronic'
+                if (empty($item->product_type)) {
+                    $item->product_type = 'electronic';
+                }
+                return $item;
+            })
+            ->values();
         
         // Get global colors or owner-specific colors
         $warnas = \App\Models\PosWarna::where(function($query) use ($ownerId) {
@@ -703,7 +714,7 @@ class TransaksiController extends Controller
 
         $request->validate([
             'pos_toko_id' => 'required',
-            'invoice' => 'required|string|max:45|unique:pos_transaksi,invoice',
+            'invoice' => ['required', 'string', 'max:45', Rule::unique('pos_transaksi', 'invoice')->where('owner_id', $ownerId)],
             'total_harga' => 'required|numeric|min:0',
             'status' => 'required|string|max:45',
             'metode_pembayaran' => 'required|string|max:45',
@@ -725,11 +736,25 @@ class TransaksiController extends Controller
 
         // Process transaction items and update stock if items exist
         if ($request->has('items') && is_array($request->items)) {
-            foreach ($request->items as $itemData) {
+            \Log::info('storeKeluar - Processing items:', [
+                'owner_id' => $ownerId,
+                'pos_toko_id' => $request->pos_toko_id,
+                'total_items' => count($request->items),
+            ]);
+            
+            foreach ($request->items as $index => $itemData) {
                 // Skip empty items
                 if (empty($itemData['item_id']) || empty($itemData['type'])) {
+                    \Log::info("storeKeluar - Item $index skipped - empty item_id or type");
                     continue;
                 }
+
+                \Log::info("storeKeluar - Processing item $index:", [
+                    'item_id' => $itemData['item_id'],
+                    'item_id_type' => gettype($itemData['item_id']),
+                    'type' => $itemData['type'],
+                    'quantity' => $itemData['quantity'] ?? 1,
+                ]);
 
                 $pos_produk_id = $itemData['type'] === 'product' ? $itemData['item_id'] : null;
                 $pos_service_id = $itemData['type'] === 'service' ? $itemData['item_id'] : null;
@@ -767,6 +792,8 @@ class TransaksiController extends Controller
             }
         }
 
+        // Fetch created items with relations
+        $items = $transaksi->items()->with(['produk.merk', 'service'])->get();
 
         // Check if request is AJAX
         if ($request->wantsJson() || $request->ajax()) {
@@ -835,7 +862,7 @@ class TransaksiController extends Controller
 
         $request->validate([
             'pos_toko_id' => 'required',
-            'invoice' => 'required|string|max:45|unique:pos_transaksi,invoice,' . $id,
+            'invoice' => ['required', 'string', 'max:45', Rule::unique('pos_transaksi', 'invoice')->ignore($id)->where('owner_id', $ownerId)],
             'total_harga' => 'required|numeric|min:0',
             'status' => 'required|string|max:45',
             'metode_pembayaran' => 'required|string|max:45',

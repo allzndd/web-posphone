@@ -356,26 +356,59 @@ class ProdukController extends Controller
                 $nama = ($merk && $merk->nama) ? $merk->nama : 'Produk Baru';
             }
 
-            // Create product first
-            $createData = [
-                'owner_id' => $ownerId,
-                'pos_produk_merk_id' => $request->pos_produk_merk_id,
-                'nama' => $nama,
-                'product_type' => $request->product_type,
-                'harga_beli' => $request->harga_beli,
-                'harga_jual' => $request->harga_jual,
-                'pos_warna_id' => !empty($request->warna) ? $request->warna : null,
-                'pos_ram_id' => !empty($request->ram) ? $request->ram : null,
-                'pos_penyimpanan_id' => !empty($request->penyimpanan) ? $request->penyimpanan : null,
-                'battery_health' => !empty($request->battery_health) ? $request->battery_health : null,
-                'imei' => $request->imei,
-            ];
-            
-            \Log::info('Data to create product:', $createData);
-            
-            $produk = PosProduk::create($createData);
+            // Check if product with same characteristics already exists
+            // This prevents duplicate products
+            $existingProduk = PosProduk::where('owner_id', $ownerId)
+                ->where('pos_produk_merk_id', $request->pos_produk_merk_id)
+                ->where('nama', $nama)
+                ->where('product_type', $request->product_type)
+                ->where('pos_warna_id', !empty($request->warna) ? $request->warna : null)
+                ->where('pos_ram_id', !empty($request->ram) ? $request->ram : null)
+                ->where('pos_penyimpanan_id', !empty($request->penyimpanan) ? $request->penyimpanan : null)
+                ->first();
 
-            // Handle Color (Warna)
+            if ($existingProduk) {
+                \Log::info('quickStore - Product already exists:', [
+                    'id' => $existingProduk->id,
+                    'nama' => $existingProduk->nama,
+                    'merk_id' => $existingProduk->pos_produk_merk_id,
+                ]);
+                
+                $produk = $existingProduk;
+            } else {
+                // Create product if it doesn't exist
+                $createData = [
+                    'owner_id' => $ownerId,
+                    'pos_produk_merk_id' => $request->pos_produk_merk_id,
+                    'nama' => $nama,
+                    'product_type' => $request->product_type,
+                    'harga_beli' => $request->harga_beli,
+                    'harga_jual' => $request->harga_jual,
+                    'pos_warna_id' => !empty($request->warna) ? $request->warna : null,
+                    'pos_ram_id' => !empty($request->ram) ? $request->ram : null,
+                    'pos_penyimpanan_id' => !empty($request->penyimpanan) ? $request->penyimpanan : null,
+                    'battery_health' => !empty($request->battery_health) ? $request->battery_health : null,
+                    'imei' => $request->imei,
+                ];
+                
+                \Log::info('Data to create product:', $createData);
+                
+                $produk = PosProduk::create($createData);
+
+                // Automatically create stock entry for all stores with quantity 0
+                // Stock will be added by the transaction itself
+                $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
+                foreach ($toko as $store) {
+                    \App\Models\ProdukStok::create([
+                        'owner_id' => $ownerId,
+                        'pos_toko_id' => $store->id,
+                        'pos_produk_id' => $produk->id,
+                        'stok' => 0,
+                    ]);
+                }
+            }
+
+            // Create or update color (warna)
             if (!empty($request->warna)) {
                 \App\Models\PosWarna::firstOrCreate(
                     ['id' => $request->warna],
@@ -397,31 +430,6 @@ class ProdukController extends Controller
                     ['id' => $request->penyimpanan],
                     ['id_owner' => $ownerId]
                 );
-            }
-
-            // Automatically create stock entry for all stores with quantity 1
-            $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
-            foreach ($toko as $store) {
-                \App\Models\ProdukStok::create([
-                    'owner_id' => $ownerId,
-                    'pos_toko_id' => $store->id,
-                    'pos_produk_id' => $produk->id,
-                    'stok' => 1,
-                ]);
-
-                // Create log stok (stock history) for initial stock
-                \App\Models\LogStok::create([
-                    'owner_id' => $ownerId,
-                    'pos_produk_id' => $produk->id,
-                    'pos_toko_id' => $store->id,
-                    'stok_sebelum' => 0,
-                    'stok_sesudah' => 1,
-                    'perubahan' => 1,
-                    'tipe' => 'masuk',
-                    'referensi' => 'Produk Baru (Quick Add): ' . $produk->nama,
-                    'keterangan' => 'Stok awal produk baru dari transaksi',
-                    'pos_pengguna_id' => $user->id,
-                ]);
             }
 
             // Load relationship for response

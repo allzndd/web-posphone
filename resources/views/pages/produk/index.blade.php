@@ -71,6 +71,9 @@ use Illuminate\Support\Facades\DB;
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product Name</p>
                         </th>
                         <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">IMEI</p>
+                        </th>
+                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">RAM</p>
                         </th>
                         <th class="py-3 text-left">
@@ -108,6 +111,13 @@ use Illuminate\Support\Facades\DB;
                                 <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800/30 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
                                     Unnamed
                                 </span>
+                            @endif
+                        </td>
+                        <td class="py-4">
+                            @if($item->imei)
+                                <p class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ $item->imei }}</p>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
                             @endif
                         </td>
                         <td class="py-4">

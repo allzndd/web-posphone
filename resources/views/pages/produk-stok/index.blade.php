@@ -70,6 +70,9 @@
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Product</p>
                         </th>
                         <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">IMEI</p>
+                        </th>
+                        <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Store</p>
                         </th>
                         <th class="py-3 text-center">
@@ -98,6 +101,15 @@
                             <div>
                                 <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->produk->display_name ?? 'Unknown Product' }}</p>
                             </div>
+                        </td>
+                        
+                        <!-- IMEI -->
+                        <td class="py-4">
+                            @if($item->produk->imei)
+                                <p class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ $item->produk->imei }}</p>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
+                            @endif
                         </td>
                         
                         <!-- Store -->

@@ -71,7 +71,11 @@ class PelangganController extends Controller
     {
         // Check permission create
         if (!PermissionService::check('customer.create')) {
-            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk membuat customer baru');
+            $message = 'Anda tidak memiliki akses untuk membuat customer baru';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 403);
+            }
+            return redirect('/')->with('error', $message);
         }
 
         $user = Auth::user();
@@ -82,12 +86,16 @@ class PelangganController extends Controller
         $maxRecords = PermissionService::getMaxRecords('customer.create');
 
         if (PermissionService::isReachedLimit('customer.create', $currentCount)) {
+            $message = 'Anda telah mencapai batas maksimal data customer (' . $maxRecords . ' records)';
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Anda telah mencapai batas maksimal data customer (' . $maxRecords . ' records)');
+                ->with('error', $message);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'nomor_hp' => 'nullable|string|max:45',
             'alamat' => 'nullable|string|max:255',
@@ -95,15 +103,25 @@ class PelangganController extends Controller
             'tanggal_bergabung' => 'nullable|date',
         ]);
 
-        PosPelanggan::create([
+        $pelanggan = PosPelanggan::create([
             'owner_id' => $ownerId,
-            'nama' => $request->nama,
-            'slug' => \Illuminate\Support\Str::slug($request->nama),
-            'nomor_hp' => $request->nomor_hp,
-            'alamat' => $request->alamat,
-            'email' => $request->email,
-            'tanggal_bergabung' => $request->tanggal_bergabung ?? now()->toDateString(),
+            'nama' => $validated['nama'],
+            'slug' => \Illuminate\Support\Str::slug($validated['nama']),
+            'nomor_hp' => $validated['nomor_hp'] ?? null,
+            'alamat' => $validated['alamat'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'tanggal_bergabung' => $validated['tanggal_bergabung'] ?? now()->toDateString(),
         ]);
+
+        // Return JSON for AJAX requests
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer berhasil ditambahkan',
+                'id' => $pelanggan->id,
+                'nama' => $pelanggan->nama
+            ], 201);
+        }
 
         return redirect()->route('pelanggan.index')->with('success', 'Customer berhasil ditambahkan');
     }

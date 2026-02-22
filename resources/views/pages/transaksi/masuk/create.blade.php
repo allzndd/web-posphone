@@ -90,25 +90,34 @@
                         <label for="pos_pelanggan_id" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Customer
                         </label>
-                        <div class="relative">
-                            <select 
-                                id="pos_pelanggan_id"
-                                name="pos_pelanggan_id" 
-                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_pelanggan_id') !border-red-500 @enderror appearance-none"
-                            >
-                                <option value="">Select Customer</option>
-                                @foreach($pelanggans as $pelanggan)
-                                    <option value="{{ $pelanggan->id }}" {{ old('pos_pelanggan_id') == $pelanggan->id ? 'selected' : '' }}>
-                                        {{ $pelanggan->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill="none" d="M0 0h24v24H0z"></path>
-                                    <path d="M7 10l5 5 5-5z"></path>
-                                </svg>
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <select 
+                                    id="pos_pelanggan_id"
+                                    name="pos_pelanggan_id" 
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_pelanggan_id') !border-red-500 @enderror appearance-none"
+                                >
+                                    <option value="">Select Customer</option>
+                                    @foreach($pelanggans as $pelanggan)
+                                        <option value="{{ $pelanggan->id }}" {{ old('pos_pelanggan_id') == $pelanggan->id ? 'selected' : '' }}>
+                                            {{ $pelanggan->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M7 10l5 5 5-5z"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <button type="button" onclick="openAddCustomerModal()" class="flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-blue-600 active:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 dark:active:bg-blue-800" title="Add New Customer">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill="none" d="M0 0h24v24H0z"></path>
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                                </svg>
+                                New
+                            </button>
                         </div>
                         @error('pos_pelanggan_id')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
@@ -287,6 +296,98 @@
         </form>
     </div>
 </div>
+
+<!-- Add Customer Modal -->
+<div id="addCustomerModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Add New Customer</h3>
+            <button type="button" onclick="closeAddCustomerModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <form id="addCustomerForm" class="p-6 space-y-4">
+            @csrf
+
+            <!-- Customer Name -->
+            <div>
+                <label for="modal_nama" class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                    Customer Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="modal_nama"
+                    name="nama" 
+                    placeholder="Enter customer name"
+                    required
+                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                >
+                <span class="text-xs text-red-500 hidden" id="error_nama"></span>
+            </div>
+
+            <!-- Phone Number -->
+            <div>
+                <label for="modal_nomor_hp" class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                    Phone Number
+                </label>
+                <input 
+                    type="text" 
+                    id="modal_nomor_hp"
+                    name="nomor_hp" 
+                    placeholder="e.g., 08123456789"
+                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                >
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label for="modal_email" class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                    Email Address
+                </label>
+                <input 
+                    type="email" 
+                    id="modal_email"
+                    name="email" 
+                    placeholder="e.g., customer@email.com"
+                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                >
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label for="modal_alamat" class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
+                    Address
+                </label>
+                <textarea 
+                    id="modal_alamat"
+                    name="alamat" 
+                    rows="2"
+                    placeholder="Enter customer address"
+                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 resize-none"
+                ></textarea>
+            </div>
+        </form>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+            <button type="button" onclick="closeAddCustomerModal()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition font-medium">
+                Cancel
+            </button>
+            <button type="button" onclick="submitAddCustomer()" id="addCustomerSubmitBtn" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition font-medium flex items-center gap-2">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                </svg>
+                Add Customer
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -393,9 +494,13 @@ function addItem() {
                 </div>
                 <div class="md:col-span-2">
                     <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Item</label>
-                    <select name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" class="item-select w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleItemChange(${itemCounter})" disabled>
-                        <option value="">Select Item</option>
-                    </select>
+                    <div class="relative">
+                        <input type="text" id="item-search-${itemCounter}" placeholder="Search or select item..." class="item-search w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onkeyup="filterItemDropdown(${itemCounter})" style="display: none;">
+                        <select name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" class="item-select w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm" onchange="handleItemChange(${itemCounter})" disabled>
+                            <option value="">Select Item</option>
+                        </select>
+                        <div id="item-dropdown-${itemCounter}" class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-navy-800 border border-gray-200 dark:border-white/10 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto"></div>
+                    </div>
                     <span id="stock-info-${itemCounter}" class="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden"></span>
                 </div>
                 <div>
@@ -426,6 +531,8 @@ function addItem() {
 function handleProductTypeChange(itemId) {
     const typeSelect = document.querySelector(`#item-${itemId} .item-type`);
     const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const itemSearch = document.getElementById(`item-search-${itemId}`);
+    const itemDropdown = document.getElementById(`item-dropdown-${itemId}`);
     const typeHiddenInput = document.getElementById(`item-type-hidden-${itemId}`);
     const stockInfo = document.getElementById(`stock-info-${itemId}`);
     const productType = typeSelect.value;
@@ -433,6 +540,17 @@ function handleProductTypeChange(itemId) {
     itemSelect.innerHTML = '<option value="">Select Item</option>';
     itemSelect.disabled = !productType;
     if (stockInfo) stockInfo.classList.add('hidden');
+    if (itemSearch) itemSearch.value = '';
+    if (itemDropdown) itemDropdown.innerHTML = '';
+    
+    // Show/hide search input and select based on product type
+    const showSearch = (productType === 'electronic' || productType === 'accessories');
+    if (itemSearch) {
+        itemSearch.style.display = showSearch ? 'block' : 'none';
+    }
+    if (itemSelect) {
+        itemSelect.style.display = showSearch ? 'none' : 'block';
+    }
     
     if (productType === 'service') {
         // Set hidden type field to service
@@ -474,6 +592,9 @@ function handleProductTypeChange(itemId) {
             return;
         }
         
+        // Store products in a data attribute for filtering
+        itemSearch.dataset.products = JSON.stringify(availableProducts);
+        
         availableProducts.forEach(product => {
             const option = document.createElement('option');
             option.value = product.id;
@@ -481,11 +602,13 @@ function handleProductTypeChange(itemId) {
             // Get stock for selected store
             const stok = product.stok_per_toko?.[selectedTokoId] || 0;
             
-            // Display product name with stock info
-            const displayText = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''} (Stock: ${stok})`;
+            // Display product name with IMEI
+            const displayText = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''}${product.imei ? ' - IMEI: ' + product.imei : ''}`;
             option.textContent = displayText;
             option.dataset.price = product.harga_jual;
             option.dataset.stock = stok;
+            option.dataset.productId = product.id;
+            option.dataset.displayText = displayText;
             
             itemSelect.appendChild(option);
         });
@@ -533,6 +656,79 @@ function handleItemChange(itemId) {
         calculateSubtotal(itemId);
     }
 }
+
+function filterItemDropdown(itemId) {
+    const searchInput = document.getElementById(`item-search-${itemId}`);
+    const itemSelect = document.getElementById(`item-select-${itemId}`);
+    const itemDropdown = document.getElementById(`item-dropdown-${itemId}`);
+    const searchText = searchInput.value.toLowerCase().trim();
+    
+    // Get all options except the first "Select Item" option
+    const options = Array.from(itemSelect.querySelectorAll('option')).slice(1);
+    
+    // Filter matching options
+    const matchingOptions = searchText === '' 
+        ? options 
+        : options.filter(option => {
+            const optionText = option.textContent.toLowerCase();
+            return optionText.includes(searchText);
+        });
+    
+    // Clear and rebuild dropdown
+    itemDropdown.innerHTML = '';
+    
+    if (matchingOptions.length === 0 && searchText !== '') {
+        const emptyItem = document.createElement('div');
+        emptyItem.className = 'px-3 py-2 text-sm text-gray-500 dark:text-gray-400';
+        emptyItem.textContent = 'No results found';
+        itemDropdown.appendChild(emptyItem);
+        itemDropdown.classList.remove('hidden');
+    } else if (matchingOptions.length > 0) {
+        matchingOptions.forEach(option => {
+            const dropdownItem = document.createElement('div');
+            dropdownItem.className = 'px-3 py-2 text-sm text-navy-700 dark:text-white hover:bg-lightPrimary dark:hover:bg-navy-700 cursor-pointer border-b border-gray-100 dark:border-white/5 last:border-b-0';
+            dropdownItem.textContent = option.textContent;
+            
+            dropdownItem.addEventListener('click', function() {
+                // Set the hidden select value
+                itemSelect.value = option.value;
+                
+                // Update search input with selection
+                searchInput.value = option.textContent;
+                
+                // Close dropdown
+                itemDropdown.classList.add('hidden');
+                
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                itemSelect.dispatchEvent(event);
+            });
+            
+            itemDropdown.appendChild(dropdownItem);
+        });
+        itemDropdown.classList.remove('hidden');
+    }
+}
+
+// Show dropdown on focus/click
+document.addEventListener('focus', function(e) {
+    if (e.target.classList.contains('item-search')) {
+        const itemId = e.target.id.replace('item-search-', '');
+        const dropdown = document.getElementById(`item-dropdown-${itemId}`);
+        
+        // Trigger filter to show all items
+        filterItemDropdown(itemId);
+    }
+}, true);
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    document.querySelectorAll('[id^="item-dropdown-"]').forEach(dropdown => {
+        if (!dropdown.parentElement.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+});
 
 function calculateSubtotal(itemId) {
     const qtyInput = document.querySelector(`#item-${itemId} .item-qty`);
@@ -652,6 +848,132 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtnText.textContent = 'Create Income';
         });
     });
+});
+
+// Modal Functions
+function openAddCustomerModal() {
+    document.getElementById('addCustomerModal').classList.remove('hidden');
+    document.getElementById('modal_nama').focus();
+}
+
+function closeAddCustomerModal() {
+    document.getElementById('addCustomerModal').classList.add('hidden');
+    document.getElementById('addCustomerForm').reset();
+    // Clear error messages
+    document.querySelectorAll('[id^="error_"]').forEach(el => {
+        el.classList.add('hidden');
+        el.textContent = '';
+    });
+}
+
+function submitAddCustomer() {
+    const form = document.getElementById('addCustomerForm');
+    const nama = document.getElementById('modal_nama').value.trim();
+    const nomor_hp = document.getElementById('modal_nomor_hp').value.trim();
+    const email = document.getElementById('modal_email').value.trim();
+    const alamat = document.getElementById('modal_alamat').value.trim();
+    
+    // Clear previous errors
+    document.querySelectorAll('[id^="error_"]').forEach(el => {
+        el.classList.add('hidden');
+        el.textContent = '';
+    });
+    
+    // Validate
+    let hasError = false;
+    if (!nama) {
+        document.getElementById('error_nama').textContent = 'Customer name is required';
+        document.getElementById('error_nama').classList.remove('hidden');
+        hasError = true;
+    }
+    
+    if (hasError) return;
+    
+    // Disable submit button
+    const submitBtn = document.getElementById('addCustomerSubmitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...';
+    
+    // Submit form via AJAX
+    const formData = new FormData(form);
+    
+    fetch('{{ route("pelanggan.store") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. Status: ' + response.status);
+        }
+        
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw {status: response.status, data: data};
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success || data.id) {
+            // Get the customer ID from response
+            const customerId = data.id;
+            const customerName = data.nama || nama;
+            
+            // Add new option to select
+            const select = document.getElementById('pos_pelanggan_id');
+            const option = document.createElement('option');
+            option.value = customerId;
+            option.textContent = customerName;
+            option.selected = true;
+            select.appendChild(option);
+            
+            // Close modal and reset
+            closeAddCustomerModal();
+        } else {
+            throw new Error(data.message || 'Failed to add customer');
+        }
+    })
+    .catch(error => {
+        let errorMsg = 'An error occurred while adding customer';
+        
+        if (error.status === 422 && error.data?.errors) {
+            // Validation errors
+            const errors = error.data.errors;
+            if (errors.nama) {
+                document.getElementById('error_nama').textContent = errors.nama[0];
+                document.getElementById('error_nama').classList.remove('hidden');
+            }
+            errorMsg = 'Please check the form for errors';
+        } else if (error.status === 403) {
+            errorMsg = error.data?.message || 'You do not have permission to add customers';
+        } else if (error.message) {
+            errorMsg = error.message;
+        }
+        
+        console.error('Add Customer Error:', error);
+        if (errorMsg) {
+            alert('Error: ' + errorMsg);
+        }
+    })
+    .finally(() => {
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('addCustomerModal')?.addEventListener('click', function(e) {
+    if (e.target.id === 'addCustomerModal') {
+        closeAddCustomerModal();
+    }
 });
 </script>
 @endpush

@@ -74,6 +74,9 @@
                             <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Product</p>
                         </th>
                         <th class="py-3 px-2 text-left">
+                            <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">IMEI</p>
+                        </th>
+                        <th class="py-3 px-2 text-left">
                             <p class="text-xs font-bold text-gray-600 dark:text-white uppercase truncate">Store</p>
                         </th>
                         <th class="py-3 px-2 text-center">
@@ -104,6 +107,15 @@
                         <!-- Product -->
                         <td class="py-3 px-2 text-left">
                             <p class="text-sm font-bold text-navy-700 dark:text-white truncate">{{ $log->produk->nama ?? '-' }}</p>
+                        </td>
+                        
+                        <!-- IMEI -->
+                        <td class="py-3 px-2 text-left">
+                            @if($log->produk->imei)
+                                <p class="text-sm font-mono text-gray-600 dark:text-gray-400 truncate">{{ $log->produk->imei }}</p>
+                            @else
+                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
+                            @endif
                         </td>
                         
                         <!-- Store -->

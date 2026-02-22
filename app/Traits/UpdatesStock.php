@@ -21,6 +21,25 @@ trait UpdatesStock
      */
     protected function updateProductStock($ownerId, $tokoId, $produkId, $quantity, $tipe, $referensi, $keterangan = null)
     {
+        // Log input parameters
+        \Log::info('updateProductStock - Input parameters:', [
+            'owner_id' => $ownerId . ' (type: ' . gettype($ownerId) . ')',
+            'toko_id' => $tokoId . ' (type: ' . gettype($tokoId) . ')',
+            'produk_id' => $produkId . ' (type: ' . gettype($produkId) . ')',
+            'quantity' => $quantity,
+        ]);
+
+        // Check if record exists BEFORE firstOrCreate
+        $existingRecord = ProdukStok::where('owner_id', $ownerId)
+            ->where('pos_toko_id', $tokoId)
+            ->where('pos_produk_id', $produkId)
+            ->first();
+
+        \Log::info('updateProductStock - Checking existing record:', [
+            'exists' => $existingRecord ? 'YES - ID: ' . $existingRecord->id : 'NO',
+            'current_stock' => $existingRecord ? $existingRecord->stok : null,
+        ]);
+
         // Find or create stock record
         $stok = ProdukStok::firstOrCreate(
             [
@@ -32,6 +51,12 @@ trait UpdatesStock
                 'stok' => 0,
             ]
         );
+
+        \Log::info('updateProductStock - After firstOrCreate:', [
+            'id' => $stok->id,
+            'was_just_created' => $stok->wasRecentlyCreated,
+            'current_stock' => $stok->stok,
+        ]);
 
         $stokSebelum = $stok->stok;
         $stokSesudah = $stokSebelum + $quantity;
