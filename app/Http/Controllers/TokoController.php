@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosToko;
+use App\Models\Langganan;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,21 @@ class TokoController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
+        // Check Free Tier status - match by slug OR nama 'Free Tier'
+        $subscription = Langganan::where('owner_id', $ownerId)
+            ->with('tipeLayanan')
+            ->latest()
+            ->first();
+        
+        $isFreeTier = false;
+        if ($subscription && $subscription->tipeLayanan) {
+            $isFreeTier = $subscription->tipeLayanan->slug === 'free' || 
+                         strtolower($subscription->tipeLayanan->nama) === 'free tier';
+        }
+        
+        $tokoCount = PosToko::where('owner_id', $ownerId)->count();
+        $canAddToko = !$isFreeTier || ($isFreeTier && $tokoCount < 1);
+
         $tokos = PosToko::where('owner_id', $ownerId)
             ->when($request->input('nama'), function ($query, $nama) {
                 return $query->where('nama', 'like', '%' . $nama . '%');
@@ -27,7 +43,7 @@ class TokoController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
 
-        return view('pages.toko.index', compact('tokos', 'hasAccessRead'));
+        return view('pages.toko.index', compact('tokos', 'hasAccessRead', 'isFreeTier', 'tokoCount', 'canAddToko'));
     }
 
     /**
@@ -40,7 +56,33 @@ class TokoController extends Controller
             return redirect()->route('toko.index')->with('error', 'Anda tidak memiliki akses untuk membuat toko baru.');
         }
 
-        return view('pages.toko.create');
+        // Check Free Tier limitation - match by slug OR nama 'Free Tier'
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+        
+        $subscription = Langganan::where('owner_id', $ownerId)
+            ->with('tipeLayanan')
+            ->latest()
+            ->first();
+        
+        $isFreeTier = false;
+        if ($subscription && $subscription->tipeLayanan) {
+            $isFreeTier = $subscription->tipeLayanan->slug === 'free' || 
+                         strtolower($subscription->tipeLayanan->nama) === 'free tier';
+        }
+        
+        $tokoCount = 0;
+        $canAddToko = true;
+        
+        if ($isFreeTier) {
+            $tokoCount = PosToko::where('owner_id', $ownerId)->count();
+            if ($tokoCount >= 1) {
+                $warningMessage = 'Paket Free Tier hanya membolehkan 1 toko. Silakan upgrade paket untuk menambah toko lebih banyak.';
+                return redirect()->route('toko.index')->with('warning', $warningMessage);
+            }
+        }
+
+        return view('pages.toko.create', compact('isFreeTier', 'tokoCount', 'canAddToko'));
     }
 
     /**
@@ -55,6 +97,26 @@ class TokoController extends Controller
 
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Validate Free Tier limitation - match by slug OR nama 'Free Tier'
+        $subscription = Langganan::where('owner_id', $ownerId)
+            ->with('tipeLayanan')
+            ->latest()
+            ->first();
+        
+        $isFreeTier = false;
+        if ($subscription && $subscription->tipeLayanan) {
+            $isFreeTier = $subscription->tipeLayanan->slug === 'free' || 
+                         strtolower($subscription->tipeLayanan->nama) === 'free tier';
+        }
+        
+        if ($isFreeTier) {
+            $tokoCount = PosToko::where('owner_id', $ownerId)->count();
+            if ($tokoCount >= 1) {
+                return redirect()->route('toko.index')
+                    ->with('error', 'Paket Free Tier hanya membolehkan 1 toko. Silakan upgrade paket Anda untuk menambah toko lebih banyak.');
+            }
+        }
 
         $request->validate([
             'nama' => 'required|string|max:255',

@@ -26,6 +26,22 @@
             </a>
         </div>
 
+        <!-- Free Tier Warning -->
+        @if($isFreeTier)
+        <div class="mb-6 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 p-4">
+            <div class="flex items-start gap-3">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="none" d="M0 0h24v24H0z"></path>
+                    <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-sm font-bold text-blue-800 dark:text-blue-300">Paket Free Tier</h3>
+                    <p class="mt-1 text-sm text-blue-700 dark:text-blue-400">Anda saat ini menggunakan paket <strong>Free Tier</strong> yang hanya membolehkan <strong>1 toko</strong>. Untuk menambah lebih banyak toko, silakan upgrade paket Anda.</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <form action="{{ route('toko.store') }}" method="POST">
             @csrf
             

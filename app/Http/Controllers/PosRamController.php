@@ -75,10 +75,10 @@ class PosRamController extends Controller
             $validated['id_owner'] = null;
             $validated['is_global'] = 1;
         }
-        // For owner, set id_owner to their ID and is_global to 0
+        // For owner, set id_owner to their ID and is_global to 1 (can use in transactions)
         elseif (auth()->user()->role_id === 2) {
             $validated['id_owner'] = auth()->id();
-            $validated['is_global'] = 0;
+            $validated['is_global'] = 1;
         }
         // For admin, is_global should be 1
         elseif (auth()->user()->role_id === 3) {
@@ -96,6 +96,11 @@ class PosRamController extends Controller
      */
     public function show(PosRam $posRam)
     {
+        // Check authorization for owner - only can view their own items
+        if (auth()->user()->role_id === 2 && $posRam->id_owner !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         return view('pages.pos-ram.show', compact('posRam'));
     }
 
@@ -141,10 +146,10 @@ class PosRamController extends Controller
             $validated['id_owner'] = null;
             $validated['is_global'] = 1;
         }
-        // For owner, set id_owner to their ID and is_global to 0
+        // For owner, set id_owner to their ID and is_global to 1 (can use in transactions)
         elseif (auth()->user()->role_id === 2) {
             $validated['id_owner'] = auth()->id();
-            $validated['is_global'] = 0;
+            $validated['is_global'] = 1;
         }
         // For admin, is_global should be 1
         elseif (auth()->user()->role_id === 3) {
