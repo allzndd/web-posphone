@@ -28,12 +28,12 @@ use Illuminate\Support\Facades\DB;
             <!-- Search & Add & Bulk Delete Button -->
             <div class="flex items-center gap-3">
                 <!-- Search Form -->
-                <form method="GET" action="{{ route('produk.index') }}" class="relative">
+                <form method="GET" action="{{ route('produk.index') }}" class="relative" id="searchForm">
                     <div class="flex items-center rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-4 py-2">
                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="h-4 w-4 text-gray-400 dark:text-white mr-2" xmlns="http://www.w3.org/2000/svg">
                             <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path>
                         </svg>
-                        <input type="text" name="nama" value="{{ request('nama') }}" placeholder="Search products..." 
+                        <input type="text" id="searchInput" name="search" value="{{ request('search') ?? request('nama') }}" placeholder="Search products..." 
                                class="block w-full bg-transparent text-sm font-medium text-navy-700 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500" />
                     </div>
                 </form>
@@ -93,160 +93,15 @@ use Illuminate\Support\Facades\DB;
                         </th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse ($produk as $item)
-                    <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors cursor-pointer" data-href="{{ route('produk.show', $item) }}">
-                        <td class="py-4" style="width: 40px;" onclick="event.stopPropagation()">
-                            <input type="checkbox" class="produk-checkbox rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-700 cursor-pointer" 
-                                   value="{{ $item->id }}" 
-                                   onchange="updateBulkDeleteButton()">
-                        </td>
-                        <td class="py-4 col-no">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white">{{ ($produk->currentPage() - 1) * $produk->perPage() + $loop->iteration }}</p>
-                        </td>
-                        <td class="py-4">
-                            @if($item->nama)
-                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->nama }}</p>
-                            @else
-                                <span class="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-800/30 px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400">
-                                    Unnamed
-                                </span>
-                            @endif
-                        </td>
-                        <td class="py-4">
-                            @if($item->imei)
-                                <p class="text-sm font-mono text-gray-600 dark:text-gray-400">{{ $item->imei }}</p>
-                            @else
-                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
-                            @endif
-                        </td>
-                        <td class="py-4">
-                            @if($item->pos_ram_id && $item->ram)
-                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->ram->kapasitas ?? '-' }} GB</p>
-                            @else
-                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
-                            @endif
-                        </td>
-                        <td class="py-4">
-                            @if($item->pos_penyimpanan_id && $item->penyimpanan)
-                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->penyimpanan->kapasitas ?? '-' }} GB</p>
-                            @else
-                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
-                            @endif
-                        </td>
-                        <td class="py-4">
-                            @if($item->pos_warna_id && $item->warna)
-                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->warna->warna ?? '-' }}</p>
-                            @else
-                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
-                            @endif
-                        </td>
-                        <td class="py-4">
-                            @if($item->battery_health)
-                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $item->battery_health }}%</p>
-                            @else
-                                <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
-                            @endif
-                        </td>
-                        <td class="py-4 text-left">
-                            <p class="text-sm font-bold text-green-500 dark:text-green-400">
-                                {{ get_currency_symbol() }} {{ number_format($item->harga_jual, 0, ',', '.') }}
-                            </p>
-                        </td>
-                        <td class="py-4 col-actions" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center gap-2">
-                                @permission('produk.update')
-                                <a href="{{ route('produk.edit', $item) }}"
-                                   class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
-                                   title="Edit">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
-                                    </svg>
-                                </a>
-                                @endpermission
-                                
-                                @permission('produk.delete')
-                                <button onclick="confirmDelete('{{ route('produk.destroy', $item) }}')"
-                                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
-                                        title="Delete">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                                    </svg>
-                                </button>
-                                @endpermission
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="10" class="py-12 text-center">
-                            <div class="flex flex-col items-center justify-center">
-                                <svg class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                </svg>
-                                <p class="text-lg font-medium text-gray-600 dark:text-gray-400">No products found</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Try adjusting your search criteria</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
+                <tbody id="tableBody">
+                    @include('pages.produk.partials.table-body')
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
-        <div class="border-t border-gray-200 dark:border-white/10 px-6 py-4">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <!-- Items Per Page & Info -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Items per page:</span>
-                    <form method="GET" action="{{ route('produk.index') }}" class="inline-block">
-                        @if(request('nama'))
-                            <input type="hidden" name="nama" value="{{ request('nama') }}">
-                        @endif
-                        <select name="per_page" onchange="this.form.submit()" 
-                                class="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:!bg-navy-800 px-3 py-1.5 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
-                            <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
-                        </select>
-                    </form>
-                    <span class="text-sm text-gray-600 dark:text-gray-400">
-                        Showing {{ $produk->firstItem() ?? 0 }} to {{ $produk->lastItem() ?? 0 }} of {{ $produk->total() }}
-                    </span>
-                </div>
-
-                <!-- Pagination Buttons -->
-                <div class="flex items-center gap-1">
-                    @if ($produk->onFirstPage())
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">◀</span>
-                    @else
-                        <a href="{{ $produk->previousPageUrl() }}&per_page={{ request('per_page', 10) }}" 
-                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">◀</a>
-                    @endif
-
-                    @for ($page = max(1, $produk->currentPage() - 2); $page <= min($produk->lastPage(), $produk->currentPage() + 2); $page++)
-                        @if ($page == $produk->currentPage())
-                            <span class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-brand-500 px-3 text-sm font-bold text-white dark:bg-brand-400">
-                                {{ $page }}
-                            </span>
-                        @else
-                            <a href="{{ $produk->url($page) }}&per_page={{ request('per_page', 10) }}" 
-                               class="flex h-9 min-w-[36px] items-center justify-center rounded-lg bg-lightPrimary px-3 text-sm font-medium text-navy-700 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">
-                                {{ $page }}
-                            </a>
-                        @endif
-                    @endfor
-
-                    @if ($produk->hasMorePages())
-                        <a href="{{ $produk->nextPageUrl() }}&per_page={{ request('per_page', 10) }}" 
-                           class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white">▶</a>
-                    @else
-                        <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-gray-400 dark:bg-navy-700 dark:text-gray-600 cursor-not-allowed">▶</span>
-                    @endif
-                </div>
-            </div>
+        <div class="border-t border-gray-200 dark:border-white/10 px-6 py-4" id="paginationContainer">
+            @include('pages.produk.partials.pagination', ['searchQuery' => request('search') ?? request('nama')])
         </div>
     </div>
 </div>
@@ -283,6 +138,133 @@ use Illuminate\Support\Facades\DB;
 
 @push('scripts')
 <script>
+// Real-time search functionality
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+
+if (searchInput) {
+    searchInput.addEventListener('keyup', function() {
+        clearTimeout(searchTimeout);
+        
+        const searchValue = this.value.trim();
+        const formData = new FormData();
+        formData.append('search', searchValue);
+        formData.append('per_page', document.querySelector('select[name="per_page"]')?.value || 10);
+        
+        // Debounce the search (wait 300ms after user stops typing)
+        searchTimeout = setTimeout(() => {
+            performSearch(searchValue);
+        }, 300);
+    });
+}
+
+function performSearch(searchValue) {
+    const params = new URLSearchParams({
+        search: searchValue,
+        per_page: document.querySelector('select[name="per_page"]')?.value || 10
+    });
+    
+    fetch(`{{ route('produk.index') }}?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Update table body
+        const tableBody = document.getElementById('tableBody');
+        if (tableBody && data.html) {
+            tableBody.innerHTML = data.html;
+            attachRowClickHandlers();
+        }
+        
+        // Update pagination
+        const paginationContainer = document.getElementById('paginationContainer');
+        if (paginationContainer && data.pagination) {
+            paginationContainer.innerHTML = data.pagination;
+            attachPaginationHandlers(searchValue);
+        }
+    })
+    .catch(error => {
+        console.error('Search error:', error);
+    });
+}
+
+// Attach click handlers to table rows for navigation
+function attachRowClickHandlers() {
+    document.querySelectorAll('tbody tr[data-href]').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('input, button, a')) {
+                window.location.href = this.getAttribute('data-href');
+            }
+        });
+    });
+}
+
+// Attach pagination handlers
+function attachPaginationHandlers(searchValue) {
+    document.querySelectorAll('#paginationContainer a.pagination-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = new URL(this.href);
+            const page = url.searchParams.get('page');
+            const perPage = url.searchParams.get('per_page') || 10;
+            
+            const params = new URLSearchParams({
+                page: page,
+                search: searchValue,
+                per_page: perPage
+            });
+            
+            fetch(`{{ route('produk.index') }}?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('tableBody');
+                if (tableBody && data.html) {
+                    tableBody.innerHTML = data.html;
+                    attachRowClickHandlers();
+                }
+                
+                const paginationContainer = document.getElementById('paginationContainer');
+                if (paginationContainer && data.pagination) {
+                    paginationContainer.innerHTML = data.pagination;
+                    attachPaginationHandlers(searchValue);
+                }
+                
+                // Update search input
+                searchInput.value = searchValue;
+            })
+            .catch(error => console.error('Pagination error:', error));
+        });
+    });
+    
+    // Attach change handler to per_page select
+    const perPageSelect = document.querySelector('#paginationContainer select[name="per_page"]');
+    if (perPageSelect) {
+        perPageSelect.addEventListener('change', function() {
+            performSearch(searchValue);
+        });
+    }
+}
+
+// Initialize row click handlers on page load
+document.addEventListener('DOMContentLoaded', function() {
+    attachRowClickHandlers();
+});
+
 function confirmDelete(deleteUrl, itemName) {
     const modal = document.getElementById('deleteConfirmModal');
     const messageEl = modal.querySelector('p.text-gray-600');

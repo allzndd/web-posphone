@@ -27,11 +27,13 @@ class ProdukStokController extends Controller
         $stok = ProdukStok::with(['produk.merk', 'toko'])
             ->where('owner_id', $ownerId)
             ->when($searchTerm, function($query) use ($searchTerm) {
-                return $query->whereHas('produk', function($subQuery) use ($searchTerm) {
-                    $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
-                })
-                ->orWhereHas('toko', function($subQuery) use ($searchTerm) {
-                    $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
+                return $query->where(function($q) use ($searchTerm) {
+                    $q->whereHas('produk', function($subQuery) use ($searchTerm) {
+                        $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('toko', function($subQuery) use ($searchTerm) {
+                        $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
+                    });
                 });
             })
             ->orderBy('id', 'desc')

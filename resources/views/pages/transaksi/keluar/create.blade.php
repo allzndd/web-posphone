@@ -821,46 +821,23 @@ function addItem() {
     itemDiv.innerHTML = `
         <div class="flex items-start gap-3">
             <div class="flex-1">
-                <!-- Product Type Selector -->
-                <div class="mb-4 pb-3 border-b border-gray-200 dark:border-white/10">
-                    <label class="text-xs font-semibold text-navy-700 dark:text-white mb-2 block">Product Type</label>
-                    <div class="flex gap-2">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="items[${itemCounter}][product_type]" value="electronic" checked onchange="updateItemProductType(${itemCounter}, 'electronic')" class="w-4 h-4">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Electronic</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="items[${itemCounter}][product_type]" value="accessories" onchange="updateItemProductType(${itemCounter}, 'accessories')" class="w-4 h-4">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Accessories</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="items[${itemCounter}][product_type]" value="service" onchange="updateItemProductType(${itemCounter}, 'service')" class="w-4 h-4">
-                            <span class="text-sm text-gray-700 dark:text-gray-300">Service</span>
-                        </label>
-                    </div>
-                </div>
+                <!-- Product Type (Hidden - Defaults to electronic) -->
+                <input type="hidden" name="items[${itemCounter}][product_type]" value="electronic">
 
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <input type="hidden" name="items[${itemCounter}][type]" value="product">
                     <input type="hidden" name="items[${itemCounter}][item_id]" id="item-select-${itemCounter}" value="">
                     
-                    <div id="productDropdownWrapper-${itemCounter}" class="md:col-span-2 custom-dropdown relative">
+                    <div class="md:col-span-2">
                         <label class="text-xs font-semibold text-navy-700 dark:text-white mb-1 block">Product</label>
-                        <div id="productDropdownTrigger-${itemCounter}" onclick="toggleProductDropdown(${itemCounter})" class="custom-dropdown-trigger w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-800 px-3 py-2 text-sm cursor-pointer">
-                            <span id="productDropdownLabel-${itemCounter}" class="truncate text-gray-400">Select or create product</span>
-                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
-                        <div id="productDropdownMenu-${itemCounter}" class="custom-dropdown-menu hidden">
-                            <div class="custom-dropdown-search">
-                                <input type="text" id="productSearchInput-${itemCounter}" placeholder="Search product..." oninput="filterProductDropdown(${itemCounter})" autocomplete="off">
+                        <div class="flex gap-2">
+                            <div class="flex-1 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-navy-900 px-3 py-2 text-sm">
+                                <span id="productDropdownLabel-${itemCounter}" class="text-gray-500 dark:text-gray-400">-</span>
                             </div>
-                            <div id="productDropdownItems-${itemCounter}">
-                                <!-- Items populated by JS -->
-                            </div>
+                            <button type="button" onclick="openProductModal(${itemCounter})" class="rounded-lg bg-brand-500 px-3 py-2 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
+                                + New
+                            </button>
                         </div>
-                        <button type="button" onclick="closeAllDropdowns(); openProductModal(${itemCounter})" class="absolute right-2 top-7 rounded-lg bg-brand-500 px-2 py-1 text-xs font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
-                            + New
-                        </button>
                     </div>
                     
                     <div>
@@ -894,11 +871,11 @@ function addItem() {
     populateProducts(itemCounter);
 }
 
-// Update product type value (just for form submission)
-function updateItemProductType(itemId, type) {
-    // No need to do anything else - radio button is already capturing the value
-    // This function is here for potential future enhancements
-}
+// Update product type value (just for form submission) - DISABLED as product_type is now hardcoded
+// function updateItemProductType(itemId, type) {
+//     // No need to do anything else - radio button is already capturing the value
+//     // This function is here for potential future enhancements
+// }
 
 function populateProducts(itemId) {
     const container = document.getElementById(`productDropdownItems-${itemId}`);
@@ -966,26 +943,25 @@ function filterProductDropdown(itemId) {
     }).join('');
 }
 
-function toggleProductDropdown(itemId) {
-    const menu = document.getElementById(`productDropdownMenu-${itemId}`);
-    if (!menu) return; // Exit if menu not found
-    
-    // Close all other dropdowns first
-    document.querySelectorAll('[id^="productDropdownMenu-"]').forEach(m => {
-        if (m.id !== `productDropdownMenu-${itemId}`) {
-            m.classList.add('hidden');
-        }
-    });
-    menu.classList.toggle('hidden');
-    if (!menu.classList.contains('hidden')) {
-        const searchInput = document.getElementById(`productSearchInput-${itemId}`);
-        if (searchInput) {
-            searchInput.value = '';
-            populateProducts(itemId);
-            setTimeout(() => searchInput.focus(), 50);
-        }
-    }
-}
+// DISABLED - Product dropdown removed, only modal for adding products
+// function toggleProductDropdown(itemId) {
+//     const menu = document.getElementById(`productDropdownMenu-${itemId}`);
+//     if (!menu) return;
+//     document.querySelectorAll('[id^="productDropdownMenu-"]').forEach(m => {
+//         if (m.id !== `productDropdownMenu-${itemId}`) {
+//             m.classList.add('hidden');
+//         }
+//     });
+//     menu.classList.toggle('hidden');
+//     if (!menu.classList.contains('hidden')) {
+//         const searchInput = document.getElementById(`productSearchInput-${itemId}`);
+//         if (searchInput) {
+//             searchInput.value = '';
+//             populateProducts(itemId);
+//             setTimeout(() => searchInput.focus(), 50);
+//         }
+//     }
+// }
 
 function closeAllDropdowns() {
     document.querySelectorAll('[id^="productDropdownMenu-"]').forEach(menu => {
@@ -1014,15 +990,6 @@ function selectProduct(itemId, productId, description) {
     
     const product = products.find(p => p.id == productId);
     if (product) {
-        // Set product type radio button if product_type is available
-        if (product.product_type) {
-            const typeRadio = document.querySelector(`#item-${itemId} input[name="items[${itemId}][product_type]"][value="${product.product_type}"]`);
-            if (typeRadio) {
-                typeRadio.checked = true;
-                updateItemProductType(itemId, product.product_type);
-            }
-        }
-        
         // Set price from product
         const priceInput = document.getElementById(`unit-price-${itemId}`);
         if (priceInput) {

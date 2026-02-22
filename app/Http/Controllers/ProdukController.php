@@ -23,13 +23,37 @@ class ProdukController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
+        $searchQuery = $request->input('search') ?? $request->input('nama');
+
         $produk = PosProduk::where('owner_id', $ownerId)
-            ->with(['merk', 'stok'])
-            ->when($request->input('nama'), function ($query, $nama) {
-                return $query->where('nama', 'like', '%' . $nama . '%');
+            ->with(['merk', 'stok', 'ram', 'penyimpanan', 'warna'])
+            ->when($searchQuery, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('nama', 'like', '%' . $search . '%')
+                        ->orWhere('imei', 'like', '%' . $search . '%')
+                        ->orWhere('battery_health', 'like', '%' . $search . '%')
+                        ->orWhere('harga_jual', 'like', '%' . $search . '%')
+                        ->orWhereHas('ram', function ($rq) use ($search) {
+                            $rq->where('kapasitas', 'like', '%' . $search . '%');
+                        })
+                        ->orWhereHas('penyimpanan', function ($rq) use ($search) {
+                            $rq->where('kapasitas', 'like', '%' . $search . '%');
+                        })
+                        ->orWhereHas('warna', function ($rq) use ($search) {
+                            $rq->where('warna', 'like', '%' . $search . '%');
+                        });
+                });
             })
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 10));
+
+        // Return JSON response if AJAX request
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'html' => view('pages.produk.partials.table-body', compact('produk'))->render(),
+                'pagination' => view('pages.produk.partials.pagination', compact('produk', 'searchQuery'))->render(),
+            ]);
+        }
 
         return view('pages.produk.index', compact('produk', 'hasAccessRead'));
     }

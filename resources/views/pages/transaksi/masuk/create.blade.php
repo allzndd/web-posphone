@@ -472,6 +472,18 @@ function formatNumber(num) {
     }
 }
 
+// Helper function to get selected products excluding current item
+function getSelectedProductsExcept(itemId) {
+    const selected = new Set();
+    document.querySelectorAll('.item-select').forEach(select => {
+        const selectItemId = select.id.replace('item-select-', '');
+        if (selectItemId !== itemId.toString() && select.value) {
+            selected.add(select.value);
+        }
+    });
+    return selected;
+}
+
 function addItem() {
     itemCounter++;
     const container = document.getElementById('items-container');
@@ -595,6 +607,9 @@ function handleProductTypeChange(itemId) {
         // Store products in a data attribute for filtering
         itemSearch.dataset.products = JSON.stringify(availableProducts);
         
+        // Get products already selected in other items
+        const selectedProducts = getSelectedProductsExcept(itemId);
+        
         availableProducts.forEach(product => {
             const option = document.createElement('option');
             option.value = product.id;
@@ -609,6 +624,11 @@ function handleProductTypeChange(itemId) {
             option.dataset.stock = stok;
             option.dataset.productId = product.id;
             option.dataset.displayText = displayText;
+            
+            // Disable if already selected in another item
+            if (selectedProducts.has(product.id.toString())) {
+                option.disabled = true;
+            }
             
             itemSelect.appendChild(option);
         });
@@ -654,7 +674,30 @@ function handleItemChange(itemId) {
         }
         
         calculateSubtotal(itemId);
+        
+        // Refresh all other item dropdowns to reflect this change
+        updateAllItemDropdowns(itemId);
     }
+}
+
+function updateAllItemDropdowns(changedItemId) {
+    document.querySelectorAll('.item-select').forEach(select => {
+        const itemId = select.id.replace('item-select-', '');
+        if (itemId !== changedItemId.toString()) {
+            // Get current value before refreshing
+            const currentValue = select.value;
+            const itemType = document.querySelector(`#item-${itemId} .item-type`);
+            
+            if (itemType && itemType.value) {
+                // Re-build the list to update disabled states
+                const currentProductType = itemType.value;
+                handleProductTypeChange(itemId);
+                
+                // Restore previous selection if still available
+                select.value = currentValue;
+            }
+        }
+    });
 }
 
 function filterItemDropdown(itemId) {
@@ -663,8 +706,10 @@ function filterItemDropdown(itemId) {
     const itemDropdown = document.getElementById(`item-dropdown-${itemId}`);
     const searchText = searchInput.value.toLowerCase().trim();
     
-    // Get all options except the first "Select Item" option
-    const options = Array.from(itemSelect.querySelectorAll('option')).slice(1);
+    // Get all options except the first "Select Item" option and filter out disabled options
+    const options = Array.from(itemSelect.querySelectorAll('option'))
+        .slice(1)
+        .filter(option => !option.disabled);
     
     // Filter matching options
     const matchingOptions = searchText === '' 
