@@ -25,8 +25,20 @@ class ProdukController extends Controller
 
         $searchQuery = $request->input('search') ?? $request->input('nama');
 
+        // Get all merkids that have stock > 0
+        $merkIdsWithStock = \App\Models\ProdukStok::where('owner_id', $ownerId)
+            ->where('stok', '>', 0)
+            ->pluck('pos_produk_id')
+            ->unique();
+        
+        // Get all products from those merks (to show all variants like in produk-stok detail modal)
         $produk = PosProduk::where('owner_id', $ownerId)
             ->with(['merk', 'stok', 'ram', 'penyimpanan', 'warna'])
+            ->whereIn('pos_produk_merk_id', 
+                PosProduk::whereIn('id', $merkIdsWithStock)
+                    ->pluck('pos_produk_merk_id')
+                    ->unique()
+            )
             ->when($searchQuery, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('nama', 'like', '%' . $search . '%')
