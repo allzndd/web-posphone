@@ -464,4 +464,67 @@ class ExpenseController extends Controller
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Update status of an expense transaction via AJAX
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,completed,cancelled',
+        ]);
+
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->whereNotNull('pos_kategori_expense_id')
+            ->findOrFail($id);
+
+        $oldStatus = $transaksi->status;
+        $newStatus = strtolower(trim($request->status));
+
+        DB::beginTransaction();
+        try {
+            if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+                $transaksi->update([
+                    'status' => $newStatus,
+                    'payment_status' => 'paid',
+                    'paid_amount' => $transaksi->total_harga,
+                ]);
+            } elseif ($oldStatus === 'completed' && $newStatus !== 'completed') {
+                $transaksi->update([
+                    'status' => $newStatus,
+                    'payment_status' => $newStatus === 'cancelled' ? 'cancelled' : 'unpaid',
+                    'paid_amount' => 0,
+                ]);
+            } else {
+                $transaksi->update([
+                    'status' => $newStatus,
+                ]);
+            }
+
+            DB::commit();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status expense berhasil diubah menjadi ' . ucfirst($newStatus),
+                    'status' => $newStatus,
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Status expense berhasil diubah menjadi ' . ucfirst($newStatus));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengubah status: ' . $e->getMessage(),
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal mengubah status: ' . $e->getMessage());
+        }
+    }
 }

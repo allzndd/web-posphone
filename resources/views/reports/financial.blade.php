@@ -66,6 +66,45 @@
         </div>
     </div>
 
+    <!-- Pending & Cancelled Info -->
+    <div class="mb-5">
+        <h5 class="text-xl font-bold text-navy-700 dark:text-white mb-4">Status Transaksi Lainnya</h5>
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+            <!-- Pending Sales -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6 border-l-4 border-orange-400">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Penjualan Pending</p>
+                    <h4 class="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">Rp {{ number_format($pendingSalesAmount ?? 0, 0, ',', '.') }}</h4>
+                    <p class="mt-1 text-xs text-gray-500">{{ $pendingSalesCount ?? 0 }} transaksi</p>
+                </div>
+            </div>
+            <!-- Cancelled Sales -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6 border-l-4 border-red-400">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Penjualan Cancelled</p>
+                    <h4 class="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">Rp {{ number_format($cancelledSalesAmount ?? 0, 0, ',', '.') }}</h4>
+                    <p class="mt-1 text-xs text-gray-500">{{ $cancelledSalesCount ?? 0 }} transaksi</p>
+                </div>
+            </div>
+            <!-- Pending Expenses -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6 border-l-4 border-orange-400">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Expense Pending</p>
+                    <h4 class="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">Rp {{ number_format($pendingExpenseAmount ?? 0, 0, ',', '.') }}</h4>
+                    <p class="mt-1 text-xs text-gray-500">{{ $pendingExpenseCount ?? 0 }} transaksi</p>
+                </div>
+            </div>
+            <!-- Cancelled Expenses -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6 border-l-4 border-red-400">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Expense Cancelled</p>
+                    <h4 class="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">Rp {{ number_format($cancelledExpenseAmount ?? 0, 0, ',', '.') }}</h4>
+                    <p class="mt-1 text-xs text-gray-500">{{ $cancelledExpenseCount ?? 0 }} transaksi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Cash Flow Section -->
     <div class="mb-5">
         <h5 class="text-xl font-bold text-navy-700 dark:text-white mb-4">Cash Flow</h5>

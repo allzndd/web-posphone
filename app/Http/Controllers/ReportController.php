@@ -258,6 +258,30 @@ class ReportController extends Controller
             }
         }
 
+        // Pending & Cancelled transactions info
+        $pendingSalesBaseQuery = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 1);
+        if ($storeId) {
+            $pendingSalesBaseQuery->where('pos_toko_id', $storeId);
+        }
+        $pendingSalesCount = (clone $pendingSalesBaseQuery)->where('status', 'pending')->count();
+        $pendingSalesAmount = (clone $pendingSalesBaseQuery)->where('status', 'pending')->sum('total_harga');
+        $cancelledSalesCount = (clone $pendingSalesBaseQuery)->where('status', 'cancelled')->count();
+        $cancelledSalesAmount = (clone $pendingSalesBaseQuery)->where('status', 'cancelled')->sum('total_harga');
+
+        $pendingExpenseBaseQuery = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 0)
+            ->whereNotNull('pos_kategori_expense_id');
+        if ($storeId) {
+            $pendingExpenseBaseQuery->where('pos_toko_id', $storeId);
+        }
+        $pendingExpenseCount = (clone $pendingExpenseBaseQuery)->where('status', 'pending')->count();
+        $pendingExpenseAmount = (clone $pendingExpenseBaseQuery)->where('status', 'pending')->sum('total_harga');
+        $cancelledExpenseCount = (clone $pendingExpenseBaseQuery)->where('status', 'cancelled')->count();
+        $cancelledExpenseAmount = (clone $pendingExpenseBaseQuery)->where('status', 'cancelled')->sum('total_harga');
+
         return view('reports.financial', [
             'hasAccessRead' => $hasAccessRead,
             'totalRevenue' => $totalRevenue,
@@ -284,6 +308,14 @@ class ReportController extends Controller
             'merkId' => $merkId,
             'stores' => $stores,
             'merks' => $merks,
+            'pendingSalesCount' => $pendingSalesCount,
+            'pendingSalesAmount' => $pendingSalesAmount,
+            'cancelledSalesCount' => $cancelledSalesCount,
+            'cancelledSalesAmount' => $cancelledSalesAmount,
+            'pendingExpenseCount' => $pendingExpenseCount,
+            'pendingExpenseAmount' => $pendingExpenseAmount,
+            'cancelledExpenseCount' => $cancelledExpenseCount,
+            'cancelledExpenseAmount' => $cancelledExpenseAmount,
         ]);
     }
 
@@ -879,6 +911,22 @@ class ReportController extends Controller
             ->take(5)
             ->all();
 
+        // Pending & Cancelled expense info (all statuses, not just completed)
+        $allExpenseBaseQuery = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 0)
+            ->whereNotNull('pos_kategori_expense_id');
+        if ($storeId) {
+            $allExpenseBaseQuery->where('pos_toko_id', $storeId);
+        }
+        if ($categoryId) {
+            $allExpenseBaseQuery->where('pos_kategori_expense_id', $categoryId);
+        }
+        $pendingExpenseCount = (clone $allExpenseBaseQuery)->where('status', 'pending')->count();
+        $pendingExpenseAmount = (clone $allExpenseBaseQuery)->where('status', 'pending')->sum('total_harga');
+        $cancelledExpenseCount = (clone $allExpenseBaseQuery)->where('status', 'cancelled')->count();
+        $cancelledExpenseAmount = (clone $allExpenseBaseQuery)->where('status', 'cancelled')->sum('total_harga');
+
         return view('reports.expense', [
             'hasAccessRead' => $hasAccessRead,
             'expenses' => $expenses,
@@ -896,6 +944,10 @@ class ReportController extends Controller
             'categoryId' => $categoryId,
             'stores' => $stores,
             'categories' => $categories,
+            'pendingExpenseCount' => $pendingExpenseCount,
+            'pendingExpenseAmount' => $pendingExpenseAmount,
+            'cancelledExpenseCount' => $cancelledExpenseCount,
+            'cancelledExpenseAmount' => $cancelledExpenseAmount,
         ]);
     }
 

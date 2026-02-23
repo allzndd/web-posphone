@@ -86,6 +86,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateMasuk'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\TransaksiController::class, 'destroyMasuk'])->name('destroy');
             Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printMasuk'])->name('print');
+            Route::patch('/{id}/update-status', [\App\Http\Controllers\TransaksiController::class, 'updateStatusMasuk'])->name('update-status');
         });
         
         // Outgoing Transactions (Purchases) - Must come before resource route
@@ -98,6 +99,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateKeluar'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\TransaksiController::class, 'destroyKeluar'])->name('destroy');
             Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printKeluar'])->name('print');
+            Route::patch('/{id}/update-status', [\App\Http\Controllers\TransaksiController::class, 'updateStatusKeluar'])->name('update-status');
         });
         
         // Expenses - Must come before resource route
@@ -109,6 +111,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             Route::get('/{id}/edit', [\App\Http\Controllers\ExpenseController::class, 'edit'])->name('edit');
             Route::put('/{id}', [\App\Http\Controllers\ExpenseController::class, 'update'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\ExpenseController::class, 'destroy'])->name('destroy');
+            Route::patch('/{id}/update-status', [\App\Http\Controllers\ExpenseController::class, 'updateStatus'])->name('update-status');
         });
         
         // Transactions (pos_transaksi) - General resource route
