@@ -139,6 +139,7 @@ class ExpenseTransactionController extends Controller
             $totalExpense = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
                 ->whereNotNull('pos_kategori_expense_id')
+                ->where('status', 'completed')
                 ->sum('total_harga');
             
             // Preload categories and stores to avoid N+1 queries
@@ -248,7 +249,14 @@ class ExpenseTransactionController extends Controller
             }
 
             // Default status to pending if not provided
-            $status = $request->status ?? 'pending';
+            $status = $request->status ? strtolower(trim($request->status)) : 'pending';
+
+            \Log::info('[EXPENSE API CREATE] Starting expense creation', [
+                'invoice' => $invoiceNumber,
+                'status' => $status,
+                'total_harga' => $request->total_harga,
+                'owner_id' => $ownerId,
+            ]);
 
             $transaction = PosTransaksi::create([
                 'owner_id' => $ownerId,
@@ -264,8 +272,12 @@ class ExpenseTransactionController extends Controller
                 'paid_amount' => $status === 'completed' ? $request->total_harga : 0,
             ]);
             
-            // Debug log
-            \Log::info('[EXPENSE CREATE] Transaction created: ID=' . $transaction->id . ', Owner=' . $transaction->owner_id . ', is_transaksi_masuk=' . $transaction->is_transaksi_masuk . ', kategori_expense_id=' . $transaction->pos_kategori_expense_id);
+            \Log::info('[EXPENSE API CREATE] Expense created successfully', [
+                'id' => $transaction->id,
+                'invoice' => $transaction->invoice,
+                'status' => $transaction->status,
+                'owner_id' => $transaction->owner_id,
+            ]);
 
             // Get category and store names
             $categoryName = null;
@@ -283,7 +295,7 @@ class ExpenseTransactionController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction created successfully',
+                'message' => 'Transaction created successfully with status: ' . ucfirst($status),
                 'data' => [
                     'id' => $transaction->id,
                     'owner_id' => $transaction->owner_id,
@@ -307,6 +319,10 @@ class ExpenseTransactionController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            \Log::error('[EXPENSE API CREATE] Error creating expense', [
+                'invoice' => $request->invoice ?? null,
+                'message' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create transaction',
@@ -429,12 +445,24 @@ class ExpenseTransactionController extends Controller
                 ], 404);
             }
 
+            $oldStatus = strtolower(trim($transaction->status));
+            $newStatus = $request->has('status') ? strtolower(trim($request->status)) : $oldStatus;
+
+            \Log::info('[EXPENSE API UPDATE] Starting expense update', [
+                'id' => $id,
+                'invoice' => $transaction->invoice,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'owner_id' => $ownerId,
+            ]);
+
             $updateData = [
                 'pos_toko_id' => $request->pos_toko_id,
                 'pos_kategori_expense_id' => $request->pos_kategori_expense_id,
                 'total_harga' => $request->total_harga,
                 'keterangan' => $request->keterangan,
                 'metode_pembayaran' => $request->metode_pembayaran,
+                'status' => $newStatus,
             ];
 
             // Update invoice if provided
@@ -442,27 +470,44 @@ class ExpenseTransactionController extends Controller
                 $updateData['invoice'] = $request->invoice;
             }
 
-            // Update status if provided
+            // Update payment status based on status
             if ($request->has('status')) {
-                $updateData['status'] = $request->status;
-                $updateData['payment_status'] = $request->status === 'completed' ? 'paid' : 'unpaid';
-                $updateData['paid_amount'] = $request->status === 'completed' ? $request->total_harga : 0;
+                $updateData['payment_status'] = $newStatus === 'completed' ? 'paid' : 'unpaid';
+                $updateData['paid_amount'] = $newStatus === 'completed' ? $request->total_harga : 0;
+                
+                \Log::info('[EXPENSE API UPDATE] Status transition detected', [
+                    'id' => $id,
+                    'invoice' => $transaction->invoice,
+                    'previous_status' => $oldStatus,
+                    'current_status' => $newStatus,
+                    'payment_status' => $updateData['payment_status'],
+                ]);
             } else {
                 $updateData['paid_amount'] = $request->total_harga;
             }
 
             $transaction->update($updateData);
 
+            \Log::info('[EXPENSE API UPDATE] Expense updated successfully', [
+                'id' => $id,
+                'invoice' => $transaction->invoice,
+                'new_status' => $newStatus,
+            ]);
+
             // Reload fresh instance
             $transaction = $transaction->fresh();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction updated successfully',
+                'message' => 'Transaction updated successfully with status: ' . ucfirst($newStatus),
                 'data' => $transaction,
             ], 200);
 
         } catch (\Exception $e) {
+            \Log::error('[EXPENSE API UPDATE] Error updating expense', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update transaction',

@@ -113,6 +113,10 @@ class HistoryTransactionController extends Controller
             $completedCount = (clone $baseQuery)->where('status', 'completed')->count();
             $cancelledCount = (clone $baseQuery)->where('status', 'cancelled')->count();
 
+            // Revenue and Expenses only count completed transactions
+            $completedIncomingQuery = (clone $baseQuery)->where('is_transaksi_masuk', 1)->where('status', 'completed');
+            $completedOutgoingQuery = (clone $baseQuery)->where('is_transaksi_masuk', 0)->where('status', 'completed');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Summary history transaksi berhasil diambil',
@@ -120,8 +124,8 @@ class HistoryTransactionController extends Controller
                     'total_transactions' => $totalTransactions,
                     'incoming_transactions' => $incomingQuery->count(),
                     'outgoing_transactions' => $outgoingQuery->count(),
-                    'total_revenue' => $incomingQuery->sum('total_harga'),
-                    'total_expenses' => $outgoingQuery->sum('total_harga'),
+                    'total_revenue' => $completedIncomingQuery->sum('total_harga'),
+                    'total_expenses' => $completedOutgoingQuery->sum('total_harga'),
                     'pending_count' => $pendingCount,
                     'completed_count' => $completedCount,
                     'cancelled_count' => $cancelledCount,

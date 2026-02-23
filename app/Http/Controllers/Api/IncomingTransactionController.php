@@ -427,7 +427,7 @@ class IncomingTransactionController extends Controller
                 }
 
                 $totalTransactions = $query->count();
-                $totalRevenue = $query->sum('total_harga');
+                $totalRevenue = (clone $query)->where('status', 'completed')->sum('total_harga');
                 $pendingCount = (clone $query)->where('status', 'pending')->count();
                 $completedCount = (clone $query)->where('status', 'completed')->count();
                 $cancelledCount = (clone $query)->where('status', 'cancelled')->count();

@@ -27,6 +27,7 @@ class LaporanPenjualanController extends Controller
             $perPage = $request->get('per_page', 10);
             $query = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->with(['toko', 'pelanggan', 'items.produk'])
                 ->orderBy('created_at', 'desc');
 
@@ -126,6 +127,7 @@ class LaporanPenjualanController extends Controller
 
             $query = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->with(['toko', 'pelanggan', 'items.produk'])
                 ->orderBy('created_at', 'desc');
 

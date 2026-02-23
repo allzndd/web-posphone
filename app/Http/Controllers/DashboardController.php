@@ -26,51 +26,61 @@ class DashboardController extends Controller
         $totalCustomers = \App\Models\PosPelanggan::where('owner_id', $ownerId)->count();
         $totalProducts = \App\Models\ProdukStok::where('owner_id', $ownerId)->sum('stok');
         
-        // Calculate profit (Income - Expense)
+        // Calculate profit (Income - Expense) - Only COMPLETED transactions
         $totalIncome = \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->sum('total_harga');
         $totalExpense = \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
             ->sum('total_harga');
         $totalProfit = $totalIncome - $totalExpense;
 
-        // Profit calculations
+        // Profit calculations - Only COMPLETED transactions
         $todayProfit = \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->whereDate('created_at', today())
             ->sum('total_harga')
             - \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
             ->whereDate('created_at', today())
             ->sum('total_harga');
             
         $thisWeekProfit = \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
             ->sum('total_harga')
             - \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
             ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
             ->sum('total_harga');
             
         $thisMonthProfit = \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('total_harga')
             - \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('total_harga');
             
         $thisYearProfit = \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->whereYear('created_at', now()->year)
             ->sum('total_harga')
             - \App\Models\PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
             ->whereYear('created_at', now()->year)
             ->sum('total_harga');
 
@@ -79,35 +89,39 @@ class DashboardController extends Controller
         $profitData = [];
         
         if ($period === 'yearly') {
-            // Last 5 years
+            // Last 5 years - Only COMPLETED transactions
             for ($i = 4; $i >= 0; $i--) {
                 $year = now()->subYears($i)->year;
                 $chartLabels[] = $year;
                 
                 $income = \App\Models\PosTransaksi::where('owner_id', $ownerId)
                     ->where('is_transaksi_masuk', 1)
+                    ->where('status', 'completed')
                     ->whereYear('created_at', $year)
                     ->sum('total_harga');
                 $expense = \App\Models\PosTransaksi::where('owner_id', $ownerId)
                     ->where('is_transaksi_masuk', 0)
+                    ->where('status', 'completed')
                     ->whereYear('created_at', $year)
                     ->sum('total_harga');
                     
                 $profitData[] = $income - $expense;
             }
         } elseif ($period === 'monthly') {
-            // Last 12 months
+            // Last 12 months - Only COMPLETED transactions
             for ($i = 11; $i >= 0; $i--) {
                 $date = now()->subMonths($i);
                 $chartLabels[] = $date->format('M Y');
                 
                 $income = \App\Models\PosTransaksi::where('owner_id', $ownerId)
                     ->where('is_transaksi_masuk', 1)
+                    ->where('status', 'completed')
                     ->whereMonth('created_at', $date->month)
                     ->whereYear('created_at', $date->year)
                     ->sum('total_harga');
                 $expense = \App\Models\PosTransaksi::where('owner_id', $ownerId)
                     ->where('is_transaksi_masuk', 0)
+                    ->where('status', 'completed')
                     ->whereMonth('created_at', $date->month)
                     ->whereYear('created_at', $date->year)
                     ->sum('total_harga');
@@ -115,17 +129,19 @@ class DashboardController extends Controller
                 $profitData[] = $income - $expense;
             }
         } else {
-            // Last 7 days (week)
+            // Last 7 days (week) - Only COMPLETED transactions
             for ($i = 6; $i >= 0; $i--) {
                 $date = now()->subDays($i);
                 $chartLabels[] = $date->format('D, M j');
                 
                 $income = \App\Models\PosTransaksi::where('owner_id', $ownerId)
                     ->where('is_transaksi_masuk', 1)
+                    ->where('status', 'completed')
                     ->whereDate('created_at', $date)
                     ->sum('total_harga');
                 $expense = \App\Models\PosTransaksi::where('owner_id', $ownerId)
                     ->where('is_transaksi_masuk', 0)
+                    ->where('status', 'completed')
                     ->whereDate('created_at', $date)
                     ->sum('total_harga');
                     

@@ -78,15 +78,17 @@ class RingkasanKeuanganController extends Controller
 
             $transactions = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
-            // Calculate totals for current filter
+            // Calculate totals for current filter (only completed transactions)
             $totalRevenue = PosTransaksi::where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->sum('total_harga');
             
             $totalExpenses = PosTransaksi::where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
                 ->where('is_transaksi_masuk', 0)
+                ->where('status', 'completed')
                 ->sum('total_harga');
             
             $netProfit = $totalRevenue - $totalExpenses;
@@ -125,6 +127,7 @@ class RingkasanKeuanganController extends Controller
             $transactionCount = PosTransaksi::where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->count();
 
             return response()->json([
@@ -208,6 +211,7 @@ class RingkasanKeuanganController extends Controller
             $transactionCount = PosTransaksi::where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->count();
 
             \Log::info('📊 Financial Summary Data:', [
@@ -290,11 +294,13 @@ class RingkasanKeuanganController extends Controller
             $transactionCount = PosTransaksi::where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->count();
 
-            // Get transactions for detail sheet and calculate revenue/hpp manually like web
+            // Get transactions for detail sheet and calculate revenue/hpp manually like web (only completed)
             $transactions = PosTransaksi::where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
+                ->where('status', 'completed')
                 ->with(['pelanggan', 'supplier', 'toko', 'items.produk'])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -412,17 +418,19 @@ class RingkasanKeuanganController extends Controller
      */
     private function getCashFlowData($ownerId, $start, $end)
     {
-        // Cash In = Total revenue from sales transactions
+        // Cash In = Total revenue from sales transactions (only completed)
         $cashIn = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->sum('total_harga');
 
-        // Calculate HPP from product cost (harga_beli) per item sold
+        // Calculate HPP from product cost (harga_beli) per item sold (only completed)
         $salesTransactions = PosTransaksi::with('items.produk')
             ->where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->get();
 
         $totalHPP = 0;
@@ -434,10 +442,11 @@ class RingkasanKeuanganController extends Controller
             }
         }
 
-        // Cash Out = Purchases + Operating Expenses
+        // Cash Out = Purchases + Operating Expenses (only completed)
         $totalPurchases = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
             ->sum('total_harga');
 
         // Get operating expenses if PosExpense model exists
@@ -453,10 +462,11 @@ class RingkasanKeuanganController extends Controller
         // Free Cash Flow = Cash In - Cash Out
         $freeCashFlow = $cashIn - $cashOut;
 
-        // Piutang (Accounts Receivable) - transactions with status != 'paid'
+        // Piutang (Accounts Receivable) - completed transactions with payment_status != 'paid'
         $piutang = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->where('payment_status', '!=', 'paid')
             ->sum(\DB::raw('total_harga - COALESCE(paid_amount, 0)'));
 
@@ -478,6 +488,7 @@ class RingkasanKeuanganController extends Controller
         $transactions = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->select('metode_pembayaran', \DB::raw('SUM(total_harga) as total'))
             ->groupBy('metode_pembayaran')
             ->get();
@@ -505,9 +516,10 @@ class RingkasanKeuanganController extends Controller
         // Get all stores for this owner
         $allStores = PosToko::where('owner_id', $ownerId)->get();
 
-        // Get transaction data grouped by store
+        // Get transaction data grouped by store (only completed)
         $transactionData = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
+            ->where('status', 'completed')
             ->select('pos_toko_id', 
                 \DB::raw('SUM(CASE WHEN is_transaksi_masuk = 1 THEN total_harga ELSE 0 END) as cash_in'),
                 \DB::raw('SUM(CASE WHEN is_transaksi_masuk = 0 THEN total_harga ELSE 0 END) as cash_out')
@@ -572,13 +584,14 @@ class RingkasanKeuanganController extends Controller
                 $end = Carbon::now()->endOfMonth();
             }
 
-            // Get transaction items with details
+            // Get transaction items with details (only completed transactions)
             $items = \DB::table('pos_transaksi_item')
                 ->join('pos_transaksi', 'pos_transaksi_item.pos_transaksi_id', '=', 'pos_transaksi.id')
                 ->leftJoin('pos_produk', 'pos_transaksi_item.pos_produk_id', '=', 'pos_produk.id')
                 ->where('pos_transaksi.owner_id', $ownerId)
                 ->whereBetween('pos_transaksi.created_at', [$start, $end])
                 ->where('pos_transaksi.is_transaksi_masuk', 1) // Only revenue transactions (sales)
+                ->where('pos_transaksi.status', 'completed') // Only completed transactions
                 ->when($storeId, function ($query) use ($storeId) {
                     return $query->where('pos_transaksi.pos_toko_id', $storeId);
                 })

@@ -106,9 +106,11 @@ class ReportController extends Controller
         $merks = PosProdukMerk::where('owner_id', $ownerId)->orWhere('is_global', 1)->get();
 
         // Build base query for sales transactions
+        // Only include COMPLETED transactions in financial calculations
         $salesQuery = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
-            ->where('is_transaksi_masuk', 1);
+            ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed');
 
         // Apply filters
         if ($storeId) {
@@ -163,10 +165,12 @@ class ReportController extends Controller
         $grossMargin = $totalRevenue > 0 ? ($grossProfit / $totalRevenue) * 100 : 0;
 
         // Get operating expenses (transactions marked as expenses: is_transaksi_masuk = 0 and pos_kategori_expense_id is set)
+        // Only include COMPLETED expense transactions
         $expenseQuery = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 0)
             ->whereNotNull('pos_kategori_expense_id')
+            ->where('status', 'completed')
             ->with(['kategoriExpense', 'toko']);
 
         if ($storeId) {
@@ -199,13 +203,14 @@ class ReportController extends Controller
 
         $receivable = $receivableQuery->sum(DB::raw('total_harga - COALESCE(paid_amount, 0)'));
 
-        // Payment method breakdown
+        // Payment method breakdown - only for completed transactions
         $paymentBreakdown = [];
         if ($salesTransactions->count() > 0) {
             $paymentData = DB::table('pos_transaksi')
                 ->where('owner_id', $ownerId)
                 ->whereBetween('created_at', [$start, $end])
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->when($storeId, function ($q) use ($storeId) {
                     return $q->where('pos_toko_id', $storeId);
                 })
@@ -218,11 +223,12 @@ class ReportController extends Controller
             }
         }
 
-        // Cash balance per outlet
+        // Cash balance per outlet - only for completed transactions
         $cashBalancePerOutlet = [];
         $outletData = DB::table('pos_transaksi')
             ->where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
+            ->where('status', 'completed')
             ->select(
                 'pos_toko_id',
                 DB::raw('SUM(CASE WHEN is_transaksi_masuk = 1 THEN total_harga ELSE 0 END) as cash_in'),
@@ -344,9 +350,11 @@ class ReportController extends Controller
         $stores = PosToko::where('owner_id', $ownerId)->get();
 
         // Build base query for sales transactions
+        // Only include COMPLETED transactions in sales report
         $transactionsQuery = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 1)
+            ->where('status', 'completed')
             ->with(['toko', 'pelanggan']);
 
         // Apply store filter
@@ -417,9 +425,11 @@ class ReportController extends Controller
         $sortBy = $request->get('sort_by', 'name');
 
         // Get all customers for this owner with their transactions
+        // Only include COMPLETED transactions in customer metrics
         $customers = \App\Models\PosPelanggan::where('owner_id', $ownerId)
             ->with(['transaksi' => function ($query) {
-                $query->where('is_transaksi_masuk', 1); // Only count sales
+                $query->where('is_transaksi_masuk', 1) // Only count sales
+                      ->where('status', 'completed'); // Only completed
             }])
             ->get();
 
@@ -707,9 +717,15 @@ class ReportController extends Controller
 
         foreach ($tradeIns as $tradeIn) {
             // Get transaction for this trade-in (usually 2 transactions: one for old product, one for new)
+            // Only include COMPLETED transactions in trade-in calculations
             $transactions = $tradeIn->transaksi;
             
             foreach ($transactions as $transaksi) {
+                // Skip non-completed transactions
+                if (strtolower($transaksi->status) !== 'completed') {
+                    continue;
+                }
+                
                 if ($transaksi->is_transaksi_masuk == 0) {
                     // Incoming product (old item being traded in)
                     $totalTradeInValue += $transaksi->total_harga;
@@ -804,10 +820,12 @@ class ReportController extends Controller
             ->get();
 
         // Build query for operating expenses from PosTransaksi
+        // Only include COMPLETED expense transactions
         $expenseQuery = PosTransaksi::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
             ->where('is_transaksi_masuk', 0)
             ->whereNotNull('pos_kategori_expense_id')
+            ->where('status', 'completed')
             ->with(['kategoriExpense', 'toko']);
 
         // Apply filters

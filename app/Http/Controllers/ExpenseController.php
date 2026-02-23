@@ -196,6 +196,15 @@ class ExpenseController extends Controller
 
         DB::beginTransaction();
         try {
+            $status = strtolower(trim($validated['status']));
+            
+            \Log::info('[EXPENSE CREATE] Starting expense creation', [
+                'invoice' => $validated['invoice'],
+                'status' => $status,
+                'total_harga' => $validated['total_harga'],
+                'owner_id' => $ownerId,
+            ]);
+            
             // Create expense transaction
             $expense = PosTransaksi::create([
                 'owner_id' => $ownerId,
@@ -205,18 +214,28 @@ class ExpenseController extends Controller
                 'invoice' => $validated['invoice'],
                 'total_harga' => $validated['total_harga'],
                 'keterangan' => $validated['keterangan'],
-                'status' => $validated['status'],
+                'status' => $status,
                 'metode_pembayaran' => $validated['metode_pembayaran'],
                 'payment_status' => 'paid',
                 'paid_amount' => $validated['total_harga'],
             ]);
 
+            \Log::info('[EXPENSE CREATE] Expense created successfully', [
+                'id' => $expense->id,
+                'invoice' => $expense->invoice,
+                'status' => $expense->status,
+            ]);
+
             DB::commit();
 
             return redirect()->route('expense.index')
-                ->with('success', 'Expense berhasil ditambahkan');
+                ->with('success', 'Expense berhasil ditambahkan dengan status: ' . ucfirst($status));
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('[EXPENSE CREATE] Error creating expense', [
+                'message' => $e->getMessage(),
+                'invoice' => $validated['invoice'] ?? null,
+            ]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -287,23 +306,45 @@ class ExpenseController extends Controller
 
         DB::beginTransaction();
         try {
+            $oldStatus = strtolower(trim($expense->status));
+            $newStatus = strtolower(trim($validated['status']));
+            
+            \Log::info('[EXPENSE UPDATE] Starting expense update', [
+                'id' => $id,
+                'invoice' => $expense->invoice,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'owner_id' => $ownerId,
+            ]);
+
+            // Update all fields
             $expense->update([
                 'pos_toko_id' => $validated['pos_toko_id'],
                 'pos_kategori_expense_id' => $validated['pos_kategori_expense_id'],
                 'invoice' => $validated['invoice'],
                 'total_harga' => $validated['total_harga'],
                 'keterangan' => $validated['keterangan'],
-                'status' => $validated['status'],
+                'status' => $newStatus,
                 'metode_pembayaran' => $validated['metode_pembayaran'],
                 'paid_amount' => $validated['total_harga'],
+            ]);
+
+            \Log::info('[EXPENSE UPDATE] Expense updated successfully', [
+                'id' => $id,
+                'invoice' => $expense->invoice,
+                'new_status' => $newStatus,
             ]);
 
             DB::commit();
 
             return redirect()->route('expense.index')
-                ->with('success', 'Expense berhasil diupdate');
+                ->with('success', 'Expense berhasil diupdate ke status: ' . ucfirst($newStatus));
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('[EXPENSE UPDATE] Error updating expense', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -333,13 +374,31 @@ class ExpenseController extends Controller
 
         DB::beginTransaction();
         try {
+            \Log::info('[EXPENSE DELETE] Starting expense deletion', [
+                'id' => $id,
+                'invoice' => $expense->invoice,
+                'status' => $expense->status,
+                'owner_id' => $ownerId,
+            ]);
+
+            $invoiceNumber = $expense->invoice;
             $expense->delete();
+
+            \Log::info('[EXPENSE DELETE] Expense deleted successfully', [
+                'id' => $id,
+                'invoice' => $invoiceNumber,
+            ]);
+
             DB::commit();
 
             return redirect()->route('expense.index')
                 ->with('success', 'Expense berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('[EXPENSE DELETE] Error deleting expense', [
+                'id' => $id,
+                'message' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
@@ -368,11 +427,28 @@ class ExpenseController extends Controller
 
         DB::beginTransaction();
         try {
+            $invoices = PosTransaksi::where('owner_id', $ownerId)
+                ->where('is_transaksi_masuk', 0)
+                ->whereNotNull('pos_kategori_expense_id')
+                ->whereIn('id', $request->ids)
+                ->pluck('invoice')
+                ->toArray();
+
+            \Log::info('[EXPENSE BULK DELETE] Starting bulk deletion', [
+                'count' => count($request->ids),
+                'invoices' => $invoices,
+                'owner_id' => $ownerId,
+            ]);
+
             PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
                 ->whereNotNull('pos_kategori_expense_id')
                 ->whereIn('id', $request->ids)
                 ->delete();
+
+            \Log::info('[EXPENSE BULK DELETE] Expenses deleted successfully', [
+                'count' => count($request->ids),
+            ]);
 
             DB::commit();
 
@@ -380,6 +456,10 @@ class ExpenseController extends Controller
                 ->with('success', count($request->ids) . ' expense berhasil dihapus');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('[EXPENSE BULK DELETE] Error deleting expenses', [
+                'count' => count($request->ids),
+                'message' => $e->getMessage(),
+            ]);
             return redirect()->back()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }

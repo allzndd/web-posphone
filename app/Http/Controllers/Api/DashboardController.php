@@ -42,15 +42,17 @@ class DashboardController extends Controller
             
             \Log::info('Total Transactions', ['count' => $totalTransactions]);
 
-            // Calculate profit (Income - Expense)
+            // Calculate profit (Income - Expense) - Only COMPLETED transactions
             // is_transaksi_masuk = 1 artinya transaksi masuk (penjualan/income)
             // is_transaksi_masuk = 0 artinya transaksi keluar (pembelian/expense)
             $totalIncome = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->sum('total_harga');
                 
             $totalExpense = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
+                ->where('status', 'completed')
                 ->sum('total_harga');
                 
             $totalProfit = $totalIncome - $totalExpense;
@@ -61,42 +63,50 @@ class DashboardController extends Controller
                 'profit' => $totalProfit
             ]);
             
-            // Period Profits
+            // Period Profits - Only COMPLETED transactions
             $todayProfit = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->whereDate('created_at', today())
                 ->sum('total_harga')
                 - PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
+                ->where('status', 'completed')
                 ->whereDate('created_at', today())
                 ->sum('total_harga');
                 
             $thisWeekProfit = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
                 ->sum('total_harga')
                 - PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
+                ->where('status', 'completed')
                 ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
                 ->sum('total_harga');
                 
             $thisMonthProfit = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->sum('total_harga')
                 - PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
+                ->where('status', 'completed')
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->sum('total_harga');
                 
             $thisYearProfit = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
                 ->whereYear('created_at', now()->year)
                 ->sum('total_harga')
                 - PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 0)
+                ->where('status', 'completed')
                 ->whereYear('created_at', now()->year)
                 ->sum('total_harga');
 
@@ -175,6 +185,7 @@ class DashboardController extends Controller
 
             $chartData = PosTransaksi::where('owner_id', $ownerId)
                 ->where('is_transaksi_masuk', 1) // Penjualan (income)
+                ->where('status', 'completed') // Only completed transactions
                 ->where('created_at', '>=', $startDate)
                 ->select(
                     DB::raw("DATE_FORMAT(created_at, '$dateFormat') as date"),
@@ -219,7 +230,8 @@ class DashboardController extends Controller
 
             $topProducts = PosTransaksiItem::whereHas('transaksi', function ($query) use ($ownerId) {
                 $query->where('owner_id', $ownerId)
-                    ->where('is_transaksi_masuk', 1); // Penjualan (income)
+                    ->where('is_transaksi_masuk', 1) // Penjualan (income)
+                    ->where('status', 'completed'); // Only completed transactions
             })
                 ->select('pos_produk_id', DB::raw('SUM(quantity) as total_sold'))
                 ->groupBy('pos_produk_id')

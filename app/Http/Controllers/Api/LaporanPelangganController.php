@@ -29,7 +29,8 @@ class LaporanPelangganController extends Controller
 
             $query = PosPelanggan::where('owner_id', $ownerId)
                 ->with(['transaksi' => function($q) {
-                    $q->select('id', 'pos_pelanggan_id', 'total_harga', 'created_at');
+                    $q->where('status', 'completed')
+                      ->select('id', 'pos_pelanggan_id', 'total_harga', 'created_at', 'status');
                 }]);
 
             // Search
@@ -42,11 +43,15 @@ class LaporanPelangganController extends Controller
                 });
             }
 
-            // Sorting
+            // Sorting (count and sum only completed transactions)
             if ($sortBy === 'purchases') {
-                $query->withCount('transaksi')->orderBy('transaksi_count', 'desc');
+                $query->withCount(['transaksi' => function($q) {
+                    $q->where('status', 'completed');
+                }])->orderBy('transaksi_count', 'desc');
             } elseif ($sortBy === 'value') {
-                $query->withSum('transaksi', 'total_harga')->orderBy('transaksi_sum_total_harga', 'desc');
+                $query->withSum(['transaksi' => function($q) {
+                    $q->where('status', 'completed');
+                }], 'total_harga')->orderBy('transaksi_sum_total_harga', 'desc');
             } elseif ($sortBy === 'recent') {
                 $query->orderBy('created_at', 'desc');
             } else {
@@ -112,7 +117,10 @@ class LaporanPelangganController extends Controller
                 ], 403);
             }
 
-            $query = PosPelanggan::where('owner_id', $ownerId)->with('transaksi');
+            $query = PosPelanggan::where('owner_id', $ownerId)
+                ->with(['transaksi' => function($q) {
+                    $q->where('status', 'completed');
+                }]);
 
             $customers = $query->get();
 
@@ -163,7 +171,10 @@ class LaporanPelangganController extends Controller
             $search = $request->get('search');
             $sortBy = $request->get('sort_by', 'name');
 
-            $query = PosPelanggan::where('owner_id', $ownerId)->with('transaksi');
+            $query = PosPelanggan::where('owner_id', $ownerId)
+                ->with(['transaksi' => function($q) {
+                    $q->where('status', 'completed');
+                }]);
 
             // Search
             if ($search) {
@@ -174,11 +185,15 @@ class LaporanPelangganController extends Controller
                 });
             }
 
-            // Sorting
+            // Sorting (count and sum only completed transactions)
             if ($sortBy === 'purchases') {
-                $query->withCount('transaksi')->orderBy('transaksi_count', 'desc');
+                $query->withCount(['transaksi' => function($q) {
+                    $q->where('status', 'completed');
+                }])->orderBy('transaksi_count', 'desc');
             } elseif ($sortBy === 'value') {
-                $query->withSum('transaksi', 'total_harga')->orderBy('transaksi_sum_total_harga', 'desc');
+                $query->withSum(['transaksi' => function($q) {
+                    $q->where('status', 'completed');
+                }], 'total_harga')->orderBy('transaksi_sum_total_harga', 'desc');
             } else {
                 $query->orderBy('nama');
             }

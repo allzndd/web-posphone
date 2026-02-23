@@ -19,6 +19,89 @@ use Illuminate\Validation\Rule;
 class TransaksiController extends Controller
 {
     use UpdatesStock;
+
+    /**
+     * Process stock update for transaction items based on transaction type
+     * Only processes when status is "completed"
+     * 
+     * @param PosTransaksi $transaksi
+     * @param bool $reverse - If true, reverses the stock change (for cancellation)
+     * @return void
+     */
+    private function processStockForTransaction($transaksi, $reverse = false)
+    {
+        $ownerId = $transaksi->owner_id;
+        $tokoId = $transaksi->pos_toko_id;
+        $isTransaksiMasuk = $transaksi->is_transaksi_masuk;
+
+        // Load items if not loaded
+        if (!$transaksi->relationLoaded('items')) {
+            $transaksi->load('items.produk');
+        }
+
+        // Group items by brand (merk) for consolidated stock update
+        $groupedByBrand = [];
+
+        foreach ($transaksi->items as $item) {
+            if (!$item->pos_produk_id) {
+                continue;
+            }
+
+            $produk = $item->produk ?? PosProduk::find($item->pos_produk_id);
+            if (!$produk) {
+                continue;
+            }
+
+            $merkId = $produk->pos_produk_merk_id;
+            $quantity = $item->quantity ?? 1;
+
+            if (!isset($groupedByBrand[$merkId])) {
+                $groupedByBrand[$merkId] = [
+                    'pos_produk_id' => $item->pos_produk_id,
+                    'total_quantity' => 0,
+                ];
+            }
+
+            $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+        }
+
+        // Update stock for each brand group
+        foreach ($groupedByBrand as $merkId => $data) {
+            // Find the PRIMARY (smallest ID) produk for this merk
+            $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                ->where('pos_produk_merk_id', $merkId)
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($primaryProduk) {
+                // Determine stock change direction
+                // is_transaksi_masuk = 1 (Sales/Incoming): Stock OUT (negative) when completed, Stock IN when reversed
+                // is_transaksi_masuk = 0 (Purchase/Outgoing): Stock IN (positive) when completed, Stock OUT when reversed
+                
+                if ($isTransaksiMasuk) {
+                    // Sales: reduce stock on complete, restore on cancel
+                    $stockChange = $reverse ? $data['total_quantity'] : -$data['total_quantity'];
+                    $tipe = $reverse ? 'masuk' : 'keluar';
+                    $keterangan = $reverse ? 'Pembatalan penjualan - stok dikembalikan' : 'Penjualan produk';
+                } else {
+                    // Purchase: add stock on complete, remove on cancel
+                    $stockChange = $reverse ? -$data['total_quantity'] : $data['total_quantity'];
+                    $tipe = $reverse ? 'keluar' : 'masuk';
+                    $keterangan = $reverse ? 'Pembatalan pembelian - stok dikurangi' : 'Pembelian produk dari supplier';
+                }
+
+                $this->updateProductStock(
+                    $ownerId,
+                    $tokoId,
+                    $primaryProduk->id,
+                    $stockChange,
+                    $tipe,
+                    $transaksi->invoice,
+                    $keterangan
+                );
+            }
+        }
+    }
     
     /**
      * Generate unique invoice number with retry mechanism
@@ -470,27 +553,31 @@ class TransaksiController extends Controller
                 }
             }
             
-            // Update stock ONLY for the primary product per brand
-            // This ensures only 1 produk_stok entry per (toko + brand)
-            foreach ($groupedByBrand as $merkId => $data) {
-                // Find the PRIMARY (smallest ID) produk for this merk
-                // This ensures consecutive transactions always update SAME produk_stok entry
-                $primaryProduk = PosProduk::where('owner_id', $ownerId)
-                    ->where('pos_produk_merk_id', $merkId)
-                    ->orderBy('id', 'asc')
-                    ->first();
-                
-                if ($primaryProduk) {
-                    // Transaksi masuk (sales) = stock out (reduce stock)
-                    $this->updateProductStock(
-                        $ownerId,
-                        $request->pos_toko_id,
-                        $primaryProduk->id, // Use PRIMARY product, not just first in batch
-                        -$data['total_quantity'], // Negative for sales (keluar)
-                        'keluar',
-                        $request->invoice,
-                        'Penjualan produk'
-                    );
+            // Update stock ONLY if status is "completed"
+            // For pending/cancelled transactions, stock is NOT updated
+            if (strtolower($request->status) === 'completed') {
+                // Update stock ONLY for the primary product per brand
+                // This ensures only 1 produk_stok entry per (toko + brand)
+                foreach ($groupedByBrand as $merkId => $data) {
+                    // Find the PRIMARY (smallest ID) produk for this merk
+                    // This ensures consecutive transactions always update SAME produk_stok entry
+                    $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                        ->where('pos_produk_merk_id', $merkId)
+                        ->orderBy('id', 'asc')
+                        ->first();
+                    
+                    if ($primaryProduk) {
+                        // Transaksi masuk (sales) = stock out (reduce stock)
+                        $this->updateProductStock(
+                            $ownerId,
+                            $request->pos_toko_id,
+                            $primaryProduk->id, // Use PRIMARY product, not just first in batch
+                            -$data['total_quantity'], // Negative for sales (keluar)
+                            'keluar',
+                            $request->invoice,
+                            'Penjualan produk'
+                        );
+                    }
                 }
             }
         }
@@ -557,7 +644,13 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->with('items.produk')
             ->findOrFail($id);
+
+        // Store old status for comparison
+        $oldStatus = strtolower($transaksi->status);
+        $newStatus = strtolower($request->status);
+        $oldTokoId = $transaksi->pos_toko_id;
 
         $request->validate([
             'pos_toko_id' => 'required',
@@ -569,6 +662,114 @@ class TransaksiController extends Controller
             'keterangan' => 'nullable|string|max:255',
         ]);
 
+        // Handle item changes if items provided in request (e.g., from API or AJAX)
+        $itemsChanged = false;
+        if ($request->has('items') && is_array($request->items) && !empty($request->items)) {
+            $itemsChanged = true;
+            
+            // If transaction was completed, reverse stock first for old items
+            if ($oldStatus === 'completed') {
+                $this->processStockForTransaction($transaksi, true);
+            }
+            
+            // Delete old items
+            $transaksi->items()->delete();
+            
+            // Create new items and group by brand for stock update
+            $groupedByBrand = [];
+            foreach ($request->items as $itemData) {
+                if (empty($itemData['item_id']) || empty($itemData['type'])) {
+                    continue;
+                }
+                
+                $pos_produk_id = $itemData['type'] === 'product' ? $itemData['item_id'] : null;
+                $pos_service_id = $itemData['type'] === 'service' ? $itemData['item_id'] : null;
+                $quantity = (int)($itemData['quantity'] ?? 1);
+                
+                PosTransaksiItem::create([
+                    'pos_transaksi_id' => $transaksi->id,
+                    'pos_produk_id' => $pos_produk_id,
+                    'pos_service_id' => $pos_service_id,
+                    'quantity' => $quantity,
+                    'harga_satuan' => $itemData['harga_satuan'] ?? 0,
+                    'subtotal' => $itemData['subtotal'] ?? 0,
+                    'diskon' => $itemData['diskon'] ?? 0,
+                    'garansi' => $itemData['garansi'] ?? null,
+                    'garansi_expires_at' => $itemData['garansi_expires_at'] ?? null,
+                    'pajak' => $itemData['pajak'] ?? 0,
+                ]);
+                
+                if ($pos_produk_id) {
+                    $produk = PosProduk::find($pos_produk_id);
+                    if ($produk) {
+                        $merkId = $produk->pos_produk_merk_id;
+                        if (!isset($groupedByBrand[$merkId])) {
+                            $groupedByBrand[$merkId] = [
+                                'pos_produk_id' => $pos_produk_id,
+                                'total_quantity' => 0,
+                            ];
+                        }
+                        $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+                    }
+                }
+            }
+            
+            // If old status was completed or new status is completed, recalculate stock
+            if ($oldStatus === 'completed' || $newStatus === 'completed') {
+                foreach ($groupedByBrand as $merkId => $data) {
+                    $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                        ->where('pos_produk_merk_id', $merkId)
+                        ->orderBy('id', 'asc')
+                        ->first();
+                    
+                    if ($primaryProduk) {
+                        // Apply stock for new items at current toko (use request toko in case it changed)
+                        $this->updateProductStock(
+                            $ownerId,
+                            $request->pos_toko_id,
+                            $primaryProduk->id,
+                            -$data['total_quantity'],
+                            'keluar',
+                            $transaksi->invoice,
+                            'Penjualan produk (updated)'
+                        );
+                    }
+                }
+            }
+            
+            // Reload transaksi to reflect new items
+            $transaksi->load('items.produk');
+        }
+
+        // Handle stock changes based on status transition (ONLY if items didn't change)
+        // Case 1: pending/cancelled → completed = Reduce stock (process transaction)
+        // Case 2: completed → cancelled = Return stock (reverse transaction)
+        // Case 3: completed → pending = Return stock (reverse transaction)
+        // Case 4: pending ↔ cancelled = No stock change (neither had stock impact)
+        if (!$itemsChanged && $oldStatus !== $newStatus) {
+            \Log::info('DEBUG updateMasuk - status transition detected:', [
+                'oldStatus' => $oldStatus,
+                'newStatus' => $newStatus,
+                'itemsChanged' => $itemsChanged,
+            ]);
+            
+            if ($oldStatus !== 'completed' && $newStatus === 'completed') {
+                // Status changed TO completed - reduce stock (sales = stock out)
+                \Log::info('DEBUG updateMasuk - CALLING processStockForTransaction with reverse=false (REDUCE stock)');
+                $this->processStockForTransaction($transaksi, false);
+            } elseif ($oldStatus === 'completed' && $newStatus !== 'completed') {
+                // Status changed FROM completed - return stock (reverse the reduction)
+                \Log::info('DEBUG updateMasuk - CALLING processStockForTransaction with reverse=true (RETURN stock)');
+                $this->processStockForTransaction($transaksi, true);
+            }
+        } else {
+            \Log::info('DEBUG updateMasuk - NO status transition or items changed:', [
+                'itemsChanged' => $itemsChanged,
+                'oldStatus !== newStatus' => ($oldStatus !== $newStatus),
+            ]);
+        }
+
+        // Update transaksi data
         $transaksi->update([
             'pos_toko_id' => $request->pos_toko_id,
             'pos_pelanggan_id' => $request->pos_pelanggan_id,
@@ -595,7 +796,13 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
+            ->with('items.produk')
             ->findOrFail($id);
+
+        // Reverse stock if transaction was completed
+        if (strtolower($transaksi->status) === 'completed') {
+            $this->processStockForTransaction($transaksi, true);
+        }
 
         $transaksi->delete();
 
@@ -603,7 +810,7 @@ class TransaksiController extends Controller
     }
 
     /**
-     * Bulk delete incoming transactions
+     * Bulk delete incoming transactions with stock reversal for completed items
      */
     public function bulkDestroyMasuk(Request $request)
     {
@@ -621,6 +828,21 @@ class TransaksiController extends Controller
             return redirect()->route('transaksi.masuk.index')->with('error', 'Tidak ada transaksi yang dipilih');
         }
 
+        // Load all transactions to be deleted with their items
+        $transaksis = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 1)
+            ->whereIn('id', $ids)
+            ->with('items.produk')
+            ->get();
+
+        // Reverse stock for all completed transactions
+        foreach ($transaksis as $transaksi) {
+            if (strtolower($transaksi->status) === 'completed') {
+                $this->processStockForTransaction($transaksi, true);
+            }
+        }
+
+        // Delete transactions
         PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
             ->whereIn('id', $ids)
@@ -834,27 +1056,31 @@ class TransaksiController extends Controller
                 }
             }
             
-            // Update stock ONLY for the primary product per brand
-            // This ensures only 1 produk_stok entry per (toko + brand)
-            foreach ($groupedByBrand as $merkId => $data) {
-                // Find the PRIMARY (smallest ID) produk for this merk
-                // This ensures consecutive transactions always update SAME produk_stok entry
-                $primaryProduk = PosProduk::where('owner_id', $ownerId)
-                    ->where('pos_produk_merk_id', $merkId)
-                    ->orderBy('id', 'asc')
-                    ->first();
-                
-                if ($primaryProduk) {
-                    // Transaksi keluar (purchase) = stock in (add stock)
-                    $this->updateProductStock(
-                        $ownerId,
-                        $request->pos_toko_id,
-                        $primaryProduk->id, // Use PRIMARY product, not just first in batch
-                        $data['total_quantity'],
-                        'masuk',
-                        $request->invoice,
-                        'Pembelian produk dari supplier'
-                    );
+            // Update stock ONLY if status is "completed"
+            // For pending/cancelled transactions, stock is NOT updated
+            if (strtolower($request->status) === 'completed') {
+                // Update stock ONLY for the primary product per brand
+                // This ensures only 1 produk_stok entry per (toko + brand)
+                foreach ($groupedByBrand as $merkId => $data) {
+                    // Find the PRIMARY (smallest ID) produk for this merk
+                    // This ensures consecutive transactions always update SAME produk_stok entry
+                    $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                        ->where('pos_produk_merk_id', $merkId)
+                        ->orderBy('id', 'asc')
+                        ->first();
+                    
+                    if ($primaryProduk) {
+                        // Transaksi keluar (purchase) = stock in (add stock)
+                        $this->updateProductStock(
+                            $ownerId,
+                            $request->pos_toko_id,
+                            $primaryProduk->id, // Use PRIMARY product, not just first in batch
+                            $data['total_quantity'],
+                            'masuk',
+                            $request->invoice,
+                            'Pembelian produk dari supplier'
+                        );
+                    }
                 }
             }
         }
@@ -925,7 +1151,22 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->with('items.produk')
             ->findOrFail($id);
+
+        // Store old status for comparison
+        $oldStatus = strtolower(trim($transaksi->status));
+        $newStatus = strtolower(trim($request->status));
+        $oldTokoId = $transaksi->pos_toko_id;
+
+        \Log::info('DEBUG updateKeluar start:', [
+            'transaksi_id' => $id,
+            'oldStatus (trimmed+lower)' => $oldStatus,
+            'newStatus (trimmed+lower)' => $newStatus,
+            'status_changed' => ($oldStatus !== $newStatus),
+            'transaksi_status_raw' => $transaksi->status,
+            'request_status_raw' => $request->status,
+        ]);
 
         $request->validate([
             'pos_toko_id' => 'required',
@@ -937,6 +1178,114 @@ class TransaksiController extends Controller
             'keterangan' => 'nullable|string|max:255',
         ]);
 
+        // Handle item changes if items provided in request (e.g., from API or AJAX)
+        $itemsChanged = false;
+        if ($request->has('items') && is_array($request->items) && !empty($request->items)) {
+            $itemsChanged = true;
+            
+            // If transaction was completed, reverse stock first for old items
+            if ($oldStatus === 'completed') {
+                $this->processStockForTransaction($transaksi, true);
+            }
+            
+            // Delete old items
+            $transaksi->items()->delete();
+            
+            // Create new items and group by brand for stock update
+            $groupedByBrand = [];
+            foreach ($request->items as $itemData) {
+                if (empty($itemData['item_id']) || empty($itemData['type'])) {
+                    continue;
+                }
+                
+                $pos_produk_id = $itemData['type'] === 'product' ? $itemData['item_id'] : null;
+                $pos_service_id = $itemData['type'] === 'service' ? $itemData['item_id'] : null;
+                $quantity = (int)($itemData['quantity'] ?? 1);
+                
+                PosTransaksiItem::create([
+                    'pos_transaksi_id' => $transaksi->id,
+                    'pos_produk_id' => $pos_produk_id,
+                    'pos_service_id' => $pos_service_id,
+                    'quantity' => $quantity,
+                    'harga_satuan' => $itemData['harga_satuan'] ?? 0,
+                    'subtotal' => $itemData['subtotal'] ?? 0,
+                    'diskon' => $itemData['diskon'] ?? 0,
+                    'garansi' => $itemData['garansi'] ?? null,
+                    'garansi_expires_at' => $itemData['garansi_expires_at'] ?? null,
+                    'pajak' => $itemData['pajak'] ?? 0,
+                ]);
+                
+                if ($pos_produk_id) {
+                    $produk = PosProduk::find($pos_produk_id);
+                    if ($produk) {
+                        $merkId = $produk->pos_produk_merk_id;
+                        if (!isset($groupedByBrand[$merkId])) {
+                            $groupedByBrand[$merkId] = [
+                                'pos_produk_id' => $pos_produk_id,
+                                'total_quantity' => 0,
+                            ];
+                        }
+                        $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+                    }
+                }
+            }
+            
+            // If old status was completed or new status is completed, recalculate stock
+            if ($oldStatus === 'completed' || $newStatus === 'completed') {
+                foreach ($groupedByBrand as $merkId => $data) {
+                    $primaryProduk = PosProduk::where('owner_id', $ownerId)
+                        ->where('pos_produk_merk_id', $merkId)
+                        ->orderBy('id', 'asc')
+                        ->first();
+                    
+                    if ($primaryProduk) {
+                        // Apply stock for new items at current toko (use request toko in case it changed)
+                        $this->updateProductStock(
+                            $ownerId,
+                            $request->pos_toko_id,
+                            $primaryProduk->id,
+                            $data['total_quantity'],
+                            'masuk',
+                            $transaksi->invoice,
+                            'Pembelian produk dari supplier (updated)'
+                        );
+                    }
+                }
+            }
+            
+            // Reload transaksi to reflect new items
+            $transaksi->load('items.produk');
+        }
+
+        // Handle stock changes based on status transition (ONLY if items didn't change)
+        // Case 1: pending/cancelled → completed = Add stock (process transaction)
+        // Case 2: completed → cancelled = Remove stock (reverse transaction)
+        // Case 3: completed → pending = Remove stock (reverse transaction)
+        // Case 4: pending ↔ cancelled = No stock change (neither had stock impact)
+        if (!$itemsChanged && $oldStatus !== $newStatus) {
+            \Log::info('DEBUG updateKeluar - status transition detected:', [
+                'oldStatus' => $oldStatus,
+                'newStatus' => $newStatus,
+                'itemsChanged' => $itemsChanged,
+            ]);
+            
+            if ($oldStatus !== 'completed' && $newStatus === 'completed') {
+                // Status changed TO completed - add stock (purchase = stock in)
+                \Log::info('DEBUG updateKeluar - CALLING processStockForTransaction with reverse=false (ADD stock)');
+                $this->processStockForTransaction($transaksi, false);
+            } elseif ($oldStatus === 'completed' && $newStatus !== 'completed') {
+                // Status changed FROM completed - remove stock (reverse the addition)
+                \Log::info('DEBUG updateKeluar - CALLING processStockForTransaction with reverse=true (REMOVE stock)');
+                $this->processStockForTransaction($transaksi, true);
+            }
+        } else {
+            \Log::info('DEBUG updateKeluar - NO status transition or items changed:', [
+                'itemsChanged' => $itemsChanged,
+                'oldStatus !== newStatus' => ($oldStatus !== $newStatus),
+            ]);
+        }
+
+        // Update transaksi data
         $transaksi->update([
             'pos_toko_id' => $request->pos_toko_id,
             'pos_supplier_id' => $request->pos_supplier_id,
@@ -963,7 +1312,13 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->with('items.produk')
             ->findOrFail($id);
+
+        // Reverse stock if transaction was completed
+        if (strtolower($transaksi->status) === 'completed') {
+            $this->processStockForTransaction($transaksi, true);
+        }
 
         $transaksi->delete();
 
@@ -971,7 +1326,7 @@ class TransaksiController extends Controller
     }
 
     /**
-     * Bulk delete outgoing transactions
+     * Bulk delete outgoing transactions with stock reversal for completed items
      */
     public function bulkDestroyKeluar(Request $request)
     {
@@ -989,6 +1344,21 @@ class TransaksiController extends Controller
             return redirect()->route('transaksi.keluar.index')->with('error', 'No transactions selected');
         }
 
+        // Load all transactions to be deleted with their items
+        $transaksis = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->whereIn('id', $ids)
+            ->with('items.produk')
+            ->get();
+
+        // Reverse stock for all completed transactions
+        foreach ($transaksis as $transaksi) {
+            if (strtolower($transaksi->status) === 'completed') {
+                $this->processStockForTransaction($transaksi, true);
+            }
+        }
+
+        // Delete transactions
         PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
             ->whereIn('id', $ids)
@@ -1074,12 +1444,16 @@ class TransaksiController extends Controller
             
             fputcsv($file, ['', '', '', '', '', '', '', '', '']);
             
-            // Summary
-            $totalIncome = $transaksi->where('is_transaksi_masuk', 1)->sum('total_harga');
-            $totalExpense = $transaksi->where('is_transaksi_masuk', 0)->sum('total_harga');
+            // Summary - only count COMPLETED transactions for financial calculations
+            $completedTransaksi = $transaksi->filter(function($t) {
+                return strtolower($t->status) === 'completed';
+            });
+            $totalIncome = $completedTransaksi->where('is_transaksi_masuk', 1)->sum('total_harga');
+            $totalExpense = $completedTransaksi->where('is_transaksi_masuk', 0)->sum('total_harga');
             
-            fputcsv($file, ['SUMMARY', '', '', '', '', '', '', '', '']);
+            fputcsv($file, ['SUMMARY (Completed Transactions Only)', '', '', '', '', '', '', '', '']);
             fputcsv($file, ['Total Transactions', $transaksi->count(), '', '', '', '', '', '', '']);
+            fputcsv($file, ['Completed Transactions', $completedTransaksi->count(), '', '', '', '', '', '', '']);
             fputcsv($file, ['Total Income', 'Rp ' . number_format($totalIncome, 0, ',', '.'), '', '', '', '', '', '', '']);
             fputcsv($file, ['Total Expense', 'Rp ' . number_format($totalExpense, 0, ',', '.'), '', '', '', '', '', '', '']);
             fputcsv($file, ['Net Profit', 'Rp ' . number_format($totalIncome - $totalExpense, 0, ',', '.'), '', '', '', '', '', '', '']);
