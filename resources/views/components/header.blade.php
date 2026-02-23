@@ -24,10 +24,10 @@
     </div>
 
     <!-- Right: Search & Icons & Profile -->
-    <div class="relative mt-[3px] flex h-[61px] w-full flex-grow items-center justify-around gap-2 rounded-full bg-white px-2 py-2 shadow-xl shadow-shadow-500 dark:!bg-navy-800 dark:shadow-none md:w-[365px] md:flex-grow-0 md:gap-1 xl:w-[365px] xl:gap-2 xl:ml-auto">
+    <div class="relative mt-[3px] flex h-[61px] w-full flex-grow items-center justify-around gap-3 rounded-full bg-white px-2 py-2 shadow-xl shadow-shadow-500 dark:!bg-navy-800 dark:shadow-none md:w-[150px] md:flex-grow-0 md:gap-2 xl:w-[150px] xl:gap-3 xl:ml-auto">
         
         <!-- Search -->
-        <div x-data="productSearch()" class="hidden sm:flex h-full items-center rounded-full bg-lightPrimary text-navy-700 dark:bg-navy-900 dark:text-white xl:w-[225px] relative">
+        {{-- <div x-data="productSearch()" class="hidden sm:flex h-full items-center rounded-full bg-lightPrimary text-navy-700 dark:bg-navy-900 dark:text-white xl:w-[225px] relative">
             <p class="pl-3 pr-2 text-xl">
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="h-4 w-4 text-gray-400 dark:text-white" xmlns="http://www.w3.org/2000/svg"><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"></path></svg>
             </p>
@@ -37,10 +37,10 @@
                 @input="search($event)" 
                 @focus="open = true"
                 @click.away="open = false"
-                class="block h-full w-full rounded-full bg-lightPrimary text-sm font-medium text-navy-700 outline-none placeholder:!text-gray-400 dark:bg-navy-900 dark:text-white dark:placeholder:!text-white sm:w-fit" />
+                class="block h-full w-full rounded-full bg-lightPrimary text-sm font-medium text-navy-700 outline-none placeholder:!text-gray-400 dark:bg-navy-900 dark:text-white dark:placeholder:!text-white sm:w-fit" /> --}}
             
             <!-- Search Results Dropdown -->
-            <div x-show="open && results.length > 0" 
+            {{-- <div x-show="open && results.length > 0" 
                  @click.away="open = false"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 transform scale-95"
@@ -61,20 +61,20 @@
                         </div>
                     </a>
                 </template>
-            </div>
+            </div> --}}
 
             <!-- No Results Message -->
-            <div x-show="open && searchQuery && results.length === 0 && !loading" 
+            {{-- <div x-show="open && searchQuery && results.length === 0 && !loading" 
                  @click.away="open = false"
                  class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-navy-800 rounded-lg shadow-xl z-50 p-4">
                 <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Produk tidak ditemukan</p>
-            </div>
+            </div> --}}
 
-            <!-- Loading State -->
+            {{-- <!-- Loading State -->
             <div x-show="loading" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-navy-800 rounded-lg shadow-xl z-50 p-4">
                 <p class="text-sm text-gray-600 dark:text-gray-400 text-center">Mencari...</p>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Notification Icon -->
         {{-- <div x-data="{ open: false }" class="relative cursor-pointer">
