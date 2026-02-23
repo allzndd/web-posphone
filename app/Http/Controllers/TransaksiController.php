@@ -865,6 +865,7 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 0)
+            ->whereNull('pos_kategori_expense_id') // Exclude expense transactions
             ->with(['toko', 'supplier', 'items.produk'])
             ->when($request->input('search'), function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
