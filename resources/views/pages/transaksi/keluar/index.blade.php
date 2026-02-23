@@ -621,6 +621,29 @@
             open: false,
             status: initialStatus,
             loading: false,
+            dropdownStyle: '',
+            toggleDropdown(event) {
+                if (this.open) { this.open = false; return; }
+                const btn = event.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const zoomFactor = 0.9;
+                const dropdownHeight = 110;
+                const dropdownWidth = 144;
+                const spaceBelow = window.innerHeight - rect.bottom;
+                let top, left;
+                if (spaceBelow < dropdownHeight) {
+                    top = (rect.top / zoomFactor) - dropdownHeight - 4;
+                } else {
+                    top = (rect.bottom / zoomFactor) + 4;
+                }
+                left = ((rect.left + rect.width / 2) / zoomFactor) - (dropdownWidth / 2);
+                if (left < 8) left = 8;
+                this.dropdownStyle = 'position:fixed;top:' + top + 'px;left:' + left + 'px;z-index:9999;';
+                this.open = true;
+                const self = this;
+                const closeOnScroll = () => { self.open = false; window.removeEventListener('scroll', closeOnScroll, true); };
+                window.addEventListener('scroll', closeOnScroll, true);
+            },
             async changeStatus(newStatus) {
                 if (this.status === newStatus || this.loading) { this.open = false; return; }
                 this.loading = true;
