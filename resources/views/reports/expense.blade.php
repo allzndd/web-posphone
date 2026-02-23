@@ -79,6 +79,44 @@
         </div>
     </div>
 
+    <!-- Pending & Cancelled Info -->
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-2 mb-5">
+        <!-- Pending Expenses -->
+        <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Expense Pending</p>
+                        <h4 class="mt-2 text-2xl font-bold text-orange-600 dark:text-orange-400">Rp {{ number_format($pendingExpenseAmount ?? 0, 0, ',', '.') }}</h4>
+                        <p class="mt-1 text-xs text-gray-500">{{ $pendingExpenseCount ?? 0 }} transaksi menunggu</p>
+                    </div>
+                    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900">
+                        <svg class="h-6 w-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Cancelled Expenses -->
+        <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Expense Cancelled</p>
+                        <h4 class="mt-2 text-2xl font-bold text-red-600 dark:text-red-400">Rp {{ number_format($cancelledExpenseAmount ?? 0, 0, ',', '.') }}</h4>
+                        <p class="mt-1 text-xs text-gray-500">{{ $cancelledExpenseCount ?? 0 }} transaksi dibatalkan</p>
+                    </div>
+                    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
+                        <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Top Expense Types -->
     @if(count($topExpenseTypes) > 0)
     <div class="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">

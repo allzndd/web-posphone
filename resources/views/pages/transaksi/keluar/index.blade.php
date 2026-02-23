@@ -55,7 +55,7 @@
                         <path fill="none" d="M0 0h24v24H0z"></path>
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
                     </svg>
-                    New Expense
+                    Transaksi Baru
                 </a>
                 @endpermission
             </div>
@@ -187,23 +187,37 @@
                                 </span>
                             </td>
                             <!-- Status -->
-                            <td class="py-4 text-center">
-                                @if($item->status == 'pending')
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-orange-100 dark:bg-orange-500/20 px-3 py-1 text-xs font-bold text-orange-600 dark:text-orange-300">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-                                        Pending
-                                    </span>
-                                @elseif($item->status == 'completed')
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-green-100 dark:bg-green-500/20 px-3 py-1 text-xs font-bold text-green-600 dark:text-green-300">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                                        Completed
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg bg-red-100 dark:bg-red-500/20 px-3 py-1 text-xs font-bold text-red-600 dark:text-red-300">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-                                        Cancelled
-                                    </span>
-                                @endif
+                            <td class="py-4 text-center" onclick="event.stopPropagation()">
+                                <div class="inline-block" x-data="statusDropdown('{{ $item->status }}', '{{ route('transaksi.keluar.update-status', $item->id) }}')">
+                                    <button type="button" @click="toggleDropdown($event)" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold cursor-pointer transition"
+                                        :class="{
+                                            'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-300': status === 'pending',
+                                            'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-300': status === 'completed',
+                                            'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-300': status === 'cancelled'
+                                        }">
+                                        <span x-text="status === 'pending' ? 'Pending' : (status === 'completed' ? 'Completed' : 'Cancelled')"></span>
+                                        <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                    </button>
+                                    <div x-show="open" @click.away="open = false" x-transition
+                                        class="w-36 rounded-lg bg-white dark:bg-navy-800 shadow-lg border border-gray-200 dark:border-white/10 py-1"
+                                        :style="dropdownStyle">
+                                        <button type="button" @click="changeStatus('pending')"
+                                            class="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                            :class="status === 'pending' ? 'font-bold text-orange-600 dark:text-orange-300' : 'text-gray-700 dark:text-gray-300'">
+                                            <span class="w-2 h-2 rounded-full bg-orange-500"></span> Pending
+                                        </button>
+                                        <button type="button" @click="changeStatus('completed')"
+                                            class="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                            :class="status === 'completed' ? 'font-bold text-green-600 dark:text-green-300' : 'text-gray-700 dark:text-gray-300'">
+                                            <span class="w-2 h-2 rounded-full bg-green-500"></span> Completed
+                                        </button>
+                                        <button type="button" @click="changeStatus('cancelled')"
+                                            class="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                                            :class="status === 'cancelled' ? 'font-bold text-red-600 dark:text-red-300' : 'text-gray-700 dark:text-gray-300'">
+                                            <span class="w-2 h-2 rounded-full bg-red-500"></span> Cancelled
+                                        </button>
+                                    </div>
+                                </div>
                             </td>
                             <!-- Date -->
                             <td class="py-4 text-center">
@@ -600,6 +614,72 @@
             toast.style.transition = 'opacity 0.5s';
             setTimeout(() => toast.remove(), 500);
         }, 5000);
+    }
+
+    function statusDropdown(initialStatus, url) {
+        return {
+            open: false,
+            status: initialStatus,
+            loading: false,
+            dropdownStyle: '',
+            toggleDropdown(event) {
+                if (this.open) { this.open = false; return; }
+                const btn = event.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const zoomFactor = 0.9;
+                const dropdownHeight = 110;
+                const dropdownWidth = 144;
+                const spaceBelow = window.innerHeight - rect.bottom;
+                let top, left;
+                if (spaceBelow < dropdownHeight) {
+                    top = (rect.top / zoomFactor) - dropdownHeight - 4;
+                } else {
+                    top = (rect.bottom / zoomFactor) + 4;
+                }
+                left = ((rect.left + rect.width / 2) / zoomFactor) - (dropdownWidth / 2);
+                if (left < 8) left = 8;
+                this.dropdownStyle = 'position:fixed;top:' + top + 'px;left:' + left + 'px;z-index:9999;';
+                this.open = true;
+                const self = this;
+                const closeOnScroll = () => { self.open = false; window.removeEventListener('scroll', closeOnScroll, true); };
+                window.addEventListener('scroll', closeOnScroll, true);
+            },
+            async changeStatus(newStatus) {
+                if (this.status === newStatus || this.loading) { this.open = false; return; }
+                this.loading = true;
+                try {
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.status = newStatus;
+                        showStatusToast(data.message, 'success');
+                    } else {
+                        showStatusToast(data.message || 'Gagal mengubah status', 'error');
+                    }
+                } catch (err) {
+                    showStatusToast('Gagal mengubah status', 'error');
+                }
+                this.loading = false;
+                this.open = false;
+            }
+        };
+    }
+
+    function showStatusToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-5 right-5 z-[9999] px-6 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-opacity duration-500 ' +
+            (type === 'success' ? 'bg-green-500' : 'bg-red-500');
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
     }
 </script>
 @endpush
