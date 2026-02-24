@@ -222,6 +222,147 @@
         </div>
     </div>
 
+    <!-- Modal & Profit per Outlet Section -->
+    <div class="mb-5">
+        <h5 class="text-xl font-bold text-navy-700 dark:text-white mb-4">Modal & Profit per Outlet</h5>
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-3 mb-5">
+            <!-- Total Modal -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-gradient-to-br from-amber-400 to-amber-600 bg-clip-border shadow-3xl shadow-shadow-500 dark:shadow-none p-6">
+                <div>
+                    <p class="text-sm font-medium text-white/80">Total Modal (Capital)</p>
+                    <h4 class="mt-2 text-3xl font-bold text-white">Rp {{ number_format($totalModal ?? 0, 0, ',', '.') }}</h4>
+                    <p class="mt-1 text-xs text-white/70">Modal semua toko</p>
+                </div>
+            </div>
+
+            <!-- Total Net Profit -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-gradient-to-br from-emerald-400 to-emerald-600 bg-clip-border shadow-3xl shadow-shadow-500 dark:shadow-none p-6">
+                <div>
+                    <p class="text-sm font-medium text-white/80">Total Net Profit</p>
+                    <h4 class="mt-2 text-3xl font-bold text-white">Rp {{ number_format($netProfit ?? 0, 0, ',', '.') }}</h4>
+                    <p class="mt-1 text-xs text-white/70">Laba bersih periode ini</p>
+                </div>
+            </div>
+
+            <!-- Overall ROI -->
+            <div class="!z-5 relative flex flex-col rounded-[20px] bg-gradient-to-br {{ ($overallRoi ?? 0) >= 0 ? 'from-cyan-400 to-cyan-600' : 'from-rose-400 to-rose-600' }} bg-clip-border shadow-3xl shadow-shadow-500 dark:shadow-none p-6">
+                <div>
+                    <p class="text-sm font-medium text-white/80">Overall ROI</p>
+                    <h4 class="mt-2 text-3xl font-bold text-white">{{ number_format($overallRoi ?? 0, 2) }}%</h4>
+                    <p class="mt-1 text-xs text-white/70">Return on Investment</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail per Outlet Table -->
+        <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
+            <h6 class="text-lg font-bold text-navy-700 dark:text-white mb-4">Detail Modal & Profit per Toko</h6>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-white/10">
+                            <th class="pb-3 text-left text-sm font-bold text-gray-600 dark:text-gray-400">Toko</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">Modal</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">Revenue</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">HPP</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">Gross Profit</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">Expenses</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">Net Profit</th>
+                            <th class="pb-3 text-right text-sm font-bold text-gray-600 dark:text-gray-400">ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($modalProfitPerOutlet ?? [] as $outlet)
+                        <tr class="border-b border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-navy-700">
+                            <td class="py-3 text-sm font-medium text-navy-700 dark:text-white">{{ $outlet['store_name'] }}</td>
+                            <td class="py-3 text-right text-sm text-amber-600 dark:text-amber-400 font-medium">
+                                {{ $outlet['modal'] > 0 ? 'Rp ' . number_format($outlet['modal'], 0, ',', '.') : '-' }}
+                            </td>
+                            <td class="py-3 text-right text-sm text-blue-600 dark:text-blue-400">
+                                Rp {{ number_format($outlet['revenue'], 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm text-orange-600 dark:text-orange-400">
+                                Rp {{ number_format($outlet['hpp'], 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm {{ $outlet['gross_profit'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                Rp {{ number_format($outlet['gross_profit'], 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm text-red-600 dark:text-red-400">
+                                Rp {{ number_format($outlet['expenses'], 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm font-bold {{ $outlet['net_profit'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                Rp {{ number_format($outlet['net_profit'], 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right">
+                                @if($outlet['modal'] > 0)
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold {{ $outlet['roi'] >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }}">
+                                        {{ number_format($outlet['roi'], 2) }}%
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400">N/A</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="py-4 text-center text-gray-500">Tidak ada data toko</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if(count($modalProfitPerOutlet ?? []) > 0)
+                    <tfoot>
+                        <tr class="bg-gray-50 dark:bg-navy-900 font-bold">
+                            <td class="py-3 text-sm text-navy-700 dark:text-white">TOTAL</td>
+                            <td class="py-3 text-right text-sm text-amber-600 dark:text-amber-400">
+                                Rp {{ number_format($totalModal ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm text-blue-600 dark:text-blue-400">
+                                Rp {{ number_format($totalRevenue ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm text-orange-600 dark:text-orange-400">
+                                Rp {{ number_format($totalHPP ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm {{ ($grossProfit ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                Rp {{ number_format($grossProfit ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm text-red-600 dark:text-red-400">
+                                Rp {{ number_format($totalOperatingExpenses ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right text-sm {{ ($netProfit ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                Rp {{ number_format($netProfit ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3 text-right">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold {{ ($overallRoi ?? 0) >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }}">
+                                    {{ number_format($overallRoi ?? 0, 2) }}%
+                                </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+            
+            <!-- Info Box -->
+            <div class="mt-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">Cara Membaca ROI</p>
+                        <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                            <strong>ROI (Return on Investment)</strong> = (Net Profit / Modal) × 100%. 
+                            ROI positif berarti modal menghasilkan keuntungan. 
+                            Contoh: ROI 25% artinya setiap Rp 100.000 modal menghasilkan Rp 25.000 profit.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Detail Per Item -->
     <div class="mb-5">
         <div class="flex items-center justify-between gap-4 mb-4">
