@@ -1619,19 +1619,18 @@ function submitQuickProduct(event) {
     errorDiv.classList.add('hidden');
     
     // Get product info from dropdowns
-    const merkId = document.getElementById('quick_pos_produk_merk_id').value;
-    const productType = document.getElementById('modal_product_type').value;
+    const merkIdElem = document.getElementById('quick_pos_produk_merk_id');
+    const merkId = merkIdElem ? merkIdElem.value : '';
+    const productTypeElem = document.getElementById('modal_product_type');
+    const productType = productTypeElem ? productTypeElem.value : 'electronic';
+    
+    console.log('submitQuickProduct - merkId:', merkId, 'productType:', productType);
     
     if (!merkId && productType !== 'service') {
         errorDiv.classList.remove('hidden');
-        errorDiv.querySelector('p').textContent = 'Please select a product type';
+        errorDiv.querySelector('p').textContent = 'Please select a Brand and Type first';
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Create Product
-        `;
+        submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Product';
         return;
     }
     
@@ -1642,12 +1641,7 @@ function submitQuickProduct(event) {
             errorDiv.classList.remove('hidden');
             errorDiv.querySelector('p').textContent = 'Service name is required';
             submitBtn.disabled = false;
-            submitBtn.innerHTML = `
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Create Product
-            `;
+            submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Product';
             return;
         }
     }
@@ -1751,7 +1745,17 @@ function submitQuickProduct(event) {
             
             closeProductModal();
         } else {
-            throw new Error(data.message || 'Failed to create product');
+            // Show specific validation errors from server
+            let errorMessage = data.message || 'Failed to create product';
+            if (data.errors) {
+                const errorMessages = Object.values(data.errors).flat();
+                if (errorMessages.length > 0) {
+                    errorMessage = errorMessages.join('. ');
+                }
+            }
+            console.error('Quick product errors:', data.errors);
+            errorDiv.classList.remove('hidden');
+            errorDiv.querySelector('p').textContent = errorMessage;
         }
     })
     .catch(error => {
