@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PosProduk;
 use App\Models\PosProdukMerk;
+use App\Models\PosService;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -370,6 +371,50 @@ class ProdukController extends Controller
 
             \Log::info('quickStore request data:', $request->all());
 
+            $productType = $request->input('product_type');
+
+            // ============ SERVICE TYPE ============
+            if ($productType === 'service') {
+                $request->validate([
+                    'product_type' => 'required|in:service',
+                    'nama' => 'required|string|max:255',
+                    'harga_beli' => 'required|numeric|min:0',
+                    'harga_jual' => 'required|numeric|min:0',
+                    'service_name' => 'nullable|string|max:255',
+                    'service_duration' => 'nullable|integer|min:0',
+                    'service_period' => 'nullable|string|in:days,weeks,months,years',
+                    'deskripsi' => 'nullable|string|max:1000',
+                ]);
+
+                // Create PosService record
+                $service = PosService::create([
+                    'owner_id' => $ownerId,
+                    'nama' => $request->nama,
+                    'harga' => $request->harga_jual,
+                    'keterangan' => $request->deskripsi,
+                    'durasi' => $request->service_duration,
+                ]);
+
+                \Log::info('quickStore - Service created:', ['id' => $service->id, 'nama' => $service->nama]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Service created successfully',
+                    'data' => [
+                        'id' => $service->id,
+                        'nama' => $service->nama,
+                        'merk_nama' => '',
+                        'harga_beli' => $request->harga_beli,
+                        'harga_jual' => $service->harga,
+                        'product_type' => 'service',
+                        'service_duration' => $request->service_duration,
+                        'service_period' => $request->service_period,
+                        'service_description' => $service->keterangan,
+                    ]
+                ]);
+            }
+
+            // ============ ELECTRONIC / ACCESSORIES TYPE ============
             $request->validate([
                 'nama' => 'nullable|string|max:255',
                 'pos_produk_merk_id' => 'required|exists:pos_produk_merk,id',
