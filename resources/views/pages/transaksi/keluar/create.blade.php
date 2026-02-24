@@ -488,60 +488,27 @@
 
                         <!-- Service Fields Section (Service Only) -->
                         <div id="modal-service-fields" class="hidden">
-                            <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-green-500 pl-3">Service Details</h5>
+                            <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-green-500 pl-3">Select Service</h5>
                             
                             <div class="grid grid-cols-1 gap-4">
-                                <!-- Service Name -->
+                                <!-- Service Selection Dropdown -->
                                 <div>
                                     <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
                                         Service Name <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" id="quick_service_name"
-                                           name="service_name"
-                                           placeholder="e.g., Phone Screen Repair, Battery Replacement, Software Update"
-                                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                                </div>
-
-                                <!-- Service Duration -->
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                            Duration <span class="text-xs text-gray-500">(Optional)</span>
-                                        </label>
-                                        <input type="number" id="quick_service_duration"
-                                               name="service_duration"
-                                               min="0"
-                                               placeholder="e.g., 1, 7, 30"
-                                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                            Period <span class="text-xs text-gray-500">(Optional)</span>
-                                        </label>
-                                        <div class="custom-dropdown">
-                                            <select id="quick_service_period"
-                                                    name="service_period"
-                                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                                                <option value="">Select Period</option>
-                                                <option value="days">Days</option>
-                                                <option value="weeks">Weeks</option>
-                                                <option value="months">Months</option>
-                                                <option value="years">Years</option>
-                                            </select>
+                                    <div class="custom-dropdown">
+                                        <button type="button" id="serviceDropdownTrigger" class="custom-dropdown-trigger w-full text-left">
+                                            <span id="serviceDropdownLabel">Select a service...</span>
+                                        </button>
+                                        <div id="serviceDropdownMenu" class="custom-dropdown-menu hidden">
+                                            <div class="custom-dropdown-search">
+                                                <input type="text" id="serviceSearchInput" placeholder="Search service..." />
+                                            </div>
+                                            <div id="serviceDropdownItems"></div>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Service Description -->
-                                <div>
-                                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                        Service Description <span class="text-xs text-gray-500">(Optional)</span>
-                                    </label>
-                                    <textarea id="quick_service_description"
-                                              name="service_description"
-                                              rows="3"
-                                              placeholder="Enter detailed service description..."
-                                              class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 resize-none"></textarea>
+                                    <!-- Hidden input for service ID -->
+                                    <input type="hidden" id="quick_service_select" name="service_id" value="">
                                 </div>
                             </div>
                         </div>
@@ -654,8 +621,8 @@
                     </div>
                 </div>
 
-                <!-- Pricing Section -->
-                <div>
+                <!-- Pricing Section (Not for Service) -->
+                <div id="modal-pricing-section">
                     <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-green-500 pl-3">Pricing Information</h5>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -1075,24 +1042,33 @@ function switchModalProductType(type) {
     const imeiMarker = document.getElementById('modal-imei-required-marker');
     const brandTypeSection = document.getElementById('modal-brand-type-section');
     const serviceFields = document.getElementById('modal-service-fields');
+    const pricingSection = document.getElementById('modal-pricing-section');
+    const hargaBeli = document.getElementById('quick_harga_beli');
+    const hargaJual = document.getElementById('quick_harga_jual');
     
     if (type === 'electronic') {
-        // Electronic: Show brand dropdown, type dropdown, and specs
+        // Electronic: Show brand dropdown, type dropdown, specs and pricing
         if (brandTypeSection) brandTypeSection.classList.remove('hidden');
         if (specificationsSection) specificationsSection.classList.remove('hidden');
         if (serviceFields) serviceFields.classList.add('hidden');
+        if (pricingSection) pricingSection.classList.remove('hidden');
         imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.remove('hidden');
+        if (hargaBeli) hargaBeli.required = true;
+        if (hargaJual) hargaJual.required = true;
         // Initialize with filtered data for electronic
         initializeMerkDropdownForProductType('electronic');
     } else if (type === 'accessories') {
-        // Accessories: Show brand dropdown and type dropdown only (no specs)
+        // Accessories: Show brand dropdown and type dropdown, pricing, but no specs
         if (brandTypeSection) brandTypeSection.classList.remove('hidden');
         if (specificationsSection) specificationsSection.classList.add('hidden');
         if (serviceFields) serviceFields.classList.add('hidden');
+        if (pricingSection) pricingSection.classList.remove('hidden');
         if (imeiField) imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.add('hidden');
         if (imeiField) imeiField.value = '';
+        if (hargaBeli) hargaBeli.required = true;
+        if (hargaJual) hargaJual.required = true;
         const warnaElem = document.getElementById('quick_warna');
         const ramElem = document.getElementById('quick_ram');
         const penyimpananElem = document.getElementById('quick_penyimpanan');
@@ -1104,13 +1080,22 @@ function switchModalProductType(type) {
         // Initialize with filtered data for accessories
         initializeMerkDropdownForProductType('accessories');
     } else if (type === 'service') {
-        // Service: Hide brand/type dropdowns and specs, show service-specific fields
+        // Service: Hide brand/type dropdowns, specs, and pricing. Show service selection dropdown only
         if (brandTypeSection) brandTypeSection.classList.add('hidden');
         if (specificationsSection) specificationsSection.classList.add('hidden');
         if (serviceFields) serviceFields.classList.remove('hidden');
+        if (pricingSection) pricingSection.classList.add('hidden');
         if (imeiField) imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.add('hidden');
         if (imeiField) imeiField.value = '';
+        if (hargaBeli) {
+            hargaBeli.required = false;
+            hargaBeli.value = '';
+        }
+        if (hargaJual) {
+            hargaJual.required = false;
+            hargaJual.value = '';
+        }
         const warnaElem = document.getElementById('quick_warna');
         const ramElem = document.getElementById('quick_ram');
         const penyimpananElem = document.getElementById('quick_penyimpanan');
@@ -1119,6 +1104,9 @@ function switchModalProductType(type) {
         if (ramElem) ramElem.value = '';
         if (penyimpananElem) penyimpananElem.value = '';
         if (batteryElem) batteryElem.value = '';
+        
+        // Initialize service dropdown
+        initializeServiceDropdown();
     }
 }
 
@@ -1316,6 +1304,7 @@ document.addEventListener('click', function(e) {
     const colorWrapper = document.getElementById('colorDropdownWrapper');
     const ramWrapper = document.getElementById('ramDropdownWrapper');
     const storageWrapper = document.getElementById('storageDropdownWrapper');
+    const serviceWrapper = document.getElementById('serviceDropdownTrigger')?.parentElement;
     
     if (brandWrapper && !brandWrapper.contains(e.target)) {
         document.getElementById('brandDropdownMenu').classList.add('hidden');
@@ -1332,6 +1321,10 @@ document.addEventListener('click', function(e) {
     if (storageWrapper && !storageWrapper.contains(e.target)) {
         document.getElementById('storageDropdownMenu').classList.add('hidden');
     }
+    if (serviceWrapper && !serviceWrapper.contains(e.target)) {
+        const serviceMenu = document.getElementById('serviceDropdownMenu');
+        if (serviceMenu) serviceMenu.classList.add('hidden');
+    }
     
     // Close product dropdowns in transaction items
     document.querySelectorAll('[id^="productDropdownWrapper-"]').forEach(wrapper => {
@@ -1343,6 +1336,15 @@ document.addEventListener('click', function(e) {
             }
         }
     });
+});
+
+// Service dropdown trigger click handler
+document.addEventListener('click', function(e) {
+    const serviceDropdownTrigger = document.getElementById('serviceDropdownTrigger');
+    if (e.target === serviceDropdownTrigger || (serviceDropdownTrigger && serviceDropdownTrigger.contains(e.target))) {
+        e.preventDefault();
+        toggleServiceDropdown();
+    }
 });
 
 // Color Dropdown Functions
@@ -1558,6 +1560,80 @@ function selectStorage(id, kapasitas) {
     if (menuElem) menuElem.classList.add('hidden');
 }
 
+// ============= SERVICE DROPDOWN FUNCTIONS =============
+function initializeServiceDropdown() {
+    const dropdown = document.getElementById('serviceDropdownItems');
+    if (!dropdown) return;
+    
+    // Reset selection
+    const selectElem = document.getElementById('quick_service_select');
+    const labelElem = document.getElementById('serviceDropdownLabel');
+    
+    if (selectElem) selectElem.value = '';
+    if (labelElem) {
+        labelElem.textContent = 'Select a service...';
+        labelElem.classList.add('text-gray-400');
+        labelElem.classList.remove('text-navy-700', 'dark:text-white');
+    }
+    
+    // Render all services
+    renderServiceItems(services);
+}
+
+function renderServiceItems(items) {
+    const container = document.getElementById('serviceDropdownItems');
+    if (!container) return;
+    
+    if (items.length === 0) {
+        container.innerHTML = '<div class="dropdown-item text-gray-400">No services available</div>';
+        return;
+    }
+    
+    container.innerHTML = items.map(service => 
+        `<div class="dropdown-item" onclick="selectService(${service.id}, '${service.nama.replace(/'/g, "\\'")}', ${service.harga})" data-price="${service.harga}">
+            <div class="font-semibold">${service.nama}</div>
+            <div class="text-xs text-gray-500">${currencySymbol} ${formatNumber(service.harga)}</div>
+        </div>`
+    ).join('');
+}
+
+function toggleServiceDropdown() {
+    const menu = document.getElementById('serviceDropdownMenu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+        if (!menu.classList.contains('hidden')) {
+            const searchInput = document.getElementById('serviceSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterServiceDropdown();
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
+    }
+}
+
+function filterServiceDropdown() {
+    const search = document.getElementById('serviceSearchInput').value.toLowerCase();
+    const filtered = services.filter(service => 
+        service.nama.toLowerCase().includes(search)
+    );
+    renderServiceItems(filtered);
+}
+
+function selectService(id, nama, harga) {
+    const selectElem = document.getElementById('quick_service_select');
+    const labelElem = document.getElementById('serviceDropdownLabel');
+    const menuElem = document.getElementById('serviceDropdownMenu');
+    
+    if (selectElem) selectElem.value = id;
+    if (labelElem) {
+        labelElem.textContent = nama + ' - ' + currencySymbol + ' ' + formatNumber(harga);
+        labelElem.classList.remove('text-gray-400');
+        labelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    if (menuElem) menuElem.classList.add('hidden');
+}
+
 // Quick Add Product Modal Functions
 function openProductModal(itemId) {
     currentItemIdForModal = itemId;
@@ -1634,12 +1710,12 @@ function submitQuickProduct(event) {
         return;
     }
     
-    // Service name is required for service type
+    // Service selection is required for service type
     if (productType === 'service') {
-        const serviceName = document.getElementById('quick_service_name').value;
-        if (!serviceName) {
+        const serviceId = document.getElementById('quick_service_select').value;
+        if (!serviceId) {
             errorDiv.classList.remove('hidden');
-            errorDiv.querySelector('p').textContent = 'Service name is required';
+            errorDiv.querySelector('p').textContent = 'Please select a service';
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Product';
             return;
@@ -1648,33 +1724,65 @@ function submitQuickProduct(event) {
     
     console.log('Submitting product with type:', productType); // Debug log
     
-    // Build basic form data
-    let formData = {
+    // Add type-specific fields
+    if (productType === 'service') {
+        // For service: directly use the selected service
+        const serviceId = document.getElementById('quick_service_select').value;
+        const selectedService = services.find(s => s.id == serviceId);
+        
+        if (selectedService && currentItemIdForModal) {
+            // Set the service name
+            const labelElem = document.getElementById(`productDropdownLabel-${currentItemIdForModal}`);
+            if (labelElem) {
+                labelElem.textContent = selectedService.nama;
+                labelElem.classList.remove('text-gray-400');
+                labelElem.classList.add('text-navy-700', 'dark:text-white');
+            }
+            
+            // Set the service price to unit-price field
+            const priceInput = document.getElementById(`unit-price-${currentItemIdForModal}`);
+            if (priceInput) {
+                priceInput.value = selectedService.harga;
+            }
+            
+            // Set hidden item select value
+            const itemSelectElem = document.getElementById(`item-select-${currentItemIdForModal}`);
+            if (itemSelectElem) {
+                itemSelectElem.value = selectedService.id;
+            }
+            
+            // Calculate subtotal with service price
+            calculateSubtotal(currentItemIdForModal);
+            
+            closeProductModal();
+            
+            // Re-enable submit button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Product
+            `;
+        } else {
+            errorDiv.classList.remove('hidden');
+            errorDiv.querySelector('p').textContent = 'Selected service not found';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Create Product
+            `;
+        }
+        return;
+    }
+    
+    // For electronic/accessories: prepare data to create new product
+    formData = {
         product_type: productType,
         harga_beli: parseCurrencyValue(document.getElementById('quick_harga_beli').value),
         harga_jual: parseCurrencyValue(document.getElementById('quick_harga_jual').value),
-    };
-    
-    // Add type-specific fields
-    if (productType === 'service') {
-        formData.nama = document.getElementById('quick_service_name').value;
-        formData.service_name = document.getElementById('quick_service_name').value;
-        formData.service_duration = document.getElementById('quick_service_duration').value;
-        formData.service_period = document.getElementById('quick_service_period').value;
-        formData.service_description = document.getElementById('quick_service_description').value;
-        formData.deskripsi = document.getElementById('quick_service_description').value;
-    } else {
-        // Electronic or Accessories
-        const typeLabel = document.getElementById('typeDropdownLabel').textContent;
-        const nama = (typeLabel && typeLabel !== 'Select Type') ? typeLabel : 'Produk Baru';
-        
-        formData.nama = nama;
-        formData.pos_produk_merk_id = merkId;
-        formData.warna = document.getElementById('quick_warna').value;
-        formData.ram = document.getElementById('quick_ram').value;
-        formData.penyimpanan = document.getElementById('quick_penyimpanan').value;
-        formData.battery_health = document.getElementById('quick_battery_health').value;
-        formData.imei = document.getElementById('quick_imei').value;
     }
     
     console.log('=== FORM DATA DEBUG ===');
