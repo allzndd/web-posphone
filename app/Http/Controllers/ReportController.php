@@ -250,6 +250,78 @@ class ReportController extends Controller
             ];
         }
 
+        // Modal & Profit per Outlet
+        $modalProfitPerOutlet = [];
+        foreach ($stores as $store) {
+            // Get store modal (capital)
+            $storeModal = $store->modal ?? 0;
+            
+            // Calculate revenue for this store
+            $storeRevenue = DB::table('pos_transaksi')
+                ->where('owner_id', $ownerId)
+                ->where('pos_toko_id', $store->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
+                ->sum('total_harga');
+            
+            // Calculate HPP for this store
+            $storeHpp = 0;
+            $storeTransactions = PosTransaksi::where('owner_id', $ownerId)
+                ->where('pos_toko_id', $store->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->where('is_transaksi_masuk', 1)
+                ->where('status', 'completed')
+                ->with(['items.produk'])
+                ->get();
+            
+            foreach ($storeTransactions as $transaction) {
+                foreach ($transaction->items as $item) {
+                    $quantity = $item->quantity ?? 0;
+                    $hargaBeli = $item->produk ? $item->produk->harga_beli : 0;
+                    $storeHpp += $hargaBeli * $quantity;
+                }
+            }
+            
+            // Calculate operating expenses for this store
+            $storeExpenses = DB::table('pos_transaksi')
+                ->where('owner_id', $ownerId)
+                ->where('pos_toko_id', $store->id)
+                ->whereBetween('created_at', [$start, $end])
+                ->where('is_transaksi_masuk', 0)
+                ->whereNotNull('pos_kategori_expense_id')
+                ->where('status', 'completed')
+                ->sum('total_harga');
+            
+            // Calculate profit
+            $storeGrossProfit = $storeRevenue - $storeHpp;
+            $storeNetProfit = $storeGrossProfit - $storeExpenses;
+            
+            // Calculate ROI (Return on Investment)
+            $storeRoi = $storeModal > 0 ? ($storeNetProfit / $storeModal) * 100 : 0;
+            
+            // Calculate Profit Margin
+            $storeProfitMargin = $storeRevenue > 0 ? ($storeNetProfit / $storeRevenue) * 100 : 0;
+            
+            $modalProfitPerOutlet[] = [
+                'store_id' => $store->id,
+                'store_name' => $store->nama,
+                'modal' => $storeModal,
+                'revenue' => $storeRevenue,
+                'hpp' => $storeHpp,
+                'gross_profit' => $storeGrossProfit,
+                'expenses' => $storeExpenses,
+                'net_profit' => $storeNetProfit,
+                'roi' => $storeRoi,
+                'profit_margin' => $storeProfitMargin,
+            ];
+        }
+
+        // Calculate totals for all stores
+        $totalModal = array_sum(array_column($modalProfitPerOutlet, 'modal'));
+        $totalNetProfitAllStores = array_sum(array_column($modalProfitPerOutlet, 'net_profit'));
+        $overallRoi = $totalModal > 0 ? ($totalNetProfitAllStores / $totalModal) * 100 : 0;
+
         // Expenses by type (from kategoriExpense)
         $expensesByType = [];
         foreach ($expenses->groupBy('kategoriExpense.nama') as $type => $expenseGroup) {
@@ -298,6 +370,9 @@ class ReportController extends Controller
             'receivable' => $receivable,
             'paymentBreakdown' => $paymentBreakdown,
             'cashBalancePerOutlet' => $cashBalancePerOutlet,
+            'modalProfitPerOutlet' => $modalProfitPerOutlet,
+            'totalModal' => $totalModal,
+            'overallRoi' => $overallRoi,
             'itemDetails' => $itemDetails,
             'expensesByType' => $expensesByType,
             'expenses' => $expenses,
