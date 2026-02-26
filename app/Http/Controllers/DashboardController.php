@@ -191,63 +191,102 @@ class DashboardController extends Controller
         // Top products data (for sales chart) - Using LogStok for product sales tracking
         $topProductsData = \App\Models\LogStok::where('owner_id', $ownerId)
             ->where('tipe', 'keluar')
-            ->where('referensi', 'like', 'Penjualan%')
+            ->where('keterangan', 'Penjualan produk')
             ->with('produk')
-            ->select('pos_produk_id', DB::raw('SUM(ABS(perubahan)) as total_sold'))
-            ->groupBy('pos_produk_id')
-            ->orderByDesc('total_sold')
-            ->limit(5)
             ->get()
-            ->map(function($log) {
-                $produk = $log->produk;
-                $totalSold = abs($log->total_sold);
-                $revenue = $produk ? ($produk->harga_jual * $totalSold) : 0;
+            ->filter(function($log) {
+                return $log->produk !== null;
+            })
+            ->groupBy(function($log) {
+                return $log->produk->nama ?? 'Unknown';
+            })
+            ->map(function($logs, $nama) {
+                $totalSold = $logs->sum(function($log) {
+                    return abs($log->perubahan);
+                });
+                $avgPrice = $logs->avg(function($log) {
+                    return $log->produk->harga_jual ?? 0;
+                });
                 
                 return [
-                    'name' => $produk->nama ?? 'Unknown',
+                    'name' => $nama,
                     'sold' => $totalSold,
-                    'revenue' => $revenue
+                    'revenue' => $avgPrice * $totalSold
                 ];
             })
+            ->sortByDesc('sold')
+            ->take(5)
+            ->values()
             ->toArray();
 
-        // Recommendations - Top Profit Products
-        $topProfitProducts = \App\Models\PosProduk::where('owner_id', $ownerId)
-            ->whereNotNull('harga_jual')
-            ->whereNotNull('harga_beli')
-            ->with('stok')
+        // Recommendations - Top Profit Products (based on actual sales profit, grouped by product name)
+        $topProfitProducts = \App\Models\LogStok::where('owner_id', $ownerId)
+            ->where('tipe', 'keluar')
+            ->where('keterangan', 'Penjualan produk')
+            ->with('produk.stok')
             ->get()
-            ->map(function($produk) {
-                $profit = $produk->harga_jual - $produk->harga_beli;
-                $totalStok = $produk->stok->sum('stok') ?? 0;
+            ->filter(function($log) {
+                return $log->produk !== null && $log->produk->harga_jual !== null && $log->produk->harga_beli !== null;
+            })
+            ->groupBy(function($log) {
+                return $log->produk->nama ?? 'Unknown';
+            })
+            ->map(function($logs, $nama) {
+                // Calculate total profit from actual sales
+                $totalProfit = $logs->sum(function($log) {
+                    $unitProfit = ($log->produk->harga_jual ?? 0) - ($log->produk->harga_beli ?? 0);
+                    return $unitProfit * abs($log->perubahan);
+                });
+                // Count total sold units
+                $totalSold = $logs->sum(function($log) {
+                    return abs($log->perubahan);
+                });
+                // Sum remaining stock across all variants of this product name
+                $totalStok = $logs->unique('pos_produk_id')->sum(function($log) {
+                    return $log->produk->stok->sum('stok') ?? 0;
+                });
                 
                 return (object)[
-                    'name' => $produk->nama,
-                    'profit' => $profit,
-                    'stock' => $totalStok
+                    'name' => $nama,
+                    'profit' => $totalProfit,
+                    'stock' => $totalStok,
+                    'sold' => $totalSold
                 ];
             })
             ->sortByDesc('profit')
-            ->take(5);
+            ->take(5)
+            ->values();
 
-        // Best Selling Products (from LogStok - products sold)
+        // Best Selling Products (from LogStok - grouped by product name)
         $bestSellingProducts = \App\Models\LogStok::where('owner_id', $ownerId)
             ->where('tipe', 'keluar')
-            ->where('referensi', 'like', 'Penjualan%')
+            ->where('keterangan', 'Penjualan produk')
             ->with('produk')
-            ->select('pos_produk_id', DB::raw('SUM(ABS(perubahan)) as total_sold'))
-            ->groupBy('pos_produk_id')
-            ->orderByDesc('total_sold')
-            ->limit(5)
             ->get()
-            ->map(function($log) {
-                $produk = $log->produk;
+            ->filter(function($log) {
+                return $log->produk !== null; // Filter out orphaned records
+            })
+            ->groupBy(function($log) {
+                return $log->produk->nama ?? 'Unknown';
+            })
+            ->map(function($logs, $nama) {
+                $totalSold = $logs->sum(function($log) {
+                    return abs($log->perubahan);
+                });
+                // Get average sell price from products in this group
+                $avgSellPrice = $logs->avg(function($log) {
+                    return $log->produk->harga_jual ?? 0;
+                });
+                
                 return (object)[
-                    'name' => $produk->nama ?? 'Unknown',
-                    'sell_price' => $produk->harga_jual ?? 0,
-                    'total_sold' => abs($log->total_sold)
+                    'name' => $nama,
+                    'sell_price' => $avgSellPrice,
+                    'total_sold' => $totalSold
                 ];
-            });
+            })
+            ->sortByDesc('total_sold')
+            ->take(5)
+            ->values();
         
         // If no sales data, show message
         if ($bestSellingProducts->isEmpty()) {
