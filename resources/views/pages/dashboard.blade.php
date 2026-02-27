@@ -210,12 +210,12 @@
                         </div>
                         <div class="text-right">
                             <p class="text-sm font-bold text-green-500">Rp {{ number_format($product->profit, 0, ',', '.') }}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">profit/unit</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ $product->sold }} unit terjual</p>
                         </div>
                     </div>
                 </div>
                 @empty
-                <p class="text-gray-600 dark:text-gray-400 text-center py-4">Belum ada data produk</p>
+                <p class="text-gray-600 dark:text-gray-400 text-center py-4">Belum ada data penjualan</p>
                 @endforelse
             </div>
         </div>
