@@ -1481,7 +1481,7 @@ class TransaksiController extends Controller
             ->where('is_transaksi_masuk', 1)
             ->findOrFail($id);
 
-        $oldStatus = $transaksi->status;
+        $oldStatus = strtolower(trim($transaksi->status));
         $newStatus = strtolower(trim($request->status));
 
         DB::beginTransaction();
@@ -1500,7 +1500,7 @@ class TransaksiController extends Controller
                 $this->processStockForTransaction($transaksi, true);
                 $transaksi->update([
                     'status' => $newStatus,
-                    'payment_status' => $newStatus === 'cancelled' ? 'cancelled' : 'unpaid',
+                    'payment_status' => 'unpaid',
                     'paid_amount' => 0,
                 ]);
             }
@@ -1551,7 +1551,7 @@ class TransaksiController extends Controller
             ->whereNull('pos_kategori_expense_id')
             ->findOrFail($id);
 
-        $oldStatus = $transaksi->status;
+        $oldStatus = strtolower(trim($transaksi->status));
         $newStatus = strtolower(trim($request->status));
 
         DB::beginTransaction();
@@ -1570,7 +1570,7 @@ class TransaksiController extends Controller
                 $this->processStockForTransaction($transaksi, true);
                 $transaksi->update([
                     'status' => $newStatus,
-                    'payment_status' => $newStatus === 'cancelled' ? 'cancelled' : 'unpaid',
+                    'payment_status' => 'unpaid',
                     'paid_amount' => 0,
                 ]);
             }
