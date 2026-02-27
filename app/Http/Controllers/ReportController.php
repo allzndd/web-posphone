@@ -185,7 +185,16 @@ class ReportController extends Controller
 
         // Cash flow data
         $cashIn = $totalRevenue;
-        $cashOut = $totalHPP + $totalOperatingExpenses;
+
+        // Cash out = actual completed outgoing transactions (purchases + expenses)
+        $totalOutgoingCompleted = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 0)
+            ->where('status', 'completed')
+            ->when($storeId, fn($q) => $q->where('pos_toko_id', $storeId))
+            ->sum('total_harga');
+
+        $cashOut = $totalOutgoingCompleted;
         $freeCashFlow = $cashIn - $cashOut;
 
         // Get receivables (unpaid transactions)
@@ -354,6 +363,19 @@ class ReportController extends Controller
         $cancelledExpenseCount = (clone $pendingExpenseBaseQuery)->where('status', 'cancelled')->count();
         $cancelledExpenseAmount = (clone $pendingExpenseBaseQuery)->where('status', 'cancelled')->sum('total_harga');
 
+        // Pending & Cancelled outgoing purchases (without expense category)
+        $purchaseBaseQuery = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 0)
+            ->whereNull('pos_kategori_expense_id');
+        if ($storeId) {
+            $purchaseBaseQuery->where('pos_toko_id', $storeId);
+        }
+        $pendingPurchaseCount = (clone $purchaseBaseQuery)->where('status', 'pending')->count();
+        $pendingPurchaseAmount = (clone $purchaseBaseQuery)->where('status', 'pending')->sum('total_harga');
+        $cancelledPurchaseCount = (clone $purchaseBaseQuery)->where('status', 'cancelled')->count();
+        $cancelledPurchaseAmount = (clone $purchaseBaseQuery)->where('status', 'cancelled')->sum('total_harga');
+
         return view('reports.financial', [
             'hasAccessRead' => $hasAccessRead,
             'totalRevenue' => $totalRevenue,
@@ -391,6 +413,10 @@ class ReportController extends Controller
             'pendingExpenseAmount' => $pendingExpenseAmount,
             'cancelledExpenseCount' => $cancelledExpenseCount,
             'cancelledExpenseAmount' => $cancelledExpenseAmount,
+            'pendingPurchaseCount' => $pendingPurchaseCount,
+            'pendingPurchaseAmount' => $pendingPurchaseAmount,
+            'cancelledPurchaseCount' => $cancelledPurchaseCount,
+            'cancelledPurchaseAmount' => $cancelledPurchaseAmount,
         ]);
     }
 
