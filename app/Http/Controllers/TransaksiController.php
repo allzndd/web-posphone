@@ -577,6 +577,28 @@ class TransaksiController extends Controller
                             $request->invoice,
                             'Penjualan produk'
                         );
+                        
+                        // Delete individual products based on quantity sold
+                        // Get products to delete (latest first, excluding primary product)
+                        $productsToDelete = PosProduk::where('owner_id', $ownerId)
+                            ->where('pos_produk_merk_id', $merkId)
+                            ->where('id', '!=', $primaryProduk->id) // Don't delete primary
+                            ->orderBy('id', 'desc') // Delete newest first
+                            ->limit($data['total_quantity'])
+                            ->get();
+                        
+                        $deletedCount = $productsToDelete->count();
+                        
+                        // Delete the products
+                        foreach ($productsToDelete as $prodToDelete) {
+                            $prodToDelete->delete();
+                        }
+                        
+                        // If we need to delete more than non-primary products available,
+                        // and total_quantity equals all products (including primary),
+                        // we should still keep the primary but it will have 0 stock
+                        
+                        \Log::info("storeMasuk - Deleted {$deletedCount} products for merk {$merkId}, qty sold: {$data['total_quantity']}");
                     }
                 }
             }
@@ -997,10 +1019,8 @@ class TransaksiController extends Controller
                 'total_items' => count($request->items),
             ]);
             
-            // Group items by brand (merk) to consolidate quantities at stock level
-            // Multiple items with same toko + brand = 1 produk_stok entry with consolidated qty
-            // But each IMEI still creates separate pos_produk entry (IMEI is unique identifier)
-            $groupedByBrand = [];
+            // Track all created/used product IDs for stock update
+            $productIdsForStock = [];
             
             foreach ($request->items as $index => $itemData) {
                 // Skip empty items
@@ -1023,7 +1043,6 @@ class TransaksiController extends Controller
                 $quantity = (int)($itemData['quantity'] ?? 1);
                 
                 // Create transaction item (one entry per item for history/audit trail)
-                // This preserves transaction detail even when stock is consolidated
                 PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
@@ -1037,22 +1056,63 @@ class TransaksiController extends Controller
                     'pajak' => $itemData['pajak'] ?? 0,
                 ]);
 
-                // Group products by brand (merk) for consolidated stock update
+                // For products, create individual product records based on quantity
+                // Both electronic and accessories: each unit = 1 individual product record
+                // IMPORTANT: ALWAYS create NEW product records (clone) for EVERY unit
+                // This ensures each transaction creates separate products, not reusing existing ones
                 if ($pos_produk_id) {
-                    $produk = PosProduk::find($pos_produk_id);
-                    if ($produk) {
-                        $merkId = $produk->pos_produk_merk_id;
+                    $originalProduk = PosProduk::find($pos_produk_id);
+                    if ($originalProduk) {
+                        // Check if this is a NEW template product (created from quick add modal)
+                        // A template has: no stock records AND no OTHER transaction items (exclude current)
+                        $isNewTemplate = !\App\Models\ProdukStok::where('pos_produk_id', $originalProduk->id)->exists()
+                            && !PosTransaksiItem::where('pos_produk_id', $originalProduk->id)
+                                ->where('pos_transaksi_id', '!=', $transaksi->id)
+                                ->exists();
                         
-                        // Group key: brand/merk ID (same toko for all items in this transaction)
-                        // Store only the FIRST product_id (primary), but accumulate quantities
-                        if (!isset($groupedByBrand[$merkId])) {
-                            $groupedByBrand[$merkId] = [
-                                'pos_produk_id' => $pos_produk_id, // Primary product for this brand
-                                'total_quantity' => 0,
-                            ];
+                        // Create clone for EACH unit (including first unit)
+                        // Original product serves as template only, never added to stock directly
+                        // This prevents reuse issues when multiple transactions use same template
+                        for ($i = 0; $i < $quantity; $i++) {
+                            $clonedProduk = $originalProduk->replicate();
+                            
+                            // Set IMEI based on product type
+                            if ($originalProduk->product_type === 'accessories') {
+                                // Accessories don't have IMEI
+                                $clonedProduk->imei = null;
+                            } else {
+                                // For electronic, each unit needs unique IMEI
+                                // First unit keeps original IMEI, subsequent units get suffix
+                                if ($i === 0) {
+                                    $clonedProduk->imei = $originalProduk->imei;
+                                } else {
+                                    $clonedProduk->imei = $originalProduk->imei . '-' . ($i + 1);
+                                }
+                            }
+                            $clonedProduk->save();
+                            
+                            $productIdsForStock[] = $clonedProduk->id;
+                            
+                            \Log::info("storeKeluar - Created product #{$i} for qty:", [
+                                'original_id' => $originalProduk->id,
+                                'cloned_id' => $clonedProduk->id,
+                                'product_type' => $originalProduk->product_type,
+                                'unit_number' => $i + 1,
+                                'total_qty' => $quantity,
+                            ]);
                         }
                         
-                        $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+                        // Delete template product after cloning if it was a NEW template
+                        // This prevents template from appearing in product listing
+                        // Only delete if: it was a template (no prior stock/transactions) AND we created clones
+                        if ($isNewTemplate && $quantity > 0) {
+                            \Log::info("storeKeluar - Deleting template product:", [
+                                'template_id' => $originalProduk->id,
+                                'clones_created' => $quantity,
+                                'is_template' => true,
+                            ]);
+                            $originalProduk->delete();
+                        }
                     }
                 }
             }
@@ -1060,23 +1120,36 @@ class TransaksiController extends Controller
             // Update stock ONLY if status is "completed"
             // For pending/cancelled transactions, stock is NOT updated
             if (strtolower($request->status) === 'completed') {
-                // Update stock ONLY for the primary product per brand
-                // This ensures only 1 produk_stok entry per (toko + brand)
-                foreach ($groupedByBrand as $merkId => $data) {
+                // Group products by MERK for consolidated stock update
+                // This ensures 1 produk_stok entry per MERK, stok = total units
+                $groupedByMerk = [];
+                
+                foreach ($productIdsForStock as $produkId) {
+                    $produk = PosProduk::find($produkId);
+                    if ($produk) {
+                        $merkId = $produk->pos_produk_merk_id;
+                        if (!isset($groupedByMerk[$merkId])) {
+                            $groupedByMerk[$merkId] = 0;
+                        }
+                        $groupedByMerk[$merkId]++;
+                    }
+                }
+                
+                // Update stock for PRIMARY product per MERK (total qty for that merk)
+                foreach ($groupedByMerk as $merkId => $totalQty) {
                     // Find the PRIMARY (smallest ID) produk for this merk
-                    // This ensures consecutive transactions always update SAME produk_stok entry
                     $primaryProduk = PosProduk::where('owner_id', $ownerId)
                         ->where('pos_produk_merk_id', $merkId)
                         ->orderBy('id', 'asc')
                         ->first();
                     
                     if ($primaryProduk) {
-                        // Transaksi keluar (purchase) = stock in (add stock)
+                        // Transaksi keluar (purchase from supplier) = stock in (add stock)
                         $this->updateProductStock(
                             $ownerId,
                             $request->pos_toko_id,
-                            $primaryProduk->id, // Use PRIMARY product, not just first in batch
-                            $data['total_quantity'],
+                            $primaryProduk->id,
+                            $totalQty, // Total units for this merk
                             'masuk',
                             $request->invoice,
                             'Pembelian produk dari supplier'

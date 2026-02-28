@@ -401,14 +401,6 @@
                         Accessories
                     </div>
                 </button>
-                <button type="button" onclick="switchModalProductType('service')" id="modal-tab-service" class="modal-product-type-tab border-b-2 border-transparent px-4 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand-500 dark:hover:text-brand-400 hover:border-brand-500 transition-colors">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        Service
-                    </div>
-                </button>
             </nav>
         </div>
         
@@ -486,65 +478,6 @@
                                       class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 resize-none"></textarea>
                         </div>
 
-                        <!-- Service Fields Section (Service Only) -->
-                        <div id="modal-service-fields" class="hidden">
-                            <h5 class="mb-4 text-sm font-bold text-navy-700 dark:text-white border-l-4 border-green-500 pl-3">Service Details</h5>
-                            
-                            <div class="grid grid-cols-1 gap-4">
-                                <!-- Service Name -->
-                                <div>
-                                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                        Service Name <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="text" id="quick_service_name"
-                                           name="service_name"
-                                           placeholder="e.g., Phone Screen Repair, Battery Replacement, Software Update"
-                                           class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                                </div>
-
-                                <!-- Service Duration -->
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                            Duration <span class="text-xs text-gray-500">(Optional)</span>
-                                        </label>
-                                        <input type="number" id="quick_service_duration"
-                                               name="service_duration"
-                                               min="0"
-                                               placeholder="e.g., 1, 7, 30"
-                                               class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                            Period <span class="text-xs text-gray-500">(Optional)</span>
-                                        </label>
-                                        <div class="custom-dropdown">
-                                            <select id="quick_service_period"
-                                                    name="service_period"
-                                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                                                <option value="">Select Period</option>
-                                                <option value="days">Days</option>
-                                                <option value="weeks">Weeks</option>
-                                                <option value="months">Months</option>
-                                                <option value="years">Years</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Service Description -->
-                                <div>
-                                    <label class="block text-sm font-bold text-navy-700 dark:text-white mb-2">
-                                        Service Description <span class="text-xs text-gray-500">(Optional)</span>
-                                    </label>
-                                    <textarea id="quick_service_description"
-                                              name="service_description"
-                                              rows="3"
-                                              placeholder="Enter detailed service description..."
-                                              class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500 resize-none"></textarea>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -650,6 +583,35 @@
                                    pattern="[0-9]*"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add On / Biaya Tambahan Section (Electronic Only) -->
+                <div id="modal-addon-section">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h5 class="text-sm font-bold text-navy-700 dark:text-white border-l-4 border-orange-500 pl-3">Add On / Biaya Tambahan</h5>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 pl-4">Optional operational costs (service, repair, etc)</p>
+                        </div>
+                        <button type="button" onclick="addBiayaTambahan()"
+                                class="flex items-center gap-1 rounded-lg bg-orange-500 px-3 py-1.5 text-xs font-bold text-white transition duration-200 hover:bg-orange-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Add Item
+                        </button>
+                    </div>
+                    
+                    <div id="biayaTambahanContainer" class="space-y-3">
+                        <!-- Dynamic rows will be added here -->
+                    </div>
+                    
+                    <!-- Total Biaya Tambahan -->
+                    <div id="totalBiayaTambahanWrapper" class="hidden mt-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800/50">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-orange-700 dark:text-orange-300">Total Biaya Tambahan:</span>
+                            <span id="totalBiayaTambahan" class="text-sm font-bold text-orange-700 dark:text-orange-300">Rp 0</span>
                         </div>
                     </div>
                 </div>
@@ -799,8 +761,9 @@ function formatCurrencyInput(input) {
 // Parse formatted currency string back to number
 function parseCurrencyValue(value) {
     if (!value) return 0;
-    // Remove all dots (thousand separators) to get raw number
-    return value.replace(/\./g, '');
+    // Remove all dots (thousand separators) and convert to number
+    const cleanValue = String(value).replace(/\./g, '');
+    return parseInt(cleanValue, 10) || 0;
 }
 
 function formatNumber(num) {
@@ -989,11 +952,13 @@ function selectProduct(itemId, productId, description) {
     }
     
     const product = products.find(p => p.id == productId);
+    
     if (product) {
         // Set price from product
         const priceInput = document.getElementById(`unit-price-${itemId}`);
         if (priceInput) {
-            priceInput.value = product.harga_beli || product.harga_jual || 0;
+            const priceToSet = product.harga_beli || product.harga_jual || 0;
+            priceInput.value = priceToSet;
             
             // Make sure dropdown stays hidden after setting values
             setTimeout(() => {
@@ -1071,25 +1036,25 @@ function switchModalProductType(type) {
     activeTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
     
     const specificationsSection = document.getElementById('modal-specifications-section');
+    const addonSection = document.getElementById('modal-addon-section');
     const imeiField = document.getElementById('quick_imei');
     const imeiMarker = document.getElementById('modal-imei-required-marker');
     const brandTypeSection = document.getElementById('modal-brand-type-section');
-    const serviceFields = document.getElementById('modal-service-fields');
     
     if (type === 'electronic') {
-        // Electronic: Show brand dropdown, type dropdown, and specs
+        // Electronic: Show brand dropdown, type dropdown, specs, and addon
         if (brandTypeSection) brandTypeSection.classList.remove('hidden');
         if (specificationsSection) specificationsSection.classList.remove('hidden');
-        if (serviceFields) serviceFields.classList.add('hidden');
+        if (addonSection) addonSection.classList.remove('hidden');
         imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.remove('hidden');
         // Initialize with filtered data for electronic
         initializeMerkDropdownForProductType('electronic');
     } else if (type === 'accessories') {
-        // Accessories: Show brand dropdown and type dropdown only (no specs)
+        // Accessories: Show brand dropdown and type dropdown only (no specs, no addon)
         if (brandTypeSection) brandTypeSection.classList.remove('hidden');
         if (specificationsSection) specificationsSection.classList.add('hidden');
-        if (serviceFields) serviceFields.classList.add('hidden');
+        if (addonSection) addonSection.classList.add('hidden');
         if (imeiField) imeiField.required = false;
         if (imeiMarker) imeiMarker.classList.add('hidden');
         if (imeiField) imeiField.value = '';
@@ -1101,24 +1066,10 @@ function switchModalProductType(type) {
         if (ramElem) ramElem.value = '';
         if (penyimpananElem) penyimpananElem.value = '';
         if (batteryElem) batteryElem.value = '';
+        // Clear biaya tambahan when switching to accessories
+        clearBiayaTambahan();
         // Initialize with filtered data for accessories
         initializeMerkDropdownForProductType('accessories');
-    } else if (type === 'service') {
-        // Service: Hide brand/type dropdowns and specs, show service-specific fields
-        if (brandTypeSection) brandTypeSection.classList.add('hidden');
-        if (specificationsSection) specificationsSection.classList.add('hidden');
-        if (serviceFields) serviceFields.classList.remove('hidden');
-        if (imeiField) imeiField.required = false;
-        if (imeiMarker) imeiMarker.classList.add('hidden');
-        if (imeiField) imeiField.value = '';
-        const warnaElem = document.getElementById('quick_warna');
-        const ramElem = document.getElementById('quick_ram');
-        const penyimpananElem = document.getElementById('quick_penyimpanan');
-        const batteryElem = document.getElementById('quick_battery_health');
-        if (warnaElem) warnaElem.value = '';
-        if (ramElem) ramElem.value = '';
-        if (penyimpananElem) penyimpananElem.value = '';
-        if (batteryElem) batteryElem.value = '';
     }
 }
 
@@ -1141,9 +1092,7 @@ function initializeMerkDropdown() {
 // Initialize brand dropdown with unique merks filtered by product type
 function initializeMerkDropdownForProductType(productType) {
     // Filter allMerks by product_type
-    const filteredMerks = productType === 'service' 
-        ? [] 
-        : allMerks.filter(item => item.product_type === productType);
+    const filteredMerks = allMerks.filter(item => item.product_type === productType);
     
     const uniqueMerks = [...new Set(filteredMerks.map(item => item.merk).filter(Boolean))].sort();
     currentBrandItems = uniqueMerks;
@@ -1606,6 +1555,105 @@ function closeProductModal() {
     currentItemIdForModal = null;
     document.getElementById('quickProductForm').reset();
     document.getElementById('quickProductErrors').classList.add('hidden');
+    
+    // Reset biaya tambahan
+    clearBiayaTambahan();
+}
+
+// ============= BIAYA TAMBAHAN / ADD ON FUNCTIONS =============
+
+let biayaTambahanCounter = 0;
+
+function addBiayaTambahan() {
+    biayaTambahanCounter++;
+    const container = document.getElementById('biayaTambahanContainer');
+    const totalWrapper = document.getElementById('totalBiayaTambahanWrapper');
+    
+    const row = document.createElement('div');
+    row.id = `biayaTambahanRow_${biayaTambahanCounter}`;
+    row.className = 'flex gap-3 items-start animate-fade-in';
+    row.innerHTML = `
+        <div class="flex-1">
+            <input type="text" 
+                   name="biaya_tambahan[${biayaTambahanCounter}][nama]"
+                   placeholder="Description (e.g. Service LCD, Repair...)"
+                   class="biaya-tambahan-nama w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-orange-500">
+        </div>
+        <div class="w-36">
+            <input type="text" 
+                   name="biaya_tambahan[${biayaTambahanCounter}][harga]"
+                   placeholder="Amount"
+                   oninput="formatCurrencyInput(this); calculateTotalBiayaTambahan();"
+                   class="biaya-tambahan-harga w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-orange-500">
+        </div>
+        <button type="button" onclick="removeBiayaTambahan(${biayaTambahanCounter})"
+                class="flex-shrink-0 p-3 rounded-xl bg-red-100 dark:bg-red-900/30 text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+        </button>
+    `;
+    
+    container.appendChild(row);
+    totalWrapper.classList.remove('hidden');
+    calculateTotalBiayaTambahan();
+}
+
+function removeBiayaTambahan(index) {
+    const row = document.getElementById(`biayaTambahanRow_${index}`);
+    if (row) {
+        row.remove();
+        calculateTotalBiayaTambahan();
+        
+        // Hide total wrapper if no more items
+        const container = document.getElementById('biayaTambahanContainer');
+        const totalWrapper = document.getElementById('totalBiayaTambahanWrapper');
+        if (container.children.length === 0) {
+            totalWrapper.classList.add('hidden');
+        }
+    }
+}
+
+function clearBiayaTambahan() {
+    const container = document.getElementById('biayaTambahanContainer');
+    const totalWrapper = document.getElementById('totalBiayaTambahanWrapper');
+    
+    if (container) container.innerHTML = '';
+    if (totalWrapper) totalWrapper.classList.add('hidden');
+    biayaTambahanCounter = 0;
+}
+
+function calculateTotalBiayaTambahan() {
+    const hargaInputs = document.querySelectorAll('.biaya-tambahan-harga');
+    let total = 0;
+    
+    hargaInputs.forEach(input => {
+        total += parseCurrencyValue(input.value);
+    });
+    
+    const totalElement = document.getElementById('totalBiayaTambahan');
+    if (totalElement) {
+        totalElement.textContent = formatCurrency(total);
+    }
+    
+    return total;
+}
+
+function getBiayaTambahanData() {
+    const container = document.getElementById('biayaTambahanContainer');
+    const rows = container.querySelectorAll('[id^="biayaTambahanRow_"]');
+    const data = [];
+    
+    rows.forEach(row => {
+        const nama = row.querySelector('.biaya-tambahan-nama').value.trim();
+        const harga = parseCurrencyValue(row.querySelector('.biaya-tambahan-harga').value);
+        
+        if (nama && harga > 0) {
+            data.push({ nama: nama, harga: harga });
+        }
+    });
+    
+    return data;
 }
 
 function submitQuickProduct(event) {
@@ -1626,7 +1674,7 @@ function submitQuickProduct(event) {
     
     console.log('submitQuickProduct - merkId:', merkId, 'productType:', productType);
     
-    if (!merkId && productType !== 'service') {
+    if (!merkId) {
         errorDiv.classList.remove('hidden');
         errorDiv.querySelector('p').textContent = 'Please select a Brand and Type first';
         submitBtn.disabled = false;
@@ -1634,51 +1682,38 @@ function submitQuickProduct(event) {
         return;
     }
     
-    // Service name is required for service type
-    if (productType === 'service') {
-        const serviceName = document.getElementById('quick_service_name').value;
-        if (!serviceName) {
-            errorDiv.classList.remove('hidden');
-            errorDiv.querySelector('p').textContent = 'Service name is required';
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Product';
-            return;
-        }
-    }
-    
     console.log('Submitting product with type:', productType); // Debug log
     
+    // Get biaya tambahan data (only for electronic)
+    const biayaTambahanData = productType === 'electronic' ? getBiayaTambahanData() : [];
+    const totalBiayaTambahan = biayaTambahanData.reduce((sum, item) => sum + item.harga, 0);
+    
     // Build basic form data
+    const basePurchasePrice = parseCurrencyValue(document.getElementById('quick_harga_beli').value);
     let formData = {
         product_type: productType,
-        harga_beli: parseCurrencyValue(document.getElementById('quick_harga_beli').value),
+        harga_beli: basePurchasePrice,
+        harga_beli_total: basePurchasePrice + totalBiayaTambahan, // Total including addon
         harga_jual: parseCurrencyValue(document.getElementById('quick_harga_jual').value),
+        biaya_tambahan: biayaTambahanData,
     };
     
-    // Add type-specific fields
-    if (productType === 'service') {
-        formData.nama = document.getElementById('quick_service_name').value;
-        formData.service_name = document.getElementById('quick_service_name').value;
-        formData.service_duration = document.getElementById('quick_service_duration').value;
-        formData.service_period = document.getElementById('quick_service_period').value;
-        formData.service_description = document.getElementById('quick_service_description').value;
-        formData.deskripsi = document.getElementById('quick_service_description').value;
-    } else {
-        // Electronic or Accessories
-        const typeLabel = document.getElementById('typeDropdownLabel').textContent;
-        const nama = (typeLabel && typeLabel !== 'Select Type') ? typeLabel : 'Produk Baru';
-        
-        formData.nama = nama;
-        formData.pos_produk_merk_id = merkId;
-        formData.warna = document.getElementById('quick_warna').value;
-        formData.ram = document.getElementById('quick_ram').value;
-        formData.penyimpanan = document.getElementById('quick_penyimpanan').value;
-        formData.battery_health = document.getElementById('quick_battery_health').value;
-        formData.imei = document.getElementById('quick_imei').value;
-    }
+    // Add type-specific fields (Electronic or Accessories)
+    const typeLabel = document.getElementById('typeDropdownLabel').textContent;
+    const nama = (typeLabel && typeLabel !== 'Select Type') ? typeLabel : 'Produk Baru';
+    
+    formData.nama = nama;
+    formData.pos_produk_merk_id = merkId;
+    formData.warna = document.getElementById('quick_warna').value;
+    formData.ram = document.getElementById('quick_ram').value;
+    formData.penyimpanan = document.getElementById('quick_penyimpanan').value;
+    formData.battery_health = document.getElementById('quick_battery_health').value;
+    formData.imei = document.getElementById('quick_imei').value;
     
     console.log('=== FORM DATA DEBUG ===');
     console.log('Product Type:', productType);
+    console.log('Biaya Tambahan:', biayaTambahanData);
+    console.log('Total Biaya Tambahan:', totalBiayaTambahan);
     console.log('Complete Form Data to send:', formData);
     console.log('=== END DEBUG ===');
     
@@ -1703,18 +1738,11 @@ function submitQuickProduct(event) {
                 product_type: data.data.product_type || productType
             };
             
-            // Add brand info if not service
-            if (productType !== 'service') {
-                newProductData.merk = { nama: data.data.merk_nama };
-                newProductData.ram = data.data.ram;
-                newProductData.penyimpanan = data.data.penyimpanan;
-                newProductData.battery_health = data.data.battery_health;
-            } else {
-                // Add service-specific info
-                newProductData.service_duration = data.data.service_duration;
-                newProductData.service_period = data.data.service_period;
-                newProductData.service_description = data.data.service_description;
-            }
+            // Add brand info
+            newProductData.merk = { nama: data.data.merk_nama };
+            newProductData.ram = data.data.ram;
+            newProductData.penyimpanan = data.data.penyimpanan;
+            newProductData.battery_health = data.data.battery_health;
             
             products.push(newProductData);
             
@@ -1724,17 +1752,10 @@ function submitQuickProduct(event) {
                 let description = newProduct.nama;
                 const specs = [];
                 
-                if (productType === 'service') {
-                    // Service description
-                    if (newProduct.service_duration && newProduct.service_period) {
-                        specs.push(newProduct.service_duration + ' ' + newProduct.service_period);
-                    }
-                } else {
-                    // Electronic/Accessories specs
-                    if (newProduct.ram) specs.push(newProduct.ram + ' GB RAM');
-                    if (newProduct.penyimpanan) specs.push(newProduct.penyimpanan + ' GB');
-                    if (newProduct.battery_health) specs.push(newProduct.battery_health + '% Battery');
-                }
+                // Electronic/Accessories specs
+                if (newProduct.ram) specs.push(newProduct.ram + ' GB RAM');
+                if (newProduct.penyimpanan) specs.push(newProduct.penyimpanan + ' GB');
+                if (newProduct.battery_health) specs.push(newProduct.battery_health + '% Battery');
                 
                 if (specs.length > 0) {
                     description += ' - ' + specs.join(' / ');

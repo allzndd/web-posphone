@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\PosProduk;
+use App\Models\PosProdukBiayaTambahan;
 use App\Models\PosProdukMerk;
 use App\Models\PosService;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ProdukController extends Controller
 {
@@ -26,20 +28,20 @@ class ProdukController extends Controller
 
         $searchQuery = $request->input('search') ?? $request->input('nama');
 
-        // Get all merkids that have stock > 0
+        // Get all merk IDs that have stock > 0
         $merkIdsWithStock = \App\Models\ProdukStok::where('owner_id', $ownerId)
             ->where('stok', '>', 0)
-            ->pluck('pos_produk_id')
-            ->unique();
+            ->with('produk')
+            ->get()
+            ->pluck('produk.pos_produk_merk_id')
+            ->unique()
+            ->filter();
         
-        // Get all products from those merks (to show all variants like in produk-stok detail modal)
+        // Get all products from those merks (to show all variants/individual items)
+        // This ensures all individual products (each with unique IMEI for electronics) are displayed
         $produk = PosProduk::where('owner_id', $ownerId)
             ->with(['merk', 'stok', 'ram', 'penyimpanan', 'warna'])
-            ->whereIn('pos_produk_merk_id', 
-                PosProduk::whereIn('id', $merkIdsWithStock)
-                    ->pluck('pos_produk_merk_id')
-                    ->unique()
-            )
+            ->whereIn('pos_produk_merk_id', $merkIdsWithStock)
             ->when($searchQuery, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('nama', 'like', '%' . $search . '%')
@@ -426,9 +428,33 @@ class ProdukController extends Controller
                 'penyimpanan' => 'nullable|string|max:255',
                 'battery_health' => 'nullable|numeric|min:0|max:100',
                 'imei' => 'nullable|string|max:255',
+                'biaya_tambahan' => 'nullable|array',
+                'biaya_tambahan.*.nama' => 'required_with:biaya_tambahan|string|max:255',
+                'biaya_tambahan.*.harga' => 'required_with:biaya_tambahan|numeric|min:0',
             ]);
 
             \Log::info('After validation - warna: ' . $request->warna . ', ram: ' . $request->ram . ', penyimpanan: ' . $request->penyimpanan);
+
+            // Calculate total biaya tambahan
+            $biayaTambahanData = $request->input('biaya_tambahan', []);
+            $totalBiayaTambahan = 0;
+            if (!empty($biayaTambahanData) && is_array($biayaTambahanData)) {
+                foreach ($biayaTambahanData as $item) {
+                    if (isset($item['harga']) && $item['harga'] > 0) {
+                        $totalBiayaTambahan += $item['harga'];
+                    }
+                }
+            }
+
+            // Calculate final purchase price (base + add-on costs)
+            $basePurchasePrice = $request->harga_beli;
+            $finalPurchasePrice = $basePurchasePrice + $totalBiayaTambahan;
+
+            \Log::info('Price calculation:', [
+                'base_purchase_price' => $basePurchasePrice,
+                'total_biaya_tambahan' => $totalBiayaTambahan,
+                'final_purchase_price' => $finalPurchasePrice,
+            ]);
 
             // Auto-generate nama dari tipe saja jika kosong
             $nama = $request->nama;
@@ -465,7 +491,7 @@ class ProdukController extends Controller
                     'pos_produk_merk_id' => $request->pos_produk_merk_id,
                     'nama' => $nama,
                     'product_type' => $request->product_type,
-                    'harga_beli' => $request->harga_beli,
+                    'harga_beli' => $finalPurchasePrice, // Include biaya tambahan in purchase price
                     'harga_jual' => $request->harga_jual,
                     'pos_warna_id' => !empty($request->warna) ? $request->warna : null,
                     'pos_ram_id' => !empty($request->ram) ? $request->ram : null,
@@ -505,6 +531,47 @@ class ProdukController extends Controller
                     ['id' => $request->penyimpanan],
                     ['id_owner' => $ownerId]
                 );
+            }
+
+            // Handle Biaya Tambahan (Add On costs) - Only for electronic products
+            $biayaTambahanData = $request->input('biaya_tambahan', []);
+            if (!empty($biayaTambahanData) && $request->product_type === 'electronic' && !$existingProduk) {
+                foreach ($biayaTambahanData as $item) {
+                    if (!empty($item['nama']) && isset($item['harga']) && $item['harga'] > 0) {
+                        try {
+                            // Use DB query builder to bypass timestamp issues
+                            DB::table('pos_produk_biaya_tambahan')->insert([
+                                'pos_produk_id' => $produk->id,
+                                'nama' => $item['nama'],
+                                'harga' => $item['harga'],
+                            ]);
+                        } catch (\Exception $e) {
+                            \Log::error('Failed to insert biaya tambahan, trying with NULL timestamps:', [
+                                'error' => $e->getMessage(),
+                                'produk_id' => $produk->id,
+                            ]);
+                            
+                            // Try with explicit NULL for timestamp columns if they exist
+                            try {
+                                DB::statement('INSERT INTO pos_produk_biaya_tambahan (pos_produk_id, nama, harga) VALUES (?, ?, ?)', [
+                                    $produk->id,
+                                    $item['nama'],
+                                    $item['harga']
+                                ]);
+                            } catch (\Exception $e2) {
+                                \Log::error('Failed to insert biaya tambahan with statement:', [
+                                    'error' => $e2->getMessage()
+                                ]);
+                                // Continue without biaya tambahan rather than fail entire product creation
+                            }
+                        }
+                    }
+                }
+                
+                \Log::info('quickStore - Biaya Tambahan saved:', [
+                    'produk_id' => $produk->id,
+                    'count' => count($biayaTambahanData),
+                ]);
             }
 
             // Load relationship for response

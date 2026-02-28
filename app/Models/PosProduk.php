@@ -17,6 +17,7 @@ class PosProduk extends Model
         'pos_toko_id',
         'pos_produk_nama_id',
         'pos_produk_merk_id',
+        'pos_produk_biaya_tambahan_id',
         'pos_produk_tipe_id',
         'product_type',
         'nama',
@@ -179,5 +180,21 @@ class PosProduk extends Model
     public function stok()
     {
         return $this->hasMany(ProdukStok::class, 'pos_produk_id');
+    }
+
+    /**
+     * Relationship to Biaya Tambahan (Add On costs)
+     */
+    public function biayaTambahanItems()
+    {
+        return $this->hasMany(PosProdukBiayaTambahan::class, 'pos_produk_id');
+    }
+
+    /**
+     * Get total biaya tambahan
+     */
+    public function getTotalBiayaTambahanAttribute()
+    {
+        return $this->biayaTambahanItems->sum('harga');
     }
 }
