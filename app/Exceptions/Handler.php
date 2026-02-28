@@ -70,6 +70,16 @@ class Handler extends ExceptionHandler
             return parent::render($request, $e);
         }
 
+        // Let Laravel handle validation exceptions natively (redirect back with errors)
+        if ($e instanceof ValidationException) {
+            return parent::render($request, $e);
+        }
+
+        // Let Laravel handle token mismatch (CSRF) exceptions natively
+        if ($e instanceof \Illuminate\Session\TokenMismatchException) {
+            return parent::render($request, $e);
+        }
+
         // Handle specific exceptions first
         if ($e instanceof NotFoundHttpException) {
             return response()->view('errors.404', ['exception' => $e], 404);
