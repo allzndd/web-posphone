@@ -1094,6 +1094,52 @@ class TransaksiController extends Controller
                             }
                             $clonedProduk->save();
                             
+                            // Copy biaya tambahan (additional costs) from original to clone
+                            // This ensures biaya tambahan is preserved when template is deleted
+                            $biayaTambahanItems = \App\Models\PosProdukBiayaTambahan::where('pos_produk_id', $originalProduk->id)->get();
+                            
+                            \Log::info("=== CLONE #{$i} - COPY BIAYA TAMBAHAN ===", [
+                                'original_produk_id' => $originalProduk->id,
+                                'cloned_produk_id' => $clonedProduk->id,
+                                'biaya_tambahan_count' => $biayaTambahanItems->count(),
+                                'items' => $biayaTambahanItems->toArray(),
+                            ]);
+                            
+                            if ($biayaTambahanItems->count() > 0) {
+                                foreach ($biayaTambahanItems as $biayaItem) {
+                                    try {
+                                        // Use Eloquent Model which handles timestamps correctly
+                                        $newBiaya = \App\Models\PosProdukBiayaTambahan::create([
+                                            'pos_produk_id' => $clonedProduk->id,
+                                            'nama' => $biayaItem->nama,
+                                            'harga' => $biayaItem->harga,
+                                        ]);
+                                        
+                                        if ($newBiaya && $newBiaya->id) {
+                                            \Log::info('✅ Biaya tambahan copied to clone:', [
+                                                'new_id' => $newBiaya->id,
+                                                'from_produk_id' => $originalProduk->id,
+                                                'to_produk_id' => $clonedProduk->id,
+                                                'nama' => $biayaItem->nama,
+                                                'harga' => $biayaItem->harga,
+                                            ]);
+                                        } else {
+                                            \Log::error('❌ Create biaya tambahan to clone returned no ID');
+                                        }
+                                    } catch (\Exception $e) {
+                                        \Log::error('❌ Failed to copy biaya tambahan to clone:', [
+                                            'error' => $e->getMessage(),
+                                            'from_produk_id' => $originalProduk->id,
+                                            'to_produk_id' => $clonedProduk->id,
+                                        ]);
+                                    }
+                                }
+                            } else {
+                                \Log::warning('⚠️ No biaya tambahan found on template to copy', [
+                                    'original_produk_id' => $originalProduk->id,
+                                ]);
+                            }
+                            
                             // Store first clone ID for transaction item reference
                             if ($i === 0) {
                                 $firstClonedId = $clonedProduk->id;
@@ -1107,6 +1153,7 @@ class TransaksiController extends Controller
                                 'product_type' => $originalProduk->product_type,
                                 'unit_number' => $i + 1,
                                 'total_qty' => $quantity,
+                                'biaya_tambahan_copied' => $biayaTambahanItems->count(),
                             ]);
                         }
                         

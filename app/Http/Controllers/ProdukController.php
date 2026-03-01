@@ -209,7 +209,27 @@ class ProdukController extends Controller
      */
     public function show(PosProduk $produk)
     {
-        $produk->load(['merk', 'ram', 'penyimpanan', 'warna']);
+        $produk->load(['merk', 'ram', 'penyimpanan', 'warna', 'biayaTambahanItems']);
+        
+        // DEBUG: Log data untuk troubleshooting
+        \Log::info('ProdukController::show - DEBUG:', [
+            'produk_id' => $produk->id,
+            'biayaTambahanItems_loaded' => $produk->relationLoaded('biayaTambahanItems'),
+            'biayaTambahanItems_count' => $produk->biayaTambahanItems->count(),
+            'biayaTambahanItems_data' => $produk->biayaTambahanItems->toArray(),
+        ]);
+        
+        // Also check directly from DB
+        $directQuery = \DB::table('pos_produk_biaya_tambahan')
+            ->where('pos_produk_id', $produk->id)
+            ->get();
+        
+        \Log::info('Direct DB query for biaya tambahan:', [
+            'produk_id' => $produk->id,
+            'count' => $directQuery->count(),
+            'data' => $directQuery->toArray(),
+        ]);
+        
         return view('pages.produk.show', compact('produk'));
     }
 
@@ -535,43 +555,84 @@ class ProdukController extends Controller
 
             // Handle Biaya Tambahan (Add On costs) - Only for electronic products
             $biayaTambahanData = $request->input('biaya_tambahan', []);
+            
+            \Log::info('=== QUICKSTORE BIAYA TAMBAHAN DEBUG START ===', [
+                'produk_id' => $produk->id,
+                'product_type' => $request->product_type,
+                'biaya_tambahan_data' => $biayaTambahanData,
+                'is_empty' => empty($biayaTambahanData),
+                'is_electronic' => $request->product_type === 'electronic',
+                'existing_produk' => $existingProduk ? 'YES' : 'NO',
+                'will_process' => (!empty($biayaTambahanData) && $request->product_type === 'electronic' && !$existingProduk),
+            ]);
+            
             if (!empty($biayaTambahanData) && $request->product_type === 'electronic' && !$existingProduk) {
-                foreach ($biayaTambahanData as $item) {
+                $savedCount = 0;
+                foreach ($biayaTambahanData as $index => $item) {
+                    \Log::info("Processing biaya tambahan item #{$index}:", [
+                        'item' => $item,
+                        'nama_empty' => empty($item['nama']),
+                        'harga_isset' => isset($item['harga']),
+                        'harga_value' => $item['harga'] ?? 'not set',
+                        'harga_gt_0' => isset($item['harga']) && $item['harga'] > 0,
+                    ]);
+                    
                     if (!empty($item['nama']) && isset($item['harga']) && $item['harga'] > 0) {
                         try {
-                            // Use DB query builder to bypass timestamp issues
-                            DB::table('pos_produk_biaya_tambahan')->insert([
+                            // Use Eloquent Model which handles timestamps correctly
+                            $biayaTambahan = PosProdukBiayaTambahan::create([
                                 'pos_produk_id' => $produk->id,
                                 'nama' => $item['nama'],
                                 'harga' => $item['harga'],
                             ]);
-                        } catch (\Exception $e) {
-                            \Log::error('Failed to insert biaya tambahan, trying with NULL timestamps:', [
-                                'error' => $e->getMessage(),
-                                'produk_id' => $produk->id,
-                            ]);
                             
-                            // Try with explicit NULL for timestamp columns if they exist
-                            try {
-                                DB::statement('INSERT INTO pos_produk_biaya_tambahan (pos_produk_id, nama, harga) VALUES (?, ?, ?)', [
-                                    $produk->id,
-                                    $item['nama'],
-                                    $item['harga']
+                            if ($biayaTambahan && $biayaTambahan->id) {
+                                $savedCount++;
+                                \Log::info('✅ Biaya tambahan inserted successfully:', [
+                                    'id' => $biayaTambahan->id,
+                                    'produk_id' => $produk->id,
+                                    'nama' => $item['nama'],
+                                    'harga' => $item['harga'],
                                 ]);
-                            } catch (\Exception $e2) {
-                                \Log::error('Failed to insert biaya tambahan with statement:', [
-                                    'error' => $e2->getMessage()
+                            } else {
+                                \Log::error('❌ Create returned no ID', [
+                                    'produk_id' => $produk->id,
+                                    'item' => $item,
                                 ]);
-                                // Continue without biaya tambahan rather than fail entire product creation
                             }
+                        } catch (\Exception $e) {
+                            \Log::error('❌ Failed to insert biaya tambahan (EXCEPTION):', [
+                                'error' => $e->getMessage(),
+                                'trace' => $e->getTraceAsString(),
+                                'produk_id' => $produk->id,
+                                'nama' => $item['nama'],
+                                'harga' => $item['harga'],
+                            ]);
                         }
+                    } else {
+                        \Log::warning('⚠️ Skipping biaya tambahan item (validation failed):', [
+                            'item' => $item,
+                        ]);
                     }
                 }
                 
-                \Log::info('quickStore - Biaya Tambahan saved:', [
+                \Log::info('=== QUICKSTORE BIAYA TAMBAHAN DEBUG END ===', [
                     'produk_id' => $produk->id,
-                    'count' => count($biayaTambahanData),
+                    'total_items' => count($biayaTambahanData),
+                    'saved_count' => $savedCount,
                 ]);
+                
+                // Verify what was saved
+                $verify = DB::table('pos_produk_biaya_tambahan')
+                    ->where('pos_produk_id', $produk->id)
+                    ->get();
+                \Log::info('Verification query result:', [
+                    'produk_id' => $produk->id,
+                    'count' => $verify->count(),
+                    'data' => $verify->toArray(),
+                ]);
+            } else {
+                \Log::warning('⚠️ Biaya tambahan NOT processed (conditions not met)');
             }
 
             // Load relationship for response
