@@ -458,11 +458,11 @@
                                     </div>
                                 </div>
                                 
-                                <button type="button" 
+                                <!-- <button type="button" 
                                         onclick="openModalProductNameModal()"
                                         class="rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 whitespace-nowrap">
                                     + New
-                                </button>
+                                </button> -->
                             </div>
                         </div>
 
