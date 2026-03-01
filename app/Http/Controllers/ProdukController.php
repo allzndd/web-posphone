@@ -579,23 +579,22 @@ class ProdukController extends Controller
                     
                     if (!empty($item['nama']) && isset($item['harga']) && $item['harga'] > 0) {
                         try {
-                            // Use Eloquent Model which handles timestamps correctly
-                            $biayaTambahan = PosProdukBiayaTambahan::create([
+                            // Insert without timestamps - hosting has wrong column types
+                            $inserted = DB::table('pos_produk_biaya_tambahan')->insert([
                                 'pos_produk_id' => $produk->id,
                                 'nama' => $item['nama'],
                                 'harga' => $item['harga'],
                             ]);
                             
-                            if ($biayaTambahan && $biayaTambahan->id) {
+                            if ($inserted) {
                                 $savedCount++;
                                 \Log::info('✅ Biaya tambahan inserted successfully:', [
-                                    'id' => $biayaTambahan->id,
                                     'produk_id' => $produk->id,
                                     'nama' => $item['nama'],
                                     'harga' => $item['harga'],
                                 ]);
                             } else {
-                                \Log::error('❌ Create returned no ID', [
+                                \Log::error('❌ Insert returned false', [
                                     'produk_id' => $produk->id,
                                     'item' => $item,
                                 ]);

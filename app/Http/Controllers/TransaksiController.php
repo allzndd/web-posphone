@@ -1108,23 +1108,22 @@ class TransaksiController extends Controller
                             if ($biayaTambahanItems->count() > 0) {
                                 foreach ($biayaTambahanItems as $biayaItem) {
                                     try {
-                                        // Use Eloquent Model which handles timestamps correctly
-                                        $newBiaya = \App\Models\PosProdukBiayaTambahan::create([
+                                        // Insert without timestamps - hosting has wrong column types
+                                        $inserted = \DB::table('pos_produk_biaya_tambahan')->insert([
                                             'pos_produk_id' => $clonedProduk->id,
                                             'nama' => $biayaItem->nama,
                                             'harga' => $biayaItem->harga,
                                         ]);
                                         
-                                        if ($newBiaya && $newBiaya->id) {
+                                        if ($inserted) {
                                             \Log::info('✅ Biaya tambahan copied to clone:', [
-                                                'new_id' => $newBiaya->id,
                                                 'from_produk_id' => $originalProduk->id,
                                                 'to_produk_id' => $clonedProduk->id,
                                                 'nama' => $biayaItem->nama,
                                                 'harga' => $biayaItem->harga,
                                             ]);
                                         } else {
-                                            \Log::error('❌ Create biaya tambahan to clone returned no ID');
+                                            \Log::error('❌ Insert biaya tambahan to clone returned false');
                                         }
                                     } catch (\Exception $e) {
                                         \Log::error('❌ Failed to copy biaya tambahan to clone:', [

@@ -18,6 +18,7 @@ class PosProdukBiayaTambahan extends Model
 
     /**
      * Indicates if the model should be timestamped.
+     * Disabled - table has wrong column types on hosting.
      *
      * @var bool
      */
