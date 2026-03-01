@@ -142,7 +142,9 @@
                             <td class="py-4">
                                 <div class="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
                                     @php
-                                        $imeis = $item->items->pluck('produk.imei')->filter()->unique()->values();
+                                        $imeis = $item->items->map(function($transItem) {
+                                            return $transItem->produk ? $transItem->produk->imei : null;
+                                        })->filter()->unique()->values();
                                     @endphp
                                     @if($imeis->count() > 0)
                                         @foreach($imeis as $imei)
@@ -157,13 +159,15 @@
                             <td class="py-4">
                                 <div class="text-sm max-w-xs">
                                     @php
-                                        $productTypes = $item->items->pluck('produk.product_type')->filter()->unique()->values();
+                                        $productTypes = $item->items->map(function($transItem) {
+                                            return $transItem->produk ? $transItem->produk->product_type : null;
+                                        })->filter()->unique()->values();
                                     @endphp
                                     @if($productTypes->count() > 0)
                                         @foreach($productTypes as $type)
                                             @if($type === 'electronic')
                                                 <span class="inline-block bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-medium mb-1 mr-1">📱 Electronic</span>
-                                            @elseif($type === 'accessory')
+                                            @elseif($type === 'accessory' || $type === 'accessories')
                                                 <span class="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-xs font-medium mb-1 mr-1">🔌 Accessory</span>
                                             @elseif($type === 'service')
                                                 <span class="inline-block bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs font-medium mb-1 mr-1">🔧 Service</span>

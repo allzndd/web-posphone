@@ -1043,7 +1043,7 @@ class TransaksiController extends Controller
                 $quantity = (int)($itemData['quantity'] ?? 1);
                 
                 // Create transaction item (one entry per item for history/audit trail)
-                PosTransaksiItem::create([
+                $transaksiItem = PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
                     'pos_service_id' => $pos_service_id,
@@ -1064,11 +1064,14 @@ class TransaksiController extends Controller
                     $originalProduk = PosProduk::find($pos_produk_id);
                     if ($originalProduk) {
                         // Check if this is a NEW template product (created from quick add modal)
-                        // A template has: no stock records AND no OTHER transaction items (exclude current)
+                        // A template has: no stock records AND no OTHER transaction items (exclude current item we just created)
                         $isNewTemplate = !\App\Models\ProdukStok::where('pos_produk_id', $originalProduk->id)->exists()
                             && !PosTransaksiItem::where('pos_produk_id', $originalProduk->id)
-                                ->where('pos_transaksi_id', '!=', $transaksi->id)
+                                ->where('id', '!=', $transaksiItem->id)
                                 ->exists();
+                        
+                        // Track first cloned product ID to update transaction item reference
+                        $firstClonedId = null;
                         
                         // Create clone for EACH unit (including first unit)
                         // Original product serves as template only, never added to stock directly
@@ -1091,6 +1094,11 @@ class TransaksiController extends Controller
                             }
                             $clonedProduk->save();
                             
+                            // Store first clone ID for transaction item reference
+                            if ($i === 0) {
+                                $firstClonedId = $clonedProduk->id;
+                            }
+                            
                             $productIdsForStock[] = $clonedProduk->id;
                             
                             \Log::info("storeKeluar - Created product #{$i} for qty:", [
@@ -1100,6 +1108,12 @@ class TransaksiController extends Controller
                                 'unit_number' => $i + 1,
                                 'total_qty' => $quantity,
                             ]);
+                        }
+                        
+                        // Update transaction item to reference first clone instead of template
+                        // This ensures IMEI and product_type display correctly in index
+                        if ($firstClonedId && $isNewTemplate) {
+                            $transaksiItem->update(['pos_produk_id' => $firstClonedId]);
                         }
                         
                         // Delete template product after cloning if it was a NEW template
