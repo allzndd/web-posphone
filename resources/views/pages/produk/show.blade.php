@@ -152,43 +152,12 @@
 
             <!-- Additional Costs (Biaya Tambahan) -->
             @php
-                // Try direct DB query to bypass any relationship issues
                 $biayaTambahanDirect = \DB::table('pos_produk_biaya_tambahan')
                     ->where('pos_produk_id', $produk->id)
                     ->get();
                 
                 $hasBiayaTambahan = $biayaTambahanDirect->count() > 0;
-                
-                // DEBUG: Cek data biaya tambahan
-                \Log::info('DEBUG show.blade.php:', [
-                    'produk_id' => $produk->id,
-                    'direct_query_count' => $biayaTambahanDirect->count(),
-                    'relation_loaded' => $produk->relationLoaded('biayaTambahanItems'),
-                    'relation_count' => $produk->biayaTambahanItems ? $produk->biayaTambahanItems->count() : 'null',
-                    'hasBiayaTambahan' => $hasBiayaTambahan,
-                ]);
             @endphp
-            
-            <!-- DEBUG INFO (temporary - remove after testing) -->
-            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-white/10 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                <p class="text-sm font-bold text-gray-900 dark:text-white mb-2">🔍 DEBUG INFO:</p>
-                <ul class="text-xs text-gray-700 dark:text-gray-300 space-y-1">
-                    <li><strong>Produk ID:</strong> {{ $produk->id }}</li>
-                    <li><strong>Direct DB Query Count:</strong> {{ $biayaTambahanDirect->count() }}</li>
-                    <li><strong>Relation loaded?</strong> {{ $produk->relationLoaded('biayaTambahanItems') ? 'YES' : 'NO' }}</li>
-                    <li><strong>Relation Count:</strong> {{ $produk->biayaTambahanItems ? $produk->biayaTambahanItems->count() : 'null' }}</li>
-                    <li><strong>Has data?</strong> {{ $hasBiayaTambahan ? 'YES' : 'NO' }}</li>
-                    @if($biayaTambahanDirect->count() > 0)
-                        <li><strong>Direct Query Data:</strong>
-                            <ul class="ml-4 mt-1">
-                                @foreach($biayaTambahanDirect as $item)
-                                    <li>- ID: {{ $item->id }}, Nama: {{ $item->nama }}, Harga: {{ $item->harga }}</li>
-                                @endforeach
-                            </ul>
-                        </li>
-                    @endif
-                </ul>
-            </div>
             
             @if($hasBiayaTambahan)
             <div class="mt-8 pt-8 border-t border-gray-200 dark:border-white/10">
@@ -224,13 +193,6 @@
                     </div>
                 </div>
             </div>
-            @else
-                <!-- Debug: Show message when no additional costs found -->
-                <div class="mt-8 pt-8 border-t border-gray-200 dark:border-white/10 hidden">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
-                        No additional costs for this product. (Count: {{ $produk->biayaTambahanItems ? $produk->biayaTambahanItems->count() : 'null' }})
-                    </p>
-                </div>
             @endif
 
             <!-- Timestamps -->

@@ -211,25 +211,6 @@ class ProdukController extends Controller
     {
         $produk->load(['merk', 'ram', 'penyimpanan', 'warna', 'biayaTambahanItems']);
         
-        // DEBUG: Log data untuk troubleshooting
-        \Log::info('ProdukController::show - DEBUG:', [
-            'produk_id' => $produk->id,
-            'biayaTambahanItems_loaded' => $produk->relationLoaded('biayaTambahanItems'),
-            'biayaTambahanItems_count' => $produk->biayaTambahanItems->count(),
-            'biayaTambahanItems_data' => $produk->biayaTambahanItems->toArray(),
-        ]);
-        
-        // Also check directly from DB
-        $directQuery = \DB::table('pos_produk_biaya_tambahan')
-            ->where('pos_produk_id', $produk->id)
-            ->get();
-        
-        \Log::info('Direct DB query for biaya tambahan:', [
-            'produk_id' => $produk->id,
-            'count' => $directQuery->count(),
-            'data' => $directQuery->toArray(),
-        ]);
-        
         return view('pages.produk.show', compact('produk'));
     }
 

@@ -774,6 +774,11 @@ function formatNumber(num) {
     }
 }
 
+// Format a number with currency symbol for display
+function formatCurrency(num) {
+    return currencySymbol + ' ' + formatNumber(num);
+}
+
 function addItem() {
     itemCounter++;
     const container = document.getElementById('items-container');
