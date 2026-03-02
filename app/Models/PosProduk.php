@@ -14,20 +14,15 @@ class PosProduk extends Model
 
     protected $fillable = [
         'owner_id',
-        'pos_toko_id',
-        'pos_produk_nama_id',
         'pos_produk_merk_id',
         'pos_produk_biaya_tambahan_id',
-        'pos_produk_tipe_id',
         'product_type',
         'nama',
         'slug',
-        'deskripsi',
-        'warna',
-        'pos_warna_id',
-        'penyimpanan',
         'pos_penyimpanan_id',
         'pos_ram_id',
+        'pos_warna_id',
+        'deskripsi',
         'battery_health',
         'harga_beli',
         'harga_jual',
@@ -62,15 +57,37 @@ class PosProduk extends Model
             $parts[] = $this->merk->nama;
         }
         
-        if (!empty($this->warna)) {
-            $parts[] = $this->warna;
+        // Use warna_text accessor
+        if (!empty($this->warna_text)) {
+            $parts[] = $this->warna_text;
         }
         
-        if (!empty($this->penyimpanan)) {
-            $parts[] = $this->penyimpanan . 'GB';
+        // Use penyimpanan_text accessor
+        if (!empty($this->penyimpanan_text)) {
+            $parts[] = $this->penyimpanan_text . 'GB';
         }
         
         return !empty($parts) ? implode(' ', $parts) : 'Unknown Product';
+    }
+
+    /**
+     * Get warna text from relation (accessor untuk view)
+     */
+    public function getWarnaTextAttribute()
+    {
+        // Access warna relation - $this->warna returns PosWarna object
+        $warnaObj = $this->getRelationValue('warna');
+        return $warnaObj ? $warnaObj->warna : null;
+    }
+
+    /**
+     * Get penyimpanan kapasitas from relation (accessor untuk view)
+     */
+    public function getPenyimpananTextAttribute()
+    {
+        // Access penyimpanan relation - $this->penyimpanan returns PosPenyimpanan object
+        $penyimpananObj = $this->getRelationValue('penyimpanan');
+        return $penyimpananObj ? $penyimpananObj->kapasitas : null;
     }
 
     /**

@@ -95,25 +95,21 @@
                         </label>
                         <div class="flex gap-2">
                             <div class="relative flex-1">
+                                <!-- Hidden input to store the actual value for form submission -->
+                                <input 
+                                    type="hidden" 
+                                    id="pos_produk_merk_id"
+                                    name="pos_produk_merk_id" 
+                                    value="{{ old('pos_produk_merk_id', $produk->pos_produk_merk_id) }}"
+                                >
+                                <!-- Visible search input -->
                                 <input 
                                     type="text" 
                                     id="productNameSearch"
                                     placeholder="Search Product Name..."
-                                    value="{{ old('pos_produk_merk_id') ? $merks->find(old('pos_produk_merk_id'))->nama : ($produk->merk ? $produk->merk->nama : '') }}"
-                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0"
+                                    value="{{ old('pos_produk_merk_id') ? ($merks->find(old('pos_produk_merk_id')) ? $merks->find(old('pos_produk_merk_id'))->nama : '') : ($produk->merk ? $produk->merk->nama : '') }}"
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_produk_merk_id') !border-red-500 @enderror"
                                 >
-                                <select 
-                                    id="pos_produk_merk_id"
-                                    name="pos_produk_merk_id" 
-                                    class="hidden w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_produk_merk_id') !border-red-500 @enderror"
-                                >
-                                    <option value="">Select Product Name</option>
-                                    @foreach($merks as $merk)
-                                        <option value="{{ $merk->id }}" {{ old('pos_produk_merk_id', $produk->pos_produk_merk_id) == $merk->id ? 'selected' : '' }}>
-                                            {{ $merk->nama }}
-                                        </option>
-                                    @endforeach
-                                </select>
                                 <div id="productNameDropdown" class="absolute z-50 mt-1 w-full hidden bg-white dark:bg-navy-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                                     <div id="productNameList" class="py-1"></div>
                                 </div>
@@ -173,7 +169,7 @@
                             type="text" 
                             id="warna"
                             name="warna" 
-                            value="{{ old('warna', $produk->warna) }}"
+                            value="{{ old('warna', $produk->warna_text) }}"
                             placeholder="e.g., Midnight Black"
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('warna') !border-red-500 @enderror"
                         >
@@ -192,7 +188,7 @@
                                 type="text" 
                                 id="penyimpanan"
                                 name="penyimpanan" 
-                                value="{{ old('penyimpanan', $produk->penyimpanan) }}"
+                                value="{{ old('penyimpanan', $produk->penyimpanan_text) }}"
                                 placeholder="e.g., 128"
                                 inputmode="numeric"
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 pr-12 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('penyimpanan') !border-red-500 @enderror"
@@ -332,11 +328,18 @@
                         @enderror
                     </div>
 
-                    <!-- Additional Costs -->
-                    <div class="md:col-span-2">
+                    <!-- Additional Costs (Electronic Only or if already has data) -->
+                    @if($produk->product_type === 'electronic' || (isset($biayaTambahanItems) && $biayaTambahanItems->count() > 0))
+                    <div class="md:col-span-2" id="additional-costs-section">
                         <div class="mb-3 flex items-center justify-between">
                             <label class="text-sm font-bold text-navy-700 dark:text-white">
+                                <svg class="inline-block w-4 h-4 mr-1 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 Additional Costs
+                                @if(isset($biayaTambahanItems) && $biayaTambahanItems->count() > 0)
+                                    <span class="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">({{ $biayaTambahanItems->count() }} item{{ $biayaTambahanItems->count() > 1 ? 's' : '' }})</span>
+                                @endif
                             </label>
                             <button type="button" id="addCostBtn" 
                                     class="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-bold text-white transition duration-200 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300">
@@ -348,11 +351,16 @@
                         </div>
                         
                         <div id="costsContainer" class="space-y-3">
-                            <!-- Existing costs will be loaded here -->
+                            <!-- Existing costs will be loaded here via JavaScript -->
                         </div>
                         
-                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">Optional: Add any additional costs (e.g., repair, upgrade, shipping)</p>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-600">
+                            <svg class="inline-block w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            Optional: Add any additional costs (e.g., repair, upgrade, service)</p>
                     </div>
+                    @endif
 
                 </div>
             </div>
@@ -439,6 +447,50 @@
 <script>
 const csrfToken = '{{ csrf_token() }}';
 let productNames = @json($merks);
+const currency = '{{ get_currency() }}';
+
+// Global function to clean currency input - remove all non-numeric characters (except decimal point for USD/MYR)
+function cleanCurrencyValue(value) {
+    if (!value) return '';
+    let cleaned = String(value);
+    if (currency === 'USD' || currency === 'MYR') {
+        cleaned = cleaned.replace(/[^0-9.]/g, '');
+    } else {
+        // For IDR:
+        // Check if this looks like a database decimal (e.g., "18000000.00" - single dot with exactly 2 decimals at end)
+        const dbDecimalPattern = /^(\d+)\.(\d{2})$/;
+        const match = cleaned.match(dbDecimalPattern);
+        if (match) {
+            // This is a decimal value from database, get integer part only
+            cleaned = match[1];
+        } else {
+            // Otherwise remove dots (thousand separators) and any other non-numeric chars
+            cleaned = cleaned.replace(/[^0-9]/g, '');
+        }
+    }
+    return cleaned;
+}
+
+// Global function to format currency for display
+function formatCurrencyDisplay(value) {
+    if (!value) return '';
+    
+    // Clean the value first to remove any existing formatting
+    let cleanedValue = cleanCurrencyValue(value);
+    if (!cleanedValue) return '';
+    
+    let num = parseFloat(cleanedValue);
+    if (isNaN(num)) return '';
+    
+    // For USD/MYR: show with 2 decimals (5.99)
+    // For IDR: show as integer with thousands separator using dots
+    if (currency === 'USD' || currency === 'MYR') {
+        return num.toFixed(2);
+    } else {
+        // For IDR - format with dots as thousand separators
+        return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize searchable dropdown
@@ -447,32 +499,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-focus on search field
     document.getElementById('productNameSearch').focus();
     
-    const currency = '{{ get_currency() }}';
-    
-    // Format display based on currency type
-    function formatDisplay(value) {
-        if (!value) return '';
-        
-        let num = parseFloat(value);
-        if (isNaN(num)) return '';
-        
-        // For USD/MYR: show with 2 decimals (5.99)
-        // For IDR: show as integer with thousands separator (10,000)
-        if (currency === 'USD' || currency === 'MYR') {
-            return num.toFixed(2);
-        } else {
-            return parseInt(num).toLocaleString('id-ID');
-        }
-    }
-    
-    // Clean input - allow numbers and decimal point
-    function cleanInput(value) {
-        if (currency === 'USD' || currency === 'MYR') {
-            return value.replace(/[^0-9.]/g, '');
-        } else {
-            return value.replace(/[^0-9]/g, '');
-        }
-    }
+    // Use global functions defined above - no duplicate definitions needed
+    // cleanCurrencyValue and formatCurrencyDisplay are already defined globally
     
     // Apply to price inputs
     const priceInputs = document.querySelectorAll('#harga_beli, #harga_jual');
@@ -480,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
     priceInputs.forEach(input => {
         // Format initial DB value for display
         if (input.value) {
-            input.value = formatDisplay(input.value);
+            input.value = formatCurrencyDisplay(input.value);
         }
         
         input.addEventListener('input', function(e) {
@@ -488,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let oldValue = this.value;
             
             // Clean input
-            let cleanValue = cleanInput(this.value);
+            let cleanValue = cleanCurrencyValue(this.value);
             
             if (!cleanValue) {
                 this.value = '';
@@ -511,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.value = cleanValue;
             } else {
                 // For IDR: Format with thousands separator
-                this.value = formatDisplay(cleanValue);
+                this.value = formatCurrencyDisplay(cleanValue);
             }
             
             // Restore cursor position
@@ -531,21 +559,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Convert back to cents before form submission
-    document.querySelector('form').addEventListener('submit', function(e) {
-        priceInputs.forEach(inp => {
-            if (inp.value) {
-                inp.value = unformatCurrency(inp.value);
-            }
-        });
-    });
-    
     // Additional Costs Dynamic Fields
     let costIndex = 0;
-    const costsContainer = document.getElementById('costsContainer');
-    const addCostBtn = document.getElementById('addCostBtn');
     
     function addCostField(name = '', amount = '') {
+        const costsContainer = document.getElementById('costsContainer');
+        if (!costsContainer) return; // Exit if container doesn't exist
+        
         const costItem = document.createElement('div');
         costItem.className = 'flex gap-3 items-start';
         costItem.innerHTML = `
@@ -582,12 +602,19 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add formatting to the new amount input
         const amountInput = costItem.querySelector('.cost-amount');
         amountInput.addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9.,]/g, '');
-            formatCurrency(this);
+            let cleanValue = cleanCurrencyValue(this.value);
+            if (!cleanValue) {
+                this.value = '';
+                return;
+            }
+            this.value = formatCurrencyDisplay(cleanValue);
         });
         
         amountInput.addEventListener('blur', function() {
-            formatCurrency(this);
+            if (this.value) {
+                let cleanValue = cleanCurrencyValue(this.value);
+                this.value = formatCurrencyDisplay(cleanValue);
+            }
         });
         
         // Remove button handler
@@ -598,32 +625,55 @@ document.addEventListener('DOMContentLoaded', function() {
         costIndex++;
     }
     
-    addCostBtn.addEventListener('click', function() {
-        addCostField();
-    });
+    // Add event listener only if button exists
+    const addCostBtn = document.getElementById('addCostBtn');
+    if (addCostBtn) {
+        addCostBtn.addEventListener('click', function() {
+            addCostField();
+        });
+    }
     
-    // Load existing costs
-    @if($produk->biaya_tambahan)
-        const existingCosts = @json($produk->biaya_tambahan);
-        for (const [name, amount] of Object.entries(existingCosts)) {
-            addCostField(name, amount);
-        }
+    // Load existing costs from database
+    @if(isset($biayaTambahanItems) && $biayaTambahanItems->count() > 0)
+        const existingCosts = @json($biayaTambahanItems);
+        existingCosts.forEach(cost => {
+            addCostField(cost.nama, cost.harga);
+        });
     @endif
     
-    // Clean cost amounts before submit
-    document.querySelector('form').addEventListener('submit', function() {
-        document.querySelectorAll('.cost-amount').forEach(input => {
-            if (input.value) {
-                let cleanValue = cleanInput(input.value);
-                
-                if (currency === 'USD' || currency === 'MYR') {
-                    input.value = parseFloat(cleanValue).toFixed(2);
-                } else {
-                    input.value = cleanValue;
+    // Clean cost amounts and price inputs before submit
+    // Get the main update form by action URL to be specific
+    const mainForm = document.querySelector('form[action*="produk"][method="POST"]');
+    if (mainForm) {
+        mainForm.addEventListener('submit', function(e) {
+            // Clean main price inputs - get fresh reference
+            const hargaBeliInput = document.getElementById('harga_beli');
+            const hargaJualInput = document.getElementById('harga_jual');
+            
+            if (hargaBeliInput && hargaBeliInput.value) {
+                hargaBeliInput.value = cleanCurrencyValue(hargaBeliInput.value);
+            }
+            
+            if (hargaJualInput && hargaJualInput.value) {
+                hargaJualInput.value = cleanCurrencyValue(hargaJualInput.value);
+            }
+            
+            // Clean cost amounts
+            document.querySelectorAll('.cost-amount').forEach(input => {
+                if (input && input.value) {
+                    input.value = cleanCurrencyValue(input.value);
                 }
+            });
+            
+            // Ensure pos_produk_merk_id is set
+            const merkInput = document.getElementById('pos_produk_merk_id');
+            if (!merkInput || !merkInput.value) {
+                console.error('pos_produk_merk_id is not set!');
             }
         });
-    });
+    } else {
+        console.error('Main form not found!');
+    }
     
     // Confirm before delete
     document.querySelector('button[onclick*="deleteForm"]').addEventListener('click', function(e) {
@@ -670,6 +720,16 @@ function switchProductType(type) {
         specificationsSection.style.display = 'block';
     } else {
         specificationsSection.style.display = 'none';
+    }
+    
+    // Show/hide additional costs section
+    const additionalCostsSection = document.getElementById('additional-costs-section');
+    if (additionalCostsSection) {
+        if (type === 'electronic') {
+            additionalCostsSection.style.display = 'block';
+        } else {
+            additionalCostsSection.style.display = 'none';
+        }
     }
 }
 

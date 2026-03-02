@@ -157,14 +157,34 @@ class ProdukController extends Controller
             $nama = !empty($namaParts) ? implode(' ', $namaParts) : 'Produk Baru';
         }
 
+        // Lookup or create warna to get pos_warna_id
+        $posWarnaId = null;
+        if (!empty($request->warna)) {
+            $warna = \App\Models\PosWarna::firstOrCreate(
+                ['warna' => $request->warna, 'id_owner' => $ownerId],
+                ['is_global' => 0]
+            );
+            $posWarnaId = $warna->id;
+        }
+
+        // Lookup or create penyimpanan to get pos_penyimpanan_id
+        $posPenyimpananId = null;
+        if (!empty($request->penyimpanan)) {
+            $penyimpanan = \App\Models\PosPenyimpanan::firstOrCreate(
+                ['kapasitas' => $request->penyimpanan, 'id_owner' => $ownerId],
+                []
+            );
+            $posPenyimpananId = $penyimpanan->id;
+        }
+
         $produk = PosProduk::create([
             'owner_id' => $ownerId,
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
             'product_type' => $request->product_type,
             'nama' => $nama,
             'deskripsi' => $request->deskripsi,
-            'warna' => $request->warna,
-            'penyimpanan' => $request->penyimpanan,
+            'pos_warna_id' => $posWarnaId,
+            'pos_penyimpanan_id' => $posPenyimpananId,
             'battery_health' => $request->battery_health,
             'harga_beli' => $request->harga_beli,
             'harga_jual' => $request->harga_jual,
@@ -231,8 +251,13 @@ class ProdukController extends Controller
         $ownerId = $user->owner ? $user->owner->id : null;
 
         $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
+        
+        // Load biaya tambahan from database
+        $biayaTambahanItems = DB::table('pos_produk_biaya_tambahan')
+            ->where('pos_produk_id', $produk->id)
+            ->get();
 
-        return view('pages.produk.edit', compact('produk', 'merks'));
+        return view('pages.produk.edit', compact('produk', 'merks', 'biayaTambahanItems'));
     }
 
     /**
@@ -297,13 +322,37 @@ class ProdukController extends Controller
             $nama = !empty($namaParts) ? implode(' ', $namaParts) : 'Produk';
         }
 
+        // Get owner_id for lookup
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        // Lookup or create warna to get pos_warna_id
+        $posWarnaId = null;
+        if (!empty($request->warna)) {
+            $warna = \App\Models\PosWarna::firstOrCreate(
+                ['warna' => $request->warna, 'id_owner' => $ownerId],
+                ['is_global' => 0]
+            );
+            $posWarnaId = $warna->id;
+        }
+
+        // Lookup or create penyimpanan to get pos_penyimpanan_id
+        $posPenyimpananId = null;
+        if (!empty($request->penyimpanan)) {
+            $penyimpanan = \App\Models\PosPenyimpanan::firstOrCreate(
+                ['kapasitas' => $request->penyimpanan, 'id_owner' => $ownerId],
+                []
+            );
+            $posPenyimpananId = $penyimpanan->id;
+        }
+
         $produk->update([
             'pos_produk_merk_id' => $request->pos_produk_merk_id,
             'product_type' => $request->product_type,
             'nama' => $nama,
             'deskripsi' => $request->deskripsi,
-            'warna' => $request->warna,
-            'penyimpanan' => $request->penyimpanan,
+            'pos_warna_id' => $posWarnaId,
+            'pos_penyimpanan_id' => $posPenyimpananId,
             'battery_health' => $request->battery_health,
             'harga_beli' => $request->harga_beli,
             'harga_jual' => $request->harga_jual,
@@ -311,6 +360,28 @@ class ProdukController extends Controller
             'imei' => $request->imei,
             'aksesoris' => $request->aksesoris,
         ]);
+
+        // Sync biaya tambahan to pos_produk_biaya_tambahan table
+        // Delete existing entries
+        DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $produk->id)->delete();
+        
+        // Insert new entries if product is electronic
+        if ($request->product_type === 'electronic' && $request->has('cost_names') && $request->has('cost_amounts')) {
+            $names = $request->cost_names;
+            $amounts = $request->cost_amounts;
+            
+            for ($i = 0; $i < count($names); $i++) {
+                if (!empty($names[$i]) && !empty($amounts[$i]) && $amounts[$i] > 0) {
+                    DB::table('pos_produk_biaya_tambahan')->insert([
+                        'pos_produk_id' => $produk->id,
+                        'nama' => $names[$i],
+                        'harga' => $amounts[$i],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil diperbarui');
     }
@@ -674,11 +745,13 @@ class ProdukController extends Controller
                     
                     if (!empty($item['nama']) && isset($item['harga']) && $item['harga'] > 0) {
                         try {
-                            // Insert without timestamps - hosting has wrong column types
+                            // Insert with timestamps
                             $inserted = DB::table('pos_produk_biaya_tambahan')->insert([
                                 'pos_produk_id' => $produk->id,
                                 'nama' => $item['nama'],
                                 'harga' => $item['harga'],
+                                'created_at' => now(),
+                                'updated_at' => now(),
                             ]);
                             
                             if ($inserted) {
