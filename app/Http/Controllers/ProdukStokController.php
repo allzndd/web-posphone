@@ -238,6 +238,50 @@ class ProdukStokController extends Controller
             return redirect()->route('produk-stok.index')->with('error', 'Anda tidak memiliki akses untuk menghapus stok.');
         }
 
+        $user = auth()->user();
+        $ownerId = $produkStok->owner_id;
+        $produk = $produkStok->produk;
+        $merkId = $produk ? $produk->pos_produk_merk_id : null;
+        $tokoId = $produkStok->pos_toko_id;
+        $stokCount = $produkStok->stok;
+
+        // Create log stok before deletion
+        if ($produk) {
+            \App\Models\LogStok::create([
+                'owner_id' => $ownerId,
+                'pos_produk_id' => $produkStok->pos_produk_id,
+                'pos_toko_id' => $tokoId,
+                'stok_sebelum' => $stokCount,
+                'stok_sesudah' => 0,
+                'perubahan' => -$stokCount,
+                'tipe' => 'keluar',
+                'referensi' => 'Hapus Stok',
+                'keterangan' => 'Stok dihapus dari halaman Produk Stok',
+                'pos_pengguna_id' => $user->id,
+            ]);
+        }
+
+        // Delete all products with same merk (since stock tracks by merk)
+        if ($merkId) {
+            $relatedProducts = PosProduk::where('owner_id', $ownerId)
+                ->where('pos_produk_merk_id', $merkId)
+                ->get();
+
+            foreach ($relatedProducts as $prod) {
+                // Delete biaya tambahan
+                \Illuminate\Support\Facades\DB::table('pos_produk_biaya_tambahan')
+                    ->where('pos_produk_id', $prod->id)
+                    ->delete();
+                
+                // Delete log stok for this product
+                \App\Models\LogStok::where('pos_produk_id', $prod->id)->delete();
+                
+                // Delete the product
+                $prod->delete();
+            }
+        }
+
+        // Delete the stock entry
         $produkStok->delete();
 
         return redirect()->route('produk-stok.index')
@@ -263,6 +307,58 @@ class ProdukStokController extends Controller
         $user = auth()->user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
+        // Get all stock entries to be deleted
+        $stokEntries = ProdukStok::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->with('produk')
+            ->get();
+
+        // Collect all merk IDs to delete related products
+        $merkIds = [];
+        foreach ($stokEntries as $stokEntry) {
+            if ($stokEntry->produk && $stokEntry->produk->pos_produk_merk_id) {
+                $merkIds[] = $stokEntry->produk->pos_produk_merk_id;
+                
+                // Create log stok before deletion
+                \App\Models\LogStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_produk_id' => $stokEntry->pos_produk_id,
+                    'pos_toko_id' => $stokEntry->pos_toko_id,
+                    'stok_sebelum' => $stokEntry->stok,
+                    'stok_sesudah' => 0,
+                    'perubahan' => -$stokEntry->stok,
+                    'tipe' => 'keluar',
+                    'referensi' => 'Hapus Stok Massal',
+                    'keterangan' => 'Bulk delete stok dari halaman Produk Stok',
+                    'pos_pengguna_id' => $user->id,
+                ]);
+            }
+        }
+
+        $merkIds = array_unique($merkIds);
+
+        // Delete all products with those merks
+        if (!empty($merkIds)) {
+            $relatedProductIds = PosProduk::where('owner_id', $ownerId)
+                ->whereIn('pos_produk_merk_id', $merkIds)
+                ->pluck('id')
+                ->toArray();
+
+            // Delete biaya tambahan
+            \Illuminate\Support\Facades\DB::table('pos_produk_biaya_tambahan')
+                ->whereIn('pos_produk_id', $relatedProductIds)
+                ->delete();
+            
+            // Delete log stok for those products
+            \App\Models\LogStok::whereIn('pos_produk_id', $relatedProductIds)->delete();
+            
+            // Delete the products
+            PosProduk::where('owner_id', $ownerId)
+                ->whereIn('pos_produk_merk_id', $merkIds)
+                ->delete();
+        }
+
+        // Delete the stock entries
         $deletedCount = ProdukStok::where('owner_id', $ownerId)
             ->whereIn('id', $ids)
             ->delete();

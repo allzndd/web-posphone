@@ -328,6 +328,58 @@ class ProdukController extends Controller
             return redirect()->route('produk.index')->with('error', 'Anda tidak memiliki akses untuk menghapus produk.');
         }
 
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+        $merkId = $produk->pos_produk_merk_id;
+
+        // Handle stock reduction for this brand
+        // Stock is tracked per brand (merk), so we need to reduce stock by 1 for this brand
+        // Stock is stored on the "primary" product (smallest ID for this merk)
+        
+        // Find all pos_produk_stok entries for products with same merk
+        $stokEntries = \App\Models\ProdukStok::whereHas('produk', function($q) use ($ownerId, $merkId) {
+            $q->where('owner_id', $ownerId)
+              ->where('pos_produk_merk_id', $merkId);
+        })->get();
+
+        foreach ($stokEntries as $stokEntry) {
+            if ($stokEntry->stok > 0) {
+                // Reduce stock by 1
+                $stokEntry->stok = $stokEntry->stok - 1;
+                $stokEntry->save();
+
+                // Create log stok
+                \App\Models\LogStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_produk_id' => $stokEntry->pos_produk_id,
+                    'pos_toko_id' => $stokEntry->pos_toko_id,
+                    'stok_sebelum' => $stokEntry->stok + 1,
+                    'stok_sesudah' => $stokEntry->stok,
+                    'perubahan' => -1,
+                    'tipe' => 'keluar',
+                    'referensi' => 'Hapus Produk',
+                    'keterangan' => 'Produk dihapus: ' . $produk->nama,
+                    'pos_pengguna_id' => $user->id,
+                ]);
+            }
+
+            // If stock becomes 0, delete the entry
+            if ($stokEntry->stok <= 0) {
+                $stokEntry->delete();
+            }
+        }
+
+        // Delete related records
+        // 1. Delete biaya tambahan
+        DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $produk->id)->delete();
+        
+        // 2. Delete log stok for this specific product
+        \App\Models\LogStok::where('pos_produk_id', $produk->id)->delete();
+        
+        // 3. Delete produk stok entry if it belongs to this product (not transferred)
+        \App\Models\ProdukStok::where('pos_produk_id', $produk->id)->delete();
+        
+        // 4. Delete the product
         $produk->delete();
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
@@ -352,6 +404,68 @@ class ProdukController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
+        // Get products to be deleted and group by merk
+        $products = PosProduk::where('owner_id', $ownerId)
+            ->whereIn('id', $ids)
+            ->get();
+
+        // Count products per merk to reduce stock accordingly
+        $merkCounts = [];
+        foreach ($products as $prod) {
+            $merkId = $prod->pos_produk_merk_id;
+            if (!isset($merkCounts[$merkId])) {
+                $merkCounts[$merkId] = 0;
+            }
+            $merkCounts[$merkId]++;
+        }
+
+        // Reduce stock for each merk
+        foreach ($merkCounts as $merkId => $count) {
+            $stokEntries = \App\Models\ProdukStok::whereHas('produk', function($q) use ($ownerId, $merkId) {
+                $q->where('owner_id', $ownerId)
+                  ->where('pos_produk_merk_id', $merkId);
+            })->get();
+
+            foreach ($stokEntries as $stokEntry) {
+                if ($stokEntry->stok > 0) {
+                    $reduction = min($count, $stokEntry->stok);
+                    $oldStok = $stokEntry->stok;
+                    $stokEntry->stok = $stokEntry->stok - $reduction;
+                    $stokEntry->save();
+
+                    // Create log stok
+                    \App\Models\LogStok::create([
+                        'owner_id' => $ownerId,
+                        'pos_produk_id' => $stokEntry->pos_produk_id,
+                        'pos_toko_id' => $stokEntry->pos_toko_id,
+                        'stok_sebelum' => $oldStok,
+                        'stok_sesudah' => $stokEntry->stok,
+                        'perubahan' => -$reduction,
+                        'tipe' => 'keluar',
+                        'referensi' => 'Hapus Produk Massal',
+                        'keterangan' => 'Bulk delete: ' . $reduction . ' produk dihapus',
+                        'pos_pengguna_id' => $user->id,
+                    ]);
+
+                    // If stock becomes 0, delete the entry
+                    if ($stokEntry->stok <= 0) {
+                        $stokEntry->delete();
+                    }
+                }
+            }
+        }
+
+        // Delete related records first
+        // 1. Delete biaya tambahan for all products
+        DB::table('pos_produk_biaya_tambahan')->whereIn('pos_produk_id', $ids)->delete();
+        
+        // 2. Delete log stok for all products
+        \App\Models\LogStok::whereIn('pos_produk_id', $ids)->delete();
+        
+        // 3. Delete produk stok for all products
+        \App\Models\ProdukStok::whereIn('pos_produk_id', $ids)->delete();
+        
+        // 4. Delete the products
         $deletedCount = PosProduk::where('owner_id', $ownerId)
             ->whereIn('id', $ids)
             ->delete();
