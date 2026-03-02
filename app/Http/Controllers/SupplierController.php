@@ -55,8 +55,15 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         if (!PermissionService::check('supplier.create')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to create suppliers'
+                ], 403);
+            }
             return redirect('/')->with('error', 'You do not have permission to create suppliers');
         }
+        
         $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'nomor_hp' => 'nullable|string|max:45',
@@ -69,7 +76,16 @@ class SupplierController extends Controller
         $validated['owner_id'] = $user->owner ? $user->owner->id : null;
         $validated['slug'] = Str::slug($validated['nama']);
 
-        PosSupplier::create($validated);
+        $supplier = PosSupplier::create($validated);
+
+        // Return JSON response if AJAX request
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier created successfully',
+                'data' => $supplier
+            ]);
+        }
 
         return redirect()->route('supplier.index')
             ->with('success', 'Supplier created successfully');

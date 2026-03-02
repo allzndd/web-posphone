@@ -169,25 +169,35 @@
                         <label for="pos_supplier_id" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Supplier
                         </label>
-                        <div class="relative">
-                            <select 
-                                id="pos_supplier_id"
-                                name="pos_supplier_id" 
-                                class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_supplier_id') !border-red-500 @enderror appearance-none"
-                            >
-                                <option value="">Select Supplier</option>
-                                @foreach($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}" {{ old('pos_supplier_id') == $supplier->id ? 'selected' : '' }}>
-                                        {{ $supplier->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill="none" d="M0 0h24v24H0z"></path>
-                                    <path d="M7 10l5 5 5-5z"></path>
-                                </svg>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <select 
+                                    id="pos_supplier_id"
+                                    name="pos_supplier_id" 
+                                    class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 focus:ring-0 @error('pos_supplier_id') !border-red-500 @enderror appearance-none"
+                                >
+                                    <option value="">Select Supplier</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" {{ old('pos_supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                            {{ $supplier->nama }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-400 dark:text-gray-600" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill="none" d="M0 0h24v24H0z"></path>
+                                        <path d="M7 10l5 5 5-5z"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <button type="button" onclick="openQuickAddSupplierModal()" 
+                                    class="flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-300">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill="none" d="M0 0h24v24H0z"></path>
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                                </svg>
+                                New
+                            </button>
                         </div>
                         @error('pos_supplier_id')
                             <p class="mt-2 text-sm text-red-500 dark:text-red-400">{{ $message }}</p>
@@ -662,6 +672,109 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     Create Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Quick Add Supplier Modal -->
+<div id="quickAddSupplierModal" class="hidden fixed inset-0 z-[999] flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white dark:bg-navy-800 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white dark:bg-navy-800 border-b border-gray-200 dark:border-white/10 px-6 py-4 rounded-t-2xl">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Quick Add Supplier</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Add a new supplier quickly</p>
+        </div>
+        
+        <form id="quickSupplierForm" class="p-6">
+            <div id="quickSupplierErrors" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <ul class="text-sm text-red-600 dark:text-red-400 list-disc list-inside"></ul>
+            </div>
+
+            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <!-- Supplier Name -->
+                <div>
+                    <label for="quick_supplier_nama" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                        Supplier Name <span class="text-red-500">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="quick_supplier_nama"
+                        name="nama" 
+                        required
+                        maxlength="255"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                        placeholder="Enter supplier name"
+                    >
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                    <label for="quick_supplier_nomor_hp" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                        Phone Number
+                    </label>
+                    <input 
+                        type="text" 
+                        id="quick_supplier_nomor_hp"
+                        name="nomor_hp" 
+                        maxlength="45"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                        placeholder="e.g., 08123456789"
+                    >
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="quick_supplier_email" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                        Email
+                    </label>
+                    <input 
+                        type="email" 
+                        id="quick_supplier_email"
+                        name="email" 
+                        maxlength="255"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                        placeholder="supplier@example.com"
+                    >
+                </div>
+
+                <!-- Address -->
+                <div>
+                    <label for="quick_supplier_alamat" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                        Address
+                    </label>
+                    <input 
+                        type="text" 
+                        id="quick_supplier_alamat"
+                        name="alamat" 
+                        maxlength="255"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                        placeholder="Enter address"
+                    >
+                </div>
+
+                <!-- Description -->
+                <div class="md:col-span-2">
+                    <label for="quick_supplier_keterangan" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
+                        Description
+                    </label>
+                    <input 
+                        type="text" 
+                        id="quick_supplier_keterangan"
+                        name="keterangan" 
+                        maxlength="255"
+                        class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-brand-500 dark:focus:border-brand-400"
+                        placeholder="Additional notes about this supplier"
+                    >
+                </div>
+            </div>
+
+            <div class="flex gap-3 justify-end pt-4 mt-6 border-t border-gray-200 dark:border-white/10">
+                <button type="button" onclick="closeQuickAddSupplierModal()" class="rounded-xl bg-gray-100 px-5 py-2.5 text-sm font-bold text-navy-700 transition duration-200 hover:bg-gray-200 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20">
+                    Cancel
+                </button>
+                <button type="submit" id="submitQuickSupplier" class="rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200">
+                    Add Supplier
                 </button>
             </div>
         </form>
@@ -1799,6 +1912,89 @@ function submitQuickProduct(event) {
     });
 }
 
+// ============= QUICK ADD SUPPLIER MODAL FUNCTIONS =============
+
+function openQuickAddSupplierModal() {
+    document.getElementById('quickAddSupplierModal').classList.remove('hidden');
+    document.getElementById('quick_supplier_nama').focus();
+    document.getElementById('quickSupplierForm').reset();
+    document.getElementById('quickSupplierErrors').classList.add('hidden');
+}
+
+function closeQuickAddSupplierModal() {
+    document.getElementById('quickAddSupplierModal').classList.add('hidden');
+    document.getElementById('quickSupplierForm').reset();
+}
+
+// Submit Quick Add Supplier
+document.getElementById('quickSupplierForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitQuickSupplier');
+    const errorDiv = document.getElementById('quickSupplierErrors');
+    const errorList = errorDiv.querySelector('ul');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+    errorDiv.classList.add('hidden');
+    
+    const formData = {
+        nama: document.getElementById('quick_supplier_nama').value,
+        nomor_hp: document.getElementById('quick_supplier_nomor_hp').value,
+        email: document.getElementById('quick_supplier_email').value,
+        alamat: document.getElementById('quick_supplier_alamat').value,
+        keterangan: document.getElementById('quick_supplier_keterangan').value
+    };
+    
+    try {
+        const response = await fetch('{{ route("supplier.store") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Add to supplier dropdown
+            const supplierSelect = document.getElementById('pos_supplier_id');
+            const option = new Option(data.data.nama, data.data.id, true, true);
+            supplierSelect.add(option);
+            supplierSelect.value = data.data.id;
+            
+            closeQuickAddSupplierModal();
+        } else {
+            // Show validation errors
+            errorList.innerHTML = '';
+            if (data.errors) {
+                Object.values(data.errors).forEach(errorArray => {
+                    errorArray.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        errorList.appendChild(li);
+                    });
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = data.message || 'An error occurred';
+                errorList.appendChild(li);
+            }
+            errorDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        errorList.innerHTML = '<li>Network error. Please try again.</li>';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Supplier';
+    }
+});
+
 // ============= PRODUCT NAME MODAL FUNCTIONS =============
 
 function openModalProductNameModal() {
@@ -1889,6 +2085,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeProductModal();
         closeModalProductNameModal();
+        closeQuickAddSupplierModal();
     }
 });
 
