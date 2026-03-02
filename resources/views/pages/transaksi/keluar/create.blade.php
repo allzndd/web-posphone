@@ -82,6 +82,20 @@
         border-color: rgba(255,255,255,0.1);
         color: white;
     }
+    
+    /* Clickable product display hover effect */
+    .product-display-editable {
+        transition: all 0.2s ease;
+    }
+    .product-display-editable:hover {
+        background-color: rgba(255, 119, 0, 0.05) !important;
+        border-color: #ff7700 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(255, 119, 0, 0.15);
+    }
+    .dark .product-display-editable:hover {
+        background-color: rgba(255, 119, 0, 0.1) !important;
+    }
 </style>
 @endpush
 
@@ -844,6 +858,7 @@ const currency = '{{ get_currency() }}';
 const csrfToken = '{{ csrf_token() }}';
 let itemCounter = 0;
 let currentItemIdForModal = null;
+let itemDataStore = {}; // Store complete form data for each item to allow editing
 
 // Real-time currency formatting for input fields (dot as thousand separator)
 function formatCurrencyInput(input) {
@@ -1131,6 +1146,9 @@ function calculateGrandTotal() {
 function removeItem(itemId) {
     const item = document.getElementById(`item-${itemId}`);
     if (item) {
+        // Clear stored form data for this item
+        delete itemDataStore[itemId];
+        
         item.remove();
         calculateGrandTotal();
     }
@@ -1640,32 +1658,133 @@ function openProductModal(itemId) {
     if (modal) modal.classList.remove('hidden');
     if (errorDiv) errorDiv.classList.add('hidden');
     
-    // Reset form fields first
-    if (form) form.reset();
+    // Check if this item has stored data (for editing)
+    const storedData = itemDataStore[itemId];
     
-    // Then set defaults and tabs (after reset to prevent reset from overriding)
-    if (productTypeInput) productTypeInput.value = 'electronic';
-    if (imeiInput) imeiInput.required = false;
-    if (specsSection) specsSection.classList.remove('hidden');
-    if (brandSection) brandSection.classList.remove('hidden');
-    if (serviceSection) serviceSection.classList.add('hidden');
-    
-    // Reset tab styles to electronic (active state)
-    const tabs = document.querySelectorAll('.modal-product-type-tab');
-    tabs.forEach(tab => {
-        tab.classList.remove('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
-        tab.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
-    });
-    
-    const electronicTab = document.getElementById('modal-tab-electronic');
-    electronicTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
-    electronicTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
-    
-    // Initialize dropdowns
-    initializeMerkDropdown();
-    initializeColorDropdown();
-    initializeRamDropdown();
-    initializeStorageDropdown();
+    if (storedData) {
+        // Editing existing item - populate with stored data
+        console.log('Editing item with stored data:', storedData);
+        
+        // Set product type first
+        const productType = storedData.product_type || 'electronic';
+        switchModalProductType(productType);
+        
+        // Populate all form fields
+        setTimeout(() => {
+            // Set merk/brand and type
+            if (storedData.merk_select) {
+                document.getElementById('quick_merk_select').value = storedData.merk_select;
+                const brandLabel = document.getElementById('brandDropdownLabel');
+                if (brandLabel) {
+                    brandLabel.textContent = storedData.merk_select;
+                    brandLabel.classList.remove('text-gray-400');
+                    brandLabel.classList.add('text-navy-700', 'dark:text-white');
+                }
+                handleMerkChange(); // Populate type dropdown
+            }
+            
+            if (storedData.pos_produk_merk_id) {
+                document.getElementById('quick_pos_produk_merk_id').value = storedData.pos_produk_merk_id;
+                // Find and set type label
+                const selectedMerk = allMerks.find(m => m.id == storedData.pos_produk_merk_id);
+                if (selectedMerk) {
+                    const typeLabel = document.getElementById('typeDropdownLabel');
+                    if (typeLabel) {
+                        typeLabel.textContent = selectedMerk.nama;
+                        typeLabel.classList.remove('text-gray-400');
+                        typeLabel.classList.add('text-navy-700', 'dark:text-white');
+                    }
+                }
+            }
+            
+            // Set color
+            if (storedData.warna) {
+                document.getElementById('quick_warna').value = storedData.warna;
+                const colorLabel = document.getElementById('colorDropdownLabel');
+                if (colorLabel) {
+                    colorLabel.textContent = storedData.warna_label || storedData.warna;
+                    colorLabel.classList.remove('text-gray-400');
+                    colorLabel.classList.add('text-navy-700', 'dark:text-white');
+                }
+            }
+            
+            // Set RAM
+            if (storedData.ram) {
+                document.getElementById('quick_ram').value = storedData.ram;
+                const ramLabel = document.getElementById('ramDropdownLabel');
+                if (ramLabel) {
+                    ramLabel.textContent = storedData.ram_label || storedData.ram;
+                    ramLabel.classList.remove('text-gray-400');
+                    ramLabel.classList.add('text-navy-700', 'dark:text-white');
+                }
+            }
+            
+            // Set Storage
+            if (storedData.penyimpanan) {
+                document.getElementById('quick_penyimpanan').value = storedData.penyimpanan;
+                const storageLabel = document.getElementById('storageDropdownLabel');
+                if (storageLabel) {
+                    storageLabel.textContent = storedData.penyimpanan_label || storedData.penyimpanan;
+                    storageLabel.classList.remove('text-gray-400');
+                    storageLabel.classList.add('text-navy-700', 'dark:text-white');
+                }
+            }
+            
+            // Set other fields
+            if (storedData.battery_health) document.getElementById('quick_battery_health').value = storedData.battery_health;
+            if (storedData.imei) document.getElementById('quick_imei').value = storedData.imei;
+            if (storedData.harga_beli) document.getElementById('quick_harga_beli').value = formatNumber(storedData.harga_beli);
+            if (storedData.harga_jual) document.getElementById('quick_harga_jual').value = formatNumber(storedData.harga_jual);
+            
+            // Restore biaya tambahan
+            clearBiayaTambahan();
+            if (storedData.biaya_tambahan && storedData.biaya_tambahan.length > 0) {
+                storedData.biaya_tambahan.forEach(biaya => {
+                    addBiayaTambahan();
+                    const rows = document.querySelectorAll('[id^="biayaTambahanRow_"]');
+                    const lastRow = rows[rows.length - 1];
+                    if (lastRow) {
+                        const namaInput = lastRow.querySelector('.biaya-tambahan-nama');
+                        const hargaInput = lastRow.querySelector('.biaya-tambahan-harga');
+                        if (namaInput) namaInput.value = biaya.nama;
+                        if (hargaInput) hargaInput.value = formatNumber(biaya.harga);
+                    }
+                });
+                calculateTotalBiayaTambahan();
+            }
+        }, 100); // Small delay to ensure dropdowns are initialized
+        
+    } else {
+        // New item - reset form fields
+        if (form) form.reset();
+        
+        // Set defaults and tabs (after reset to prevent reset from overriding)
+        if (productTypeInput) productTypeInput.value = 'electronic';
+        if (imeiInput) imeiInput.required = false;
+        if (specsSection) specsSection.classList.remove('hidden');
+        if (brandSection) brandSection.classList.remove('hidden');
+        if (serviceSection) serviceSection.classList.add('hidden');
+        
+        // Reset tab styles to electronic (active state)
+        const tabs = document.querySelectorAll('.modal-product-type-tab');
+        tabs.forEach(tab => {
+            tab.classList.remove('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+            tab.classList.add('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+        });
+        
+        const electronicTab = document.getElementById('modal-tab-electronic');
+        electronicTab.classList.remove('border-transparent', 'text-gray-600', 'dark:text-gray-400');
+        electronicTab.classList.add('active', 'border-brand-500', 'text-brand-500', 'dark:text-brand-400');
+        
+        // Initialize dropdowns
+        initializeMerkDropdown();
+        initializeColorDropdown();
+        initializeRamDropdown();
+        initializeStorageDropdown();
+        
+        // Clear biaya tambahan
+        clearBiayaTambahan();
+    }
 }
 
 function closeProductModal() {
@@ -1676,6 +1795,35 @@ function closeProductModal() {
     
     // Reset biaya tambahan
     clearBiayaTambahan();
+}
+
+// Make item editable by adding click handler (no icon, just clickable area)
+function makeItemEditable(itemId) {
+    const labelElem = document.getElementById(`productDropdownLabel-${itemId}`);
+    
+    if (!labelElem) return;
+    
+    // Find the parent flex container (the display div)
+    const displayDiv = labelElem.closest('.flex-1.rounded-lg');
+    
+    if (displayDiv) {
+        // Add CSS class for hover effect
+        displayDiv.classList.add('product-display-editable');
+        
+        // Add styling for clickable state
+        displayDiv.style.cursor = 'pointer';
+        displayDiv.title = 'Click to edit product details';
+        
+        // Remove existing click handler if any
+        displayDiv.onclick = null;
+        
+        // Add click handler
+        displayDiv.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openProductModal(itemId);
+        };
+    }
 }
 
 // ============= BIAYA TAMBAHAN / ADD ON FUNCTIONS =============
@@ -1781,7 +1929,7 @@ function submitQuickProduct(event) {
     const errorDiv = document.getElementById('quickProductErrors');
     
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating...';
+    submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...';
     errorDiv.classList.add('hidden');
     
     // Get product info from dropdowns
@@ -1800,116 +1948,93 @@ function submitQuickProduct(event) {
         return;
     }
     
-    console.log('Submitting product with type:', productType); // Debug log
-    
     // Get biaya tambahan data (only for electronic)
     const biayaTambahanData = productType === 'electronic' ? getBiayaTambahanData() : [];
     const totalBiayaTambahan = biayaTambahanData.reduce((sum, item) => sum + item.harga, 0);
     
     // Build basic form data
     const basePurchasePrice = parseCurrencyValue(document.getElementById('quick_harga_beli').value);
-    let formData = {
-        product_type: productType,
-        harga_beli: basePurchasePrice,
-        harga_beli_total: basePurchasePrice + totalBiayaTambahan, // Total including addon
-        harga_jual: parseCurrencyValue(document.getElementById('quick_harga_jual').value),
-        biaya_tambahan: biayaTambahanData,
-    };
-    
-    // Add type-specific fields (Electronic or Accessories)
     const typeLabel = document.getElementById('typeDropdownLabel').textContent;
     const nama = (typeLabel && typeLabel !== 'Select Type') ? typeLabel : 'Produk Baru';
     
-    formData.nama = nama;
-    formData.pos_produk_merk_id = merkId;
-    formData.warna = document.getElementById('quick_warna').value;
-    formData.ram = document.getElementById('quick_ram').value;
-    formData.penyimpanan = document.getElementById('quick_penyimpanan').value;
-    formData.battery_health = document.getElementById('quick_battery_health').value;
-    formData.imei = document.getElementById('quick_imei').value;
+    // Check if we're editing an existing item (has stored data with product_id)
+    const existingItemData = itemDataStore[currentItemIdForModal];
+    const isEditing = existingItemData && existingItemData.product_id;
     
-    console.log('=== FORM DATA DEBUG ===');
-    console.log('Product Type:', productType);
-    console.log('Biaya Tambahan:', biayaTambahanData);
-    console.log('Total Biaya Tambahan:', totalBiayaTambahan);
-    console.log('Complete Form Data to send:', formData);
-    console.log('=== END DEBUG ===');
+    console.log('isEditing:', isEditing, 'existingItemData:', existingItemData);
     
-    fetch('{{ route("produk.quick-store") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Add new product to products array
-            const newProductData = {
-                id: data.data.id,
-                nama: data.data.nama,
-                harga_beli: data.data.harga_beli,
-                harga_jual: data.data.harga_jual,
-                product_type: data.data.product_type || productType
-            };
-            
-            // Add brand info
-            newProductData.merk = { nama: data.data.merk_nama };
-            newProductData.ram = data.data.ram;
-            newProductData.penyimpanan = data.data.penyimpanan;
-            newProductData.battery_health = data.data.battery_health;
-            
-            products.push(newProductData);
-            
-            // Update dropdown for current item
-            if (currentItemIdForModal) {
-                const newProduct = products[products.length - 1];
-                let description = newProduct.nama;
-                const specs = [];
-                
-                // Electronic/Accessories specs
-                if (newProduct.ram) specs.push(newProduct.ram + ' GB RAM');
-                if (newProduct.penyimpanan) specs.push(newProduct.penyimpanan + ' GB');
-                if (newProduct.battery_health) specs.push(newProduct.battery_health + '% Battery');
-                
-                if (specs.length > 0) {
-                    description += ' - ' + specs.join(' / ');
-                }
-                
-                selectProduct(currentItemIdForModal, data.data.id, description);
-            }
-            
-            closeProductModal();
-        } else {
-            // Show specific validation errors from server
-            let errorMessage = data.message || 'Failed to create product';
-            if (data.errors) {
-                const errorMessages = Object.values(data.errors).flat();
-                if (errorMessages.length > 0) {
-                    errorMessage = errorMessages.join('. ');
-                }
-            }
-            console.error('Quick product errors:', data.errors);
-            errorDiv.classList.remove('hidden');
-            errorDiv.querySelector('p').textContent = errorMessage;
+    // STORE DATA LOCALLY - Don't create product in database yet!
+    // Product will be created when transaction is submitted
+    console.log('Storing product data locally (not creating in DB yet)');
+    
+    // Get labels for display
+    const colorLabel = document.getElementById('colorDropdownLabel').textContent;
+    const ramLabel = document.getElementById('ramDropdownLabel').textContent;
+    const storageLabel = document.getElementById('storageDropdownLabel').textContent;
+    const brandLabel = document.getElementById('brandDropdownLabel').textContent;
+    const hargaJual = parseCurrencyValue(document.getElementById('quick_harga_jual').value);
+    
+    // Store complete form data
+    itemDataStore[currentItemIdForModal] = {
+        product_type: productType,
+        pos_produk_merk_id: merkId,
+        merk_select: document.getElementById('quick_merk_select').value,
+        nama: nama,
+        warna: document.getElementById('quick_warna').value,
+        warna_label: (colorLabel && colorLabel !== 'Select Color') ? colorLabel : '',
+        ram: document.getElementById('quick_ram').value,
+        ram_label: (ramLabel && ramLabel !== 'Select RAM') ? ramLabel : '',
+        penyimpanan: document.getElementById('quick_penyimpanan').value,
+        penyimpanan_label: (storageLabel && storageLabel !== 'Select Storage') ? storageLabel : '',
+        battery_health: document.getElementById('quick_battery_health').value,
+        imei: document.getElementById('quick_imei').value,
+        harga_beli: basePurchasePrice,
+        harga_jual: hargaJual,
+        biaya_tambahan: biayaTambahanData,
+        harga_beli_total: basePurchasePrice + totalBiayaTambahan
+    };
+    
+    console.log('Stored item data for item', currentItemIdForModal, ':', itemDataStore[currentItemIdForModal]);
+    
+    // Update the product label display
+    const labelElem = document.getElementById(`productDropdownLabel-${currentItemIdForModal}`);
+    if (labelElem) {
+        let description = nama;
+        const specs = [];
+        
+        if (itemDataStore[currentItemIdForModal].ram) specs.push(itemDataStore[currentItemIdForModal].ram + ' GB RAM');
+        if (itemDataStore[currentItemIdForModal].penyimpanan) specs.push(itemDataStore[currentItemIdForModal].penyimpanan + ' GB');
+        if (itemDataStore[currentItemIdForModal].battery_health) specs.push(itemDataStore[currentItemIdForModal].battery_health + '% Battery');
+        
+        if (specs.length > 0) {
+            description += ' - ' + specs.join(' / ');
         }
-    })
-    .catch(error => {
-        errorDiv.classList.remove('hidden');
-        errorDiv.querySelector('p').textContent = error.message || 'An error occurred while creating the product';
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Create Product
-        `;
-    });
+        
+        labelElem.textContent = description;
+        labelElem.classList.remove('text-gray-500', 'dark:text-gray-400');
+        labelElem.classList.add('text-navy-700', 'dark:text-white');
+    }
+    
+    // Set the product ID (use negative number as temporary ID to indicate it's not created yet)
+    const itemSelectElem = document.getElementById(`item-select-${currentItemIdForModal}`);
+    if (itemSelectElem) {
+        itemSelectElem.value = `temp_${currentItemIdForModal}`; // Temporary ID
+    }
+    
+    // Update prices in the item row
+    const unitPriceInput = document.getElementById(`unit-price-${currentItemIdForModal}`);
+    if (unitPriceInput) {
+        unitPriceInput.value = hargaJual;
+        calculateSubtotal(currentItemIdForModal);
+    }
+    
+    // Make the item editable (clickable)
+    makeItemEditable(currentItemIdForModal);
+    
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Create Product';
+    
+    closeProductModal();
 }
 
 // ============= QUICK ADD SUPPLIER MODAL FUNCTIONS =============
@@ -2139,41 +2264,124 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         submitBtnText.textContent = 'Processing...';
         
-        // Prepare form data
-        const formData = new FormData(form);
+        // FIRST: Create products for items with temporary IDs (from modal)
+        const itemsToCreate = [];
+        const itemIdsMap = {}; // Map from temporary ID to real product ID
         
-        // DEBUG: Log all FormData entries for quantities
-        console.log('=== QUANTITY DEBUG FROM FORMDATA ===');
-        for (let [key, value] of formData.entries()) {
-            if (key.includes('[quantity]')) {
-                console.log(`${key} = "${value}"`);
+        // Check all items for temporary IDs
+        document.querySelectorAll('[id^="item-select-"]').forEach(itemSelect => {
+            const itemId = itemSelect.id.replace('item-select-', '');
+            const itemValue = itemSelect.value;
+            
+            // Check if this is a temporary ID (starts with "temp_")
+            if (itemValue && itemValue.startsWith('temp_')) {
+                const storedData = itemDataStore[itemId];
+                if (storedData) {
+                    itemsToCreate.push({
+                        tempId: itemValue,
+                        itemId: itemId,
+                        data: storedData
+                    });
+                }
+            }
+        });
+        
+        console.log('Items to create before transaction:', itemsToCreate);
+        
+        // Function to create products sequentially
+        async function createProducts() {
+            for (const item of itemsToCreate) {
+                try {
+                    const formData = {
+                        product_type: item.data.product_type,
+                        harga_beli: item.data.harga_beli,
+                        harga_beli_total: item.data.harga_beli_total,
+                        harga_jual: item.data.harga_jual,
+                        biaya_tambahan: item.data.biaya_tambahan || [],
+                        nama: item.data.nama,
+                        pos_produk_merk_id: item.data.pos_produk_merk_id,
+                        warna: item.data.warna,
+                        ram: item.data.ram,
+                        penyimpanan: item.data.penyimpanan,
+                        battery_health: item.data.battery_health,
+                        imei: item.data.imei,
+                    };
+                    
+                    const response = await fetch('{{ route("produk.quick-store") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Map temporary ID to real product ID
+                        itemIdsMap[item.tempId] = data.data.id;
+                        
+                        // Update the hidden input with real product ID
+                        const itemSelect = document.getElementById(`item-select-${item.itemId}`);
+                        if (itemSelect) {
+                            itemSelect.value = data.data.id;
+                        }
+                        
+                        console.log(`Product created: ${item.tempId} -> ${data.data.id}`);
+                    } else {
+                        throw new Error(data.message || 'Failed to create product');
+                    }
+                } catch (error) {
+                    console.error('Error creating product:', error);
+                    alert('Error creating product: ' + error.message);
+                    submitBtn.disabled = false;
+                    submitBtnText.textContent = 'Create Expense';
+                    throw error; // Stop the process
+                }
             }
         }
         
-        // Submit form via AJAX
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Redirect to print page
-                window.location.href = data.print_url || data.redirect_url;
-            } else {
-                throw new Error(data.message || 'Failed to create transaction');
-            }
-        })
-        .catch(error => {
-            alert('Error: ' + (error.message || 'An error occurred while creating the transaction'));
-            // Re-enable submit button
-            submitBtn.disabled = false;
-            submitBtnText.textContent = 'Create Expense';
-        });
+        // Create products first, then submit transaction
+        createProducts()
+            .then(() => {
+                // Prepare form data
+                const formData = new FormData(form);
+                
+                // DEBUG: Log all FormData entries for quantities
+                console.log('=== QUANTITY DEBUG FROM FORMDATA ===');
+                for (let [key, value] of formData.entries()) {
+                    if (key.includes('[quantity]')) {
+                        console.log(`${key} = "${value}"`);
+                    }
+                }
+                
+                // Submit form via AJAX
+                return fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to print page
+                    window.location.href = data.print_url || data.redirect_url;
+                } else {
+                    throw new Error(data.message || 'Failed to create transaction');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + (error.message || 'An error occurred while creating the transaction'));
+                // Re-enable submit button
+                submitBtn.disabled = false;
+                submitBtnText.textContent = 'Create Expense';
+            });
     });
 });
 </script>
