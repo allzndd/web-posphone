@@ -28,17 +28,19 @@ class ProdukController extends Controller
 
         $searchQuery = $request->input('search') ?? $request->input('nama');
 
-        // Get all merk IDs that have stock > 0
+        // Get merk IDs that have stock > 0 (stock is grouped by merk)
+        // First get the representative product IDs with stock, then get their merk IDs
         $merkIdsWithStock = \App\Models\ProdukStok::where('owner_id', $ownerId)
             ->where('stok', '>', 0)
             ->with('produk')
             ->get()
-            ->pluck('produk.pos_produk_merk_id')
-            ->unique()
-            ->filter();
+            ->map(function($stok) {
+                return $stok->produk ? $stok->produk->pos_produk_merk_id : null;
+            })
+            ->filter()
+            ->unique();
         
-        // Get all products from those merks (to show all variants/individual items)
-        // This ensures all individual products (each with unique IMEI for electronics) are displayed
+        // Get ALL products whose merk has stock (stock is grouped by merk)
         $produk = PosProduk::where('owner_id', $ownerId)
             ->with(['merk', 'stok', 'ram', 'penyimpanan', 'warna'])
             ->whereIn('pos_produk_merk_id', $merkIdsWithStock)
@@ -193,29 +195,58 @@ class ProdukController extends Controller
             'aksesoris' => $request->aksesoris,
         ]);
 
-        // Automatically create stock entry for all stores with quantity 1
+        // Create or update stock entry for all stores (GROUPED by merk + store)
         $toko = \App\Models\PosToko::where('owner_id', $ownerId)->get();
+        $merkId = $produk->pos_produk_merk_id;
+        
         foreach ($toko as $store) {
-            \App\Models\ProdukStok::create([
-                'owner_id' => $ownerId,
-                'pos_toko_id' => $store->id,
-                'pos_produk_id' => $produk->id,
-                'stok' => 1,
-            ]);
+            // Check if stock entry already exists for this MERK + STORE (grouped stock)
+            $existingStok = \App\Models\ProdukStok::where('owner_id', $ownerId)
+                ->where('pos_toko_id', $store->id)
+                ->whereHas('produk', function($query) use ($merkId) {
+                    $query->where('pos_produk_merk_id', $merkId);
+                })
+                ->first();
 
-            // Create log stok (stock history) for initial stock
-            \App\Models\LogStok::create([
-                'owner_id' => $ownerId,
-                'pos_produk_id' => $produk->id,
-                'pos_toko_id' => $store->id,
-                'stok_sebelum' => 0,
-                'stok_sesudah' => 1,
-                'perubahan' => 1,
-                'tipe' => 'masuk',
-                'referensi' => 'Produk Baru: ' . $produk->nama,
-                'keterangan' => 'Stok awal produk baru',
-                'pos_pengguna_id' => $user->id,
-            ]);
+            if ($existingStok) {
+                // Increment existing stock
+                $stokSebelum = $existingStok->stok;
+                $existingStok->update(['stok' => $stokSebelum + 1]);
+                
+                \App\Models\LogStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_produk_id' => $produk->id,
+                    'pos_toko_id' => $store->id,
+                    'stok_sebelum' => $stokSebelum,
+                    'stok_sesudah' => $stokSebelum + 1,
+                    'perubahan' => 1,
+                    'tipe' => 'masuk',
+                    'referensi' => 'Produk Baru: ' . $produk->nama,
+                    'keterangan' => 'Tambah stok produk baru (grouped by merk)',
+                    'pos_pengguna_id' => $user->id,
+                ]);
+            } else {
+                // Create new stock entry with this product as representative
+                \App\Models\ProdukStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_toko_id' => $store->id,
+                    'pos_produk_id' => $produk->id,
+                    'stok' => 1,
+                ]);
+
+                \App\Models\LogStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_produk_id' => $produk->id,
+                    'pos_toko_id' => $store->id,
+                    'stok_sebelum' => 0,
+                    'stok_sesudah' => 1,
+                    'perubahan' => 1,
+                    'tipe' => 'masuk',
+                    'referensi' => 'Produk Baru: ' . $produk->nama,
+                    'keterangan' => 'Stok awal produk baru',
+                    'pos_pengguna_id' => $user->id,
+                ]);
+            }
         }
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan');
@@ -388,6 +419,7 @@ class ProdukController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * Deletes individual product and REDUCES stock count (does not delete entire stock entry)
      *
      * @param  PosProduk  $produk
      * @return \Illuminate\Http\Response
@@ -403,40 +435,46 @@ class ProdukController extends Controller
         $ownerId = $user->owner ? $user->owner->id : null;
         $merkId = $produk->pos_produk_merk_id;
 
-        // Handle stock reduction for this brand
-        // Stock is tracked per brand (merk), so we need to reduce stock by 1 for this brand
-        // Stock is stored on the "primary" product (smallest ID for this merk)
-        
-        // Find all pos_produk_stok entries for products with same merk
-        $stokEntries = \App\Models\ProdukStok::whereHas('produk', function($q) use ($ownerId, $merkId) {
-            $q->where('owner_id', $ownerId)
-              ->where('pos_produk_merk_id', $merkId);
-        })->get();
+        // Find another product with same merk to use as new representative (exclude current product)
+        $newRepresentativeProduk = PosProduk::where('owner_id', $ownerId)
+            ->where('pos_produk_merk_id', $merkId)
+            ->where('id', '!=', $produk->id) // Exclude product being deleted
+            ->orderBy('id', 'asc') // Use oldest remaining product
+            ->first();
 
-        foreach ($stokEntries as $stokEntry) {
-            if ($stokEntry->stok > 0) {
-                // Reduce stock by 1
-                $stokEntry->stok = $stokEntry->stok - 1;
-                $stokEntry->save();
+        // Find stock entries that reference THIS product being deleted
+        $stokEntriesReferencingThis = \App\Models\ProdukStok::where('owner_id', $ownerId)
+            ->where('pos_produk_id', $produk->id) // Stock entries pointing to this product
+            ->get();
 
-                // Create log stok
-                \App\Models\LogStok::create([
-                    'owner_id' => $ownerId,
-                    'pos_produk_id' => $stokEntry->pos_produk_id,
-                    'pos_toko_id' => $stokEntry->pos_toko_id,
-                    'stok_sebelum' => $stokEntry->stok + 1,
-                    'stok_sesudah' => $stokEntry->stok,
-                    'perubahan' => -1,
-                    'tipe' => 'keluar',
-                    'referensi' => 'Hapus Produk',
-                    'keterangan' => 'Produk dihapus: ' . $produk->nama,
-                    'pos_pengguna_id' => $user->id,
+        foreach ($stokEntriesReferencingThis as $stokEntry) {
+            // Create log stok for stock reduction
+            \App\Models\LogStok::create([
+                'owner_id' => $ownerId,
+                'pos_produk_id' => $produk->id,
+                'pos_toko_id' => $stokEntry->pos_toko_id,
+                'stok_sebelum' => $stokEntry->stok,
+                'stok_sesudah' => max(0, $stokEntry->stok - 1),
+                'perubahan' => -1,
+                'tipe' => 'keluar',
+                'referensi' => 'Hapus Produk',
+                'keterangan' => 'Produk dihapus: ' . $produk->nama,
+                'pos_pengguna_id' => $user->id,
+            ]);
+            
+            // Reduce stock count by 1
+            $newStok = max(0, $stokEntry->stok - 1);
+            
+            // Always update stock entry, NEVER delete it
+            // Stock entry should persist even with stok=0 until manually deleted from Produk Stok page
+            if ($newRepresentativeProduk) {
+                $stokEntry->update([
+                    'stok' => $newStok,
+                    'pos_produk_id' => $newRepresentativeProduk->id // Update to new representative
                 ]);
-            }
-
-            // If stock becomes 0, delete the entry
-            if ($stokEntry->stok <= 0) {
-                $stokEntry->delete();
+            } else {
+                // No other products exist, just reduce stock to 0
+                $stokEntry->update(['stok' => $newStok]);
             }
         }
 
@@ -447,10 +485,7 @@ class ProdukController extends Controller
         // 2. Delete log stok for this specific product
         \App\Models\LogStok::where('pos_produk_id', $produk->id)->delete();
         
-        // 3. Delete produk stok entry if it belongs to this product (not transferred)
-        \App\Models\ProdukStok::where('pos_produk_id', $produk->id)->delete();
-        
-        // 4. Delete the product
+        // 3. Delete the product
         $produk->delete();
 
         return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus');
@@ -458,6 +493,7 @@ class ProdukController extends Controller
 
     /**
      * Bulk delete products
+     * Deletes individual products and REDUCES stock counts (does not delete entire stock entries)
      */
     public function bulkDestroy(Request $request)
     {
@@ -475,53 +511,66 @@ class ProdukController extends Controller
         $user = Auth::user();
         $ownerId = $user->owner ? $user->owner->id : null;
 
-        // Get products to be deleted and group by merk
+        // Get products to be deleted with their merk info
         $products = PosProduk::where('owner_id', $ownerId)
             ->whereIn('id', $ids)
             ->get();
 
-        // Count products per merk to reduce stock accordingly
-        $merkCounts = [];
+        // Group products by merk_id to efficiently reduce stock
+        $productsByMerk = [];
         foreach ($products as $prod) {
             $merkId = $prod->pos_produk_merk_id;
-            if (!isset($merkCounts[$merkId])) {
-                $merkCounts[$merkId] = 0;
+            if (!isset($productsByMerk[$merkId])) {
+                $productsByMerk[$merkId] = [];
             }
-            $merkCounts[$merkId]++;
+            $productsByMerk[$merkId][] = $prod;
         }
 
-        // Reduce stock for each merk
-        foreach ($merkCounts as $merkId => $count) {
-            $stokEntries = \App\Models\ProdukStok::whereHas('produk', function($q) use ($ownerId, $merkId) {
-                $q->where('owner_id', $ownerId)
-                  ->where('pos_produk_merk_id', $merkId);
-            })->get();
+        // Reduce stock for each merk group
+        foreach ($productsByMerk as $merkId => $merkProducts) {
+            $countToReduce = count($merkProducts);
+            $productIdsBeingDeleted = array_map(fn($p) => $p->id, $merkProducts);
+            
+            // Find a remaining product with same merk to use as new representative (exclude products being deleted)
+            $newRepresentativeProduk = PosProduk::where('owner_id', $ownerId)
+                ->where('pos_produk_merk_id', $merkId)
+                ->whereNotIn('id', $productIdsBeingDeleted) // Exclude products being deleted
+                ->orderBy('id', 'asc') // Use oldest remaining product
+                ->first();
+            
+            // Find stock entries that reference any product being deleted
+            $stokEntriesReferencingDeleted = \App\Models\ProdukStok::where('owner_id', $ownerId)
+                ->whereIn('pos_produk_id', $productIdsBeingDeleted) // Stock entries pointing to products being deleted
+                ->get();
 
-            foreach ($stokEntries as $stokEntry) {
-                if ($stokEntry->stok > 0) {
-                    $reduction = min($count, $stokEntry->stok);
-                    $oldStok = $stokEntry->stok;
-                    $stokEntry->stok = $stokEntry->stok - $reduction;
-                    $stokEntry->save();
-
-                    // Create log stok
-                    \App\Models\LogStok::create([
-                        'owner_id' => $ownerId,
-                        'pos_produk_id' => $stokEntry->pos_produk_id,
-                        'pos_toko_id' => $stokEntry->pos_toko_id,
-                        'stok_sebelum' => $oldStok,
-                        'stok_sesudah' => $stokEntry->stok,
-                        'perubahan' => -$reduction,
-                        'tipe' => 'keluar',
-                        'referensi' => 'Hapus Produk Massal',
-                        'keterangan' => 'Bulk delete: ' . $reduction . ' produk dihapus',
-                        'pos_pengguna_id' => $user->id,
+            foreach ($stokEntriesReferencingDeleted as $stokEntry) {
+                // Create log stok for stock reduction
+                \App\Models\LogStok::create([
+                    'owner_id' => $ownerId,
+                    'pos_produk_id' => $stokEntry->pos_produk_id, // Use current reference
+                    'pos_toko_id' => $stokEntry->pos_toko_id,
+                    'stok_sebelum' => $stokEntry->stok,
+                    'stok_sesudah' => max(0, $stokEntry->stok - $countToReduce),
+                    'perubahan' => -$countToReduce,
+                    'tipe' => 'keluar',
+                    'referensi' => 'Hapus Produk Massal',
+                    'keterangan' => 'Bulk delete ' . $countToReduce . ' produk dengan merk yang sama',
+                    'pos_pengguna_id' => $user->id,
+                ]);
+                
+                // Reduce stock count
+                $newStok = max(0, $stokEntry->stok - $countToReduce);
+                
+                // Always update stock entry, NEVER delete it
+                // Stock entry should persist even with stok=0 until manually deleted from Produk Stok page
+                if ($newRepresentativeProduk) {
+                    $stokEntry->update([
+                        'stok' => $newStok,
+                        'pos_produk_id' => $newRepresentativeProduk->id // Update to new representative
                     ]);
-
-                    // If stock becomes 0, delete the entry
-                    if ($stokEntry->stok <= 0) {
-                        $stokEntry->delete();
-                    }
+                } else {
+                    // No other products exist, just reduce stock to 0
+                    $stokEntry->update(['stok' => $newStok]);
                 }
             }
         }
@@ -530,13 +579,10 @@ class ProdukController extends Controller
         // 1. Delete biaya tambahan for all products
         DB::table('pos_produk_biaya_tambahan')->whereIn('pos_produk_id', $ids)->delete();
         
-        // 2. Delete log stok for all products
+        // 2. Delete log stok for all products  
         \App\Models\LogStok::whereIn('pos_produk_id', $ids)->delete();
         
-        // 3. Delete produk stok for all products
-        \App\Models\ProdukStok::whereIn('pos_produk_id', $ids)->delete();
-        
-        // 4. Delete the products
+        // 3. Delete the products
         $deletedCount = PosProduk::where('owner_id', $ownerId)
             ->whereIn('id', $ids)
             ->delete();
@@ -690,9 +736,14 @@ class ProdukController extends Controller
                 
                 $produk = PosProduk::create($createData);
 
-                // DO NOT automatically create produk_stok entries here
-                // produk_stok will be created ONLY when transaction updates stock via UpdatesStock::updateProductStock
-                // This prevents orphaned stok=0 entries when multiple items with same brand are grouped
+                // DO NOT create stock entries here for quick add from transactions
+                // Stock will be created when transaction is marked as "completed"
+                // This prevents double stock creation (once here, once in storeKeluar)
+                
+                \Log::info('quickStore - Product created (stock will be added on transaction completion):', [
+                    'produk_id' => $produk->id,
+                    'note' => 'Stock entries NOT created yet - waiting for transaction completion'
+                ]);
             }
 
             // Create or update color (warna)

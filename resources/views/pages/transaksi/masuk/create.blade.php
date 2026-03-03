@@ -617,21 +617,47 @@ function handleProductTypeChange(itemId) {
             // Get stock for selected store
             const stok = product.stok_per_toko?.[selectedTokoId] || 0;
             
-            // Display product name with IMEI
-            const displayText = `${product.nama}${product.merk ? ' - ' + product.merk.nama : ''}${product.imei ? ' - IMEI: ' + product.imei : ''}`;
+            // Build display text with IMEI prominently for electronics
+            let displayText = product.nama;
+            if (product.merk && product.merk.nama) {
+                displayText += ` - ${product.merk.nama}`;
+            }
+            // Add IMEI for electronics (this is the unique identifier)
+            if (product.imei) {
+                displayText += ` | IMEI: ${product.imei}`;
+            }
+            // Add color if available
+            if (product.warna && product.warna.warna) {
+                displayText += ` | ${product.warna.warna}`;
+            }
+            // Add storage if available  
+            if (product.penyimpanan && product.penyimpanan.kapasitas) {
+                displayText += ` | ${product.penyimpanan.kapasitas}GB`;
+            }
+            
             option.textContent = displayText;
             option.dataset.price = product.harga_jual;
             option.dataset.stock = stok;
             option.dataset.productId = product.id;
             option.dataset.displayText = displayText;
+            option.dataset.imei = product.imei || '';
             
-            // Disable if already selected in another item
+            // Mark if already selected in another item (don't disable - just mark)
             if (selectedProducts.has(product.id.toString())) {
                 option.disabled = true;
+                option.textContent += ' (Already selected)';
             }
             
             itemSelect.appendChild(option);
         });
+        
+        // Auto-trigger dropdown display for search-enabled product types
+        if (itemSearch && itemSearch.style.display !== 'none') {
+            setTimeout(() => {
+                itemSearch.focus();
+                filterItemDropdown(itemId);
+            }, 100);
+        }
     }
 }
 
@@ -648,25 +674,39 @@ function handleItemChange(itemId) {
         // Show stock info for products
         if (selectedOption.dataset.stock !== undefined) {
             const stock = parseInt(selectedOption.dataset.stock);
+            const imei = selectedOption.dataset.imei;
+            
             if (stockInfo) {
-                stockInfo.textContent = `Available stock: ${stock} units`;
                 stockInfo.classList.remove('hidden');
-                stockInfo.classList.remove('text-red-500', 'text-green-500', 'text-orange-500');
+                stockInfo.classList.remove('text-red-500', 'text-green-500', 'text-orange-500', 'font-medium');
                 
                 if (stock <= 0) {
                     stockInfo.textContent = 'OUT OF STOCK';
                     stockInfo.classList.add('text-red-500');
-                } else if (stock <= 10) {
-                    stockInfo.classList.add('text-orange-500');
+                } else if (imei) {
+                    // Product with IMEI - individual unit
+                    stockInfo.textContent = `✓ In Stock | IMEI: ${imei}`;
+                    stockInfo.classList.add('text-green-600', 'font-medium');
                 } else {
-                    stockInfo.classList.add('text-green-500');
+                    // Regular product
+                    stockInfo.textContent = `✓ Available: ${stock} unit${stock > 1 ? 's' : ''}`;
+                    if (stock <= 10) {
+                        stockInfo.classList.add('text-orange-500');
+                    } else {
+                        stockInfo.classList.add('text-green-500');
+                    }
                 }
             }
             
-            // Set max quantity to available stock
-            qtyInput.max = stock;
-            if (parseInt(qtyInput.value) > stock) {
-                qtyInput.value = stock;
+            // For products with IMEI, max qty is 1 (individual unit)
+            if (imei) {
+                qtyInput.max = 1;
+                qtyInput.value = 1;
+            } else {
+                qtyInput.max = stock;
+                if (parseInt(qtyInput.value) > stock) {
+                    qtyInput.value = stock;
+                }
             }
         } else if (stockInfo) {
             stockInfo.classList.add('hidden');
@@ -681,22 +721,38 @@ function handleItemChange(itemId) {
 }
 
 function updateAllItemDropdowns(changedItemId) {
+    // Get all selected product IDs across all rows
+    const allSelectedProducts = new Set();
+    document.querySelectorAll('.item-select').forEach(select => {
+        if (select.value && select.value !== '') {
+            allSelectedProducts.add(select.value);
+        }
+    });
+    
+    // Update disabled state for each dropdown WITHOUT rebuilding
     document.querySelectorAll('.item-select').forEach(select => {
         const itemId = select.id.replace('item-select-', '');
-        if (itemId !== changedItemId.toString()) {
-            // Get current value before refreshing
-            const currentValue = select.value;
-            const itemType = document.querySelector(`#item-${itemId} .item-type`);
-            
-            if (itemType && itemType.value) {
-                // Re-build the list to update disabled states
-                const currentProductType = itemType.value;
-                handleProductTypeChange(itemId);
-                
-                // Restore previous selection if still available
-                select.value = currentValue;
+        const currentValue = select.value;
+        
+        // Update each option's disabled state
+        Array.from(select.options).forEach(option => {
+            if (option.value === '' || option.value === currentValue) {
+                // Keep "Select Item" and current selection enabled
+                return;
             }
-        }
+            
+            // Disable if selected elsewhere, enable if not
+            const isSelectedElsewhere = allSelectedProducts.has(option.value) && option.value !== currentValue;
+            option.disabled = isSelectedElsewhere;
+            
+            // Update text to show/hide "Already selected"
+            let text = option.dataset.displayText || option.textContent.replace(' (Already selected)', '');
+            if (isSelectedElsewhere) {
+                option.textContent = text + ' (Already selected)';
+            } else {
+                option.textContent = text;
+            }
+        });
     });
 }
 
@@ -706,10 +762,8 @@ function filterItemDropdown(itemId) {
     const itemDropdown = document.getElementById(`item-dropdown-${itemId}`);
     const searchText = searchInput.value.toLowerCase().trim();
     
-    // Get all options except the first "Select Item" option and filter out disabled options
-    const options = Array.from(itemSelect.querySelectorAll('option'))
-        .slice(1)
-        .filter(option => !option.disabled);
+    // Get all options except the first "Select Item" option (include disabled to show all products)
+    const options = Array.from(itemSelect.querySelectorAll('option')).slice(1);
     
     // Filter matching options
     const matchingOptions = searchText === '' 
@@ -731,23 +785,42 @@ function filterItemDropdown(itemId) {
     } else if (matchingOptions.length > 0) {
         matchingOptions.forEach(option => {
             const dropdownItem = document.createElement('div');
-            dropdownItem.className = 'px-3 py-2 text-sm text-navy-700 dark:text-white hover:bg-lightPrimary dark:hover:bg-navy-700 cursor-pointer border-b border-gray-100 dark:border-white/5 last:border-b-0';
-            dropdownItem.textContent = option.textContent;
+            const isDisabled = option.disabled;
             
-            dropdownItem.addEventListener('click', function() {
-                // Set the hidden select value
-                itemSelect.value = option.value;
-                
-                // Update search input with selection
-                searchInput.value = option.textContent;
-                
-                // Close dropdown
-                itemDropdown.classList.add('hidden');
-                
-                // Trigger change event
-                const event = new Event('change', { bubbles: true });
-                itemSelect.dispatchEvent(event);
-            });
+            if (isDisabled) {
+                // Disabled item styling (already selected)
+                dropdownItem.className = 'px-3 py-2 text-sm text-gray-400 dark:text-gray-600 bg-gray-50 dark:bg-navy-900 cursor-not-allowed border-b border-gray-100 dark:border-white/5 last:border-b-0';
+            } else {
+                // Available item styling
+                dropdownItem.className = 'px-3 py-2 text-sm text-navy-700 dark:text-white hover:bg-lightPrimary dark:hover:bg-navy-700 cursor-pointer border-b border-gray-100 dark:border-white/5 last:border-b-0';
+            }
+            
+            // Build display with IMEI highlighted
+            let displayHTML = option.textContent;
+            if (option.dataset.imei && displayHTML.includes('IMEI')) {
+                displayHTML = displayHTML.replace(/(IMEI: [\\w]+)/g, '<span class="font-semibold text-blue-600 dark:text-blue-400">$1</span>');
+            }
+            dropdownItem.innerHTML = displayHTML;
+            
+            if (!isDisabled) {
+                dropdownItem.addEventListener('click', function() {
+                    // Set the hidden select value
+                    itemSelect.value = option.value;
+                    
+                    // Update search input with selection (remove 'Already selected' text)
+                    const cleanText = option.dataset.displayText || option.textContent.replace(' (Already selected)', '');
+                    searchInput.value = cleanText;
+                    
+                    // Close dropdown
+                    itemDropdown.classList.add('hidden');
+                    
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    itemSelect.dispatchEvent(event);
+                });
+            } else {
+                dropdownItem.title = 'This item is already selected in another row';
+            }
             
             itemDropdown.appendChild(dropdownItem);
         });

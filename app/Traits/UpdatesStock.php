@@ -4,11 +4,13 @@ namespace App\Traits;
 
 use App\Models\ProdukStok;
 use App\Models\LogStok;
+use App\Models\PosProduk;
 
 trait UpdatesStock
 {
     /**
      * Update product stock and create log
+     * Stock is GROUPED by merk_id + store_id (not per individual product)
      * 
      * @param int $ownerId
      * @param int $tokoId
@@ -21,40 +23,56 @@ trait UpdatesStock
      */
     protected function updateProductStock($ownerId, $tokoId, $produkId, $quantity, $tipe, $referensi, $keterangan = null)
     {
+        // Get the product and its merk_id
+        $product = PosProduk::find($produkId);
+        if (!$product) {
+            \Log::error('updateProductStock - Product not found:', ['produk_id' => $produkId]);
+            return false;
+        }
+
+        $merkId = $product->pos_produk_merk_id;
+
         // Log input parameters
         \Log::info('updateProductStock - Input parameters:', [
             'owner_id' => $ownerId . ' (type: ' . gettype($ownerId) . ')',
             'toko_id' => $tokoId . ' (type: ' . gettype($tokoId) . ')',
             'produk_id' => $produkId . ' (type: ' . gettype($produkId) . ')',
+            'merk_id' => $merkId,
             'quantity' => $quantity,
         ]);
 
-        // Check if record exists BEFORE firstOrCreate
-        $existingRecord = ProdukStok::where('owner_id', $ownerId)
+        // Find existing stock record by MERK + STORE (grouped, not per individual product)
+        // Join with produk table to find any product with same merk in the same store
+        $existingStokByMerk = ProdukStok::where('owner_id', $ownerId)
             ->where('pos_toko_id', $tokoId)
-            ->where('pos_produk_id', $produkId)
+            ->whereHas('produk', function($query) use ($merkId) {
+                $query->where('pos_produk_merk_id', $merkId);
+            })
             ->first();
 
-        \Log::info('updateProductStock - Checking existing record:', [
-            'exists' => $existingRecord ? 'YES - ID: ' . $existingRecord->id : 'NO',
-            'current_stock' => $existingRecord ? $existingRecord->stok : null,
+        \Log::info('updateProductStock - Checking existing record by MERK:', [
+            'exists' => $existingStokByMerk ? 'YES - ID: ' . $existingStokByMerk->id : 'NO',
+            'merk_id' => $merkId,
+            'current_stock' => $existingStokByMerk ? $existingStokByMerk->stok : null,
         ]);
 
-        // Find or create stock record
-        $stok = ProdukStok::firstOrCreate(
-            [
+        // If existing stock for this merk+store found, use it
+        // Otherwise create new stock entry with this product as representative
+        if ($existingStokByMerk) {
+            $stok = $existingStokByMerk;
+        } else {
+            $stok = ProdukStok::create([
                 'owner_id' => $ownerId,
                 'pos_toko_id' => $tokoId,
-                'pos_produk_id' => $produkId,
-            ],
-            [
+                'pos_produk_id' => $produkId, // First product becomes representative
                 'stok' => 0,
-            ]
-        );
+            ]);
+        }
 
-        \Log::info('updateProductStock - After firstOrCreate:', [
+        \Log::info('updateProductStock - Stock record (grouped by merk):', [
             'id' => $stok->id,
-            'was_just_created' => $stok->wasRecentlyCreated,
+            'was_existing' => $existingStokByMerk ? true : false,
+            'representative_produk_id' => $stok->pos_produk_id,
             'current_stock' => $stok->stok,
         ]);
 

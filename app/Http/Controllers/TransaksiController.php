@@ -420,16 +420,42 @@ class TransaksiController extends Controller
         $tokos = PosToko::where('owner_id', $ownerId)->get();
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
         
-        // Load products with stock per store
-        $produks = PosProduk::where('owner_id', $ownerId)
-            ->with(['merk', 'stok' => function($query) use ($ownerId) {
-                $query->where('owner_id', $ownerId)
-                    ->select('pos_produk_id', 'pos_toko_id', 'stok');
-            }])
+        // Get all stock entries grouped by merk (stock is grouped by merk+store)
+        $stokByMerkAndStore = \App\Models\ProdukStok::where('owner_id', $ownerId)
+            ->with('produk')
             ->get()
-            ->map(function($produk) {
-                // Create stock array per store [toko_id => stok]
-                $produk->stok_per_toko = $produk->stok->pluck('stok', 'pos_toko_id')->toArray();
+            ->groupBy(function($stok) {
+                // Group by merk_id + store_id
+                return ($stok->produk ? $stok->produk->pos_produk_merk_id : 0) . '_' . $stok->pos_toko_id;
+            });
+        
+        // Load products with all identifying information
+        $produks = PosProduk::where('owner_id', $ownerId)
+            ->with([
+                'merk',
+                'warna',
+                'penyimpanan',
+                'ram',
+            ])
+            ->get()
+            ->map(function($produk) use ($stokByMerkAndStore) {
+                // Find stock for this product's merk in each store
+                $stokPerToko = [];
+                foreach ($stokByMerkAndStore as $key => $stokEntries) {
+                    // Key format: merkId_tokoId
+                    $parts = explode('_', $key);
+                    $merkId = (int)$parts[0];
+                    $tokoId = (int)$parts[1];
+                    
+                    if ($merkId === $produk->pos_produk_merk_id) {
+                        // Get the stock count from the grouped entry
+                        $stokEntry = $stokEntries->first();
+                        if ($stokEntry) {
+                            $stokPerToko[$tokoId] = $stokEntry->stok;
+                        }
+                    }
+                }
+                $produk->stok_per_toko = $stokPerToko;
                 return $produk;
             });
         
@@ -499,17 +525,27 @@ class TransaksiController extends Controller
                 if ($pos_produk_id) {
                     $quantity = $itemData['quantity'] ?? 1;
                     
-                    // Get available stock for this product IN THE SELECTED STORE
+                    // Get the product's merk for grouped stock lookup
+                    $produk = PosProduk::find($pos_produk_id);
+                    if (!$produk) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Product not found: ID {$pos_produk_id}"
+                        ], 422);
+                    }
+                    
+                    // Get available stock for this MERK IN THE SELECTED STORE (grouped stock)
                     $stokData = \App\Models\ProdukStok::where('owner_id', $ownerId)
                         ->where('pos_toko_id', $request->pos_toko_id)
-                        ->where('pos_produk_id', $pos_produk_id)
+                        ->whereHas('produk', function($query) use ($produk) {
+                            $query->where('pos_produk_merk_id', $produk->pos_produk_merk_id);
+                        })
                         ->first();
                     
                     $availableStock = $stokData ? $stokData->stok : 0;
                     
                     if ($availableStock < $quantity) {
-                        $produk = PosProduk::find($pos_produk_id);
-                        $productName = $produk ? $produk->nama : 'Product ID ' . $pos_produk_id;
+                        $productName = $produk->nama ?? 'Product ID ' . $pos_produk_id;
                         
                         return response()->json([
                             'success' => false,
@@ -578,27 +614,30 @@ class TransaksiController extends Controller
                             'Penjualan produk'
                         );
                         
-                        // Delete individual products based on quantity sold
-                        // Get products to delete (latest first, excluding primary product)
+                        // Delete individual products that were sold
+                        // Each sale = delete N products (FIFO - First In First Out: oldest first)
+                        // Get the SPECIFIC products that were actually selected/sold in this transaction
+                        // For now, we'll use FIFO strategy: delete oldest products first
                         $productsToDelete = PosProduk::where('owner_id', $ownerId)
                             ->where('pos_produk_merk_id', $merkId)
-                            ->where('id', '!=', $primaryProduk->id) // Don't delete primary
-                            ->orderBy('id', 'desc') // Delete newest first
+                            ->orderBy('id', 'asc') // Delete oldest first (FIFO)
                             ->limit($data['total_quantity'])
                             ->get();
                         
-                        $deletedCount = $productsToDelete->count();
+                        $deletedCount = 0;
                         
-                        // Delete the products
+                        // Delete the sold products
                         foreach ($productsToDelete as $prodToDelete) {
+                            // Delete related data first
+                            \DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $prodToDelete->id)->delete();
+                            \App\Models\LogStok::where('pos_produk_id', $prodToDelete->id)->delete();
+                            
+                            // Delete the product
                             $prodToDelete->delete();
+                            $deletedCount++;
                         }
                         
-                        // If we need to delete more than non-primary products available,
-                        // and total_quantity equals all products (including primary),
-                        // we should still keep the primary but it will have 0 stock
-                        
-                        \Log::info("storeMasuk - Deleted {$deletedCount} products for merk {$merkId}, qty sold: {$data['total_quantity']}");
+                        \Log::info("storeMasuk - Deleted {$deletedCount} products (FIFO) for merk {$merkId}, qty sold: {$data['total_quantity']}");
                     }
                 }
             }

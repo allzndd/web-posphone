@@ -2021,10 +2021,11 @@ function submitQuickProduct(event) {
         itemSelectElem.value = `temp_${currentItemIdForModal}`; // Temporary ID
     }
     
-    // Update prices in the item row
+    // Update prices in the item row - USE PURCHASE PRICE (including biaya tambahan)
+    // For transaksi keluar (purchase from supplier), unit price = purchase price, NOT selling price
     const unitPriceInput = document.getElementById(`unit-price-${currentItemIdForModal}`);
     if (unitPriceInput) {
-        unitPriceInput.value = hargaJual;
+        unitPriceInput.value = basePurchasePrice + totalBiayaTambahan; // Total purchase price
         calculateSubtotal(currentItemIdForModal);
     }
     
