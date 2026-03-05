@@ -204,9 +204,12 @@
             </div>
         </div>
 
-        <!-- Cash Balance Per Outlet -->
+        <!-- Cash Balance Per Outlet (Period) -->
         <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
-            <h6 class="text-lg font-bold text-navy-700 dark:text-white mb-4">Cash Balance per Outlet</h6>
+            <div class="flex items-center justify-between mb-4">
+                <h6 class="text-lg font-bold text-navy-700 dark:text-white">Cash Balance per Outlet (Periode Dipilih)</h6>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Cash flow in selected period only</span>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -234,6 +237,71 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Current Balance per Outlet (All Time) -->
+        <div class="!z-5 relative flex flex-col rounded-[20px] bg-gradient-to-br from-blue-500 to-blue-600 bg-clip-border shadow-3xl shadow-shadow-500 dark:shadow-none p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h6 class="text-lg font-bold text-white mb-1">💰 Current Balance per Outlet (Saldo Kas Riil)</h6>
+                    <p class="text-xs text-white/80">Modal Awal + Total Cash In - Total Cash Out (Sejak Awal Operasional)</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-white/70">Total Semua Outlet</p>
+                    <p class="text-2xl font-bold text-white">Rp {{ number_format($totalCurrentBalance, 0, ',', '.') }}</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-white/20">
+                            <th class="pb-3 text-left text-sm font-bold text-white/90">Toko</th>
+                            <th class="pb-3 text-right text-sm font-bold text-white/90">Modal Awal</th>
+                            <th class="pb-3 text-right text-sm font-bold text-white/90">Total Cash In</th>
+                            <th class="pb-3 text-right text-sm font-bold text-white/90">Total Cash Out</th>
+                            <th class="pb-3 text-right text-sm font-bold text-white/90">Current Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($currentBalancePerOutlet as $outlet)
+                        <tr class="border-b border-white/10">
+                            <td class="py-3 text-sm font-medium text-white">{{ $outlet['store_name'] }}</td>
+                            <td class="py-3 text-right text-sm text-white/90">Rp {{ number_format($outlet['modal'], 0, ',', '.') }}</td>
+                            <td class="py-3 text-right text-sm text-white/90">Rp {{ number_format($outlet['total_cash_in'], 0, ',', '.') }}</td>
+                            <td class="py-3 text-right text-sm text-white/90">Rp {{ number_format($outlet['total_cash_out'], 0, ',', '.') }}</td>
+                            <td class="py-3 text-right text-sm font-bold {{ $outlet['current_balance'] >= 0 ? 'text-yellow-300' : 'text-red-300' }}">
+                                Rp {{ number_format($outlet['current_balance'], 0, ',', '.') }}
+                                @if($outlet['current_balance'] < 0)
+                                    <span class="ml-2 text-xs">⚠️</span>
+                                @elseif($outlet['current_balance'] > $outlet['modal'] * 2)
+                                    <span class="ml-2 text-xs">🚀</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="py-4 text-center text-white/70">Tidak ada data</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/20">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center">
+                        <p class="text-xs text-white/70 mb-1">Total Modal Awal</p>
+                        <p class="text-lg font-bold text-white">Rp {{ number_format(array_sum(array_column($currentBalancePerOutlet, 'modal')), 0, ',', '.') }}</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-white/70 mb-1">Total Cash In (All Time)</p>
+                        <p class="text-lg font-bold text-white">Rp {{ number_format(array_sum(array_column($currentBalancePerOutlet, 'total_cash_in')), 0, ',', '.') }}</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-white/70 mb-1">Total Cash Out (All Time)</p>
+                        <p class="text-lg font-bold text-white">Rp {{ number_format(array_sum(array_column($currentBalancePerOutlet, 'total_cash_out')), 0, ',', '.') }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

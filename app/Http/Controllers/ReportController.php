@@ -259,6 +259,42 @@ class ReportController extends Controller
             ];
         }
 
+        // Current Balance per Outlet (All Time - Saldo Kas Riil)
+        $currentBalancePerOutlet = [];
+        $currentBalanceData = DB::table('pos_transaksi')
+            ->where('owner_id', $ownerId)
+            ->where('status', 'completed')
+            ->select(
+                'pos_toko_id',
+                DB::raw('SUM(CASE WHEN is_transaksi_masuk = 1 THEN total_harga ELSE 0 END) as total_cash_in'),
+                DB::raw('SUM(CASE WHEN is_transaksi_masuk = 0 THEN total_harga ELSE 0 END) as total_cash_out')
+            )
+            ->groupBy('pos_toko_id')
+            ->get();
+
+        $totalCurrentBalance = 0;
+        foreach ($stores as $store) {
+            // Get store modal (initial capital)
+            $modal = $store->modal ?? 0;
+            
+            // Get all time cash in and cash out
+            $storeData = $currentBalanceData->where('pos_toko_id', $store->id)->first();
+            $totalCashIn = $storeData ? $storeData->total_cash_in : 0;
+            $totalCashOut = $storeData ? $storeData->total_cash_out : 0;
+            
+            // Calculate current balance: Modal + Cash In - Cash Out
+            $currentBalance = $modal + $totalCashIn - $totalCashOut;
+            $totalCurrentBalance += $currentBalance;
+            
+            $currentBalancePerOutlet[] = [
+                'store_name' => $store->nama,
+                'modal' => $modal,
+                'total_cash_in' => $totalCashIn,
+                'total_cash_out' => $totalCashOut,
+                'current_balance' => $currentBalance,
+            ];
+        }
+
         // Modal & Profit per Outlet
         $modalProfitPerOutlet = [];
         foreach ($stores as $store) {
@@ -392,6 +428,8 @@ class ReportController extends Controller
             'receivable' => $receivable,
             'paymentBreakdown' => $paymentBreakdown,
             'cashBalancePerOutlet' => $cashBalancePerOutlet,
+            'currentBalancePerOutlet' => $currentBalancePerOutlet,
+            'totalCurrentBalance' => $totalCurrentBalance,
             'modalProfitPerOutlet' => $modalProfitPerOutlet,
             'totalModal' => $totalModal,
             'overallRoi' => $overallRoi,

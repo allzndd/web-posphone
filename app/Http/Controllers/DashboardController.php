@@ -188,30 +188,30 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Top products data (for sales chart) - Using LogStok for product sales tracking
-        $topProductsData = \App\Models\LogStok::where('owner_id', $ownerId)
-            ->where('tipe', 'keluar')
-            ->where('keterangan', 'Penjualan produk')
+        // Top products data (for sales chart) - Using transaction items for accurate tracking
+        $topProductsData = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
+                $query->where('owner_id', $ownerId)
+                    ->where('is_transaksi_masuk', 1) // Only sales
+                    ->where('status', 'completed'); // Only completed
+            })
             ->with('produk')
             ->get()
-            ->filter(function($log) {
-                return $log->produk !== null;
+            ->filter(function($item) {
+                return $item->produk !== null;
             })
-            ->groupBy(function($log) {
-                return $log->produk->nama ?? 'Unknown';
+            ->groupBy(function($item) {
+                return $item->produk->nama ?? 'Unknown';
             })
-            ->map(function($logs, $nama) {
-                $totalSold = $logs->sum(function($log) {
-                    return abs($log->perubahan);
-                });
-                $avgPrice = $logs->avg(function($log) {
-                    return $log->produk->harga_jual ?? 0;
+            ->map(function($items, $nama) {
+                $totalSold = $items->sum('quantity');
+                $totalRevenue = $items->sum(function($item) {
+                    return $item->harga_satuan * $item->quantity;
                 });
                 
                 return [
                     'name' => $nama,
                     'sold' => $totalSold,
-                    'revenue' => $avgPrice * $totalSold
+                    'revenue' => $totalRevenue
                 ];
             })
             ->sortByDesc('sold')
@@ -219,32 +219,40 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
-        // Recommendations - Top Profit Products (based on actual sales profit, grouped by product name)
-        $topProfitProducts = \App\Models\LogStok::where('owner_id', $ownerId)
-            ->where('tipe', 'keluar')
-            ->where('keterangan', 'Penjualan produk')
-            ->with('produk.stok')
+        // Recommendations - Top Profit Products (from actual completed transactions)
+        $topProfitProducts = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
+                $query->where('owner_id', $ownerId)
+                    ->where('is_transaksi_masuk', 1) // Only sales transactions
+                    ->where('status', 'completed'); // Only completed
+            })
+            ->with(['produk', 'transaksi'])
             ->get()
-            ->filter(function($log) {
-                return $log->produk !== null && $log->produk->harga_jual !== null && $log->produk->harga_beli !== null;
+            ->filter(function($item) {
+                // Filter out items with deleted products or invalid prices
+                return $item->produk !== null 
+                    && $item->harga_satuan > 0 
+                    && $item->produk->harga_beli > 0;
             })
-            ->groupBy(function($log) {
-                return $log->produk->nama ?? 'Unknown';
+            ->groupBy(function($item) {
+                // Group by product name
+                return $item->produk->nama ?? 'Unknown';
             })
-            ->map(function($logs, $nama) {
+            ->map(function($items, $nama) {
                 // Calculate total profit from actual sales
-                $totalProfit = $logs->sum(function($log) {
-                    $unitProfit = ($log->produk->harga_jual ?? 0) - ($log->produk->harga_beli ?? 0);
-                    return $unitProfit * abs($log->perubahan);
+                $totalProfit = $items->sum(function($item) {
+                    // Profit per unit = harga jual (harga_satuan) - harga beli (dari master produk)
+                    $unitProfit = ($item->harga_satuan ?? 0) - ($item->produk->harga_beli ?? 0);
+                    return $unitProfit * $item->quantity;
                 });
+                
                 // Count total sold units
-                $totalSold = $logs->sum(function($log) {
-                    return abs($log->perubahan);
-                });
-                // Sum remaining stock across all variants of this product name
-                $totalStok = $logs->unique('pos_produk_id')->sum(function($log) {
-                    return $log->produk->stok->sum('stok') ?? 0;
-                });
+                $totalSold = $items->sum('quantity');
+                
+                // Get current stock (sum from all variants with same name)
+                $productIds = $items->pluck('pos_produk_id')->unique();
+                $totalStok = \App\Models\ProdukStok::whereIn('pos_produk_id', $productIds)
+                    ->where('owner_id', $items->first()->transaksi->owner_id)
+                    ->sum('stok');
                 
                 return (object)[
                     'name' => $nama,
@@ -257,26 +265,28 @@ class DashboardController extends Controller
             ->take(5)
             ->values();
 
-        // Best Selling Products (from LogStok - grouped by product name)
-        $bestSellingProducts = \App\Models\LogStok::where('owner_id', $ownerId)
-            ->where('tipe', 'keluar')
-            ->where('keterangan', 'Penjualan produk')
-            ->with('produk')
+        // Best Selling Products (from actual completed transactions)
+        $bestSellingProducts = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
+                $query->where('owner_id', $ownerId)
+                    ->where('is_transaksi_masuk', 1) // Only sales transactions
+                    ->where('status', 'completed'); // Only completed
+            })
+            ->with(['produk', 'transaksi'])
             ->get()
-            ->filter(function($log) {
-                return $log->produk !== null; // Filter out orphaned records
+            ->filter(function($item) {
+                // Filter out items with deleted products
+                return $item->produk !== null;
             })
-            ->groupBy(function($log) {
-                return $log->produk->nama ?? 'Unknown';
+            ->groupBy(function($item) {
+                // Group by product name
+                return $item->produk->nama ?? 'Unknown';
             })
-            ->map(function($logs, $nama) {
-                $totalSold = $logs->sum(function($log) {
-                    return abs($log->perubahan);
-                });
-                // Get average sell price from products in this group
-                $avgSellPrice = $logs->avg(function($log) {
-                    return $log->produk->harga_jual ?? 0;
-                });
+            ->map(function($items, $nama) {
+                // Count total sold units
+                $totalSold = $items->sum('quantity');
+                
+                // Get average sell price (from harga_satuan in transaction items)
+                $avgSellPrice = $items->avg('harga_satuan');
                 
                 return (object)[
                     'name' => $nama,
@@ -287,11 +297,6 @@ class DashboardController extends Controller
             ->sortByDesc('total_sold')
             ->take(5)
             ->values();
-        
-        // If no sales data, show message
-        if ($bestSellingProducts->isEmpty()) {
-            $bestSellingProducts = collect([]);
-        }
 
         // Popular Customers (highest spending)
         $popularCustomers = \App\Models\PosPelanggan::where('owner_id', $ownerId)
@@ -314,6 +319,43 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Current Balance per Outlet (All Time - Saldo Kas Riil)
+        $stores = \App\Models\PosToko::where('owner_id', $ownerId)->get();
+        $currentBalancePerOutlet = [];
+        $currentBalanceData = DB::table('pos_transaksi')
+            ->where('owner_id', $ownerId)
+            ->where('status', 'completed')
+            ->select(
+                'pos_toko_id',
+                DB::raw('SUM(CASE WHEN is_transaksi_masuk = 1 THEN total_harga ELSE 0 END) as total_cash_in'),
+                DB::raw('SUM(CASE WHEN is_transaksi_masuk = 0 THEN total_harga ELSE 0 END) as total_cash_out')
+            )
+            ->groupBy('pos_toko_id')
+            ->get();
+
+        $totalCurrentBalance = 0;
+        foreach ($stores as $store) {
+            // Get store modal (initial capital)
+            $modal = $store->modal ?? 0;
+            
+            // Get all time cash in and cash out
+            $storeData = $currentBalanceData->where('pos_toko_id', $store->id)->first();
+            $totalCashIn = $storeData ? $storeData->total_cash_in : 0;
+            $totalCashOut = $storeData ? $storeData->total_cash_out : 0;
+            
+            // Calculate current balance: Modal + Cash In - Cash Out
+            $currentBalance = $modal + $totalCashIn - $totalCashOut;
+            $totalCurrentBalance += $currentBalance;
+            
+            $currentBalancePerOutlet[] = (object)[
+                'store_name' => $store->nama,
+                'modal' => $modal,
+                'total_cash_in' => $totalCashIn,
+                'total_cash_out' => $totalCashOut,
+                'current_balance' => $currentBalance,
+            ];
+        }
+
         return view('pages.dashboard', compact(
             'totalTransactions',
             'totalCustomers',
@@ -333,6 +375,8 @@ class DashboardController extends Controller
             'topProfitProducts',
             'bestSellingProducts',
             'popularCustomers',
+            'currentBalancePerOutlet',
+            'totalCurrentBalance',
             'period'
         ));
     }

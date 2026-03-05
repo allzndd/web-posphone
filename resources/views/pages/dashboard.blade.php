@@ -149,6 +149,114 @@
     </div>
     @endif
 
+    <!-- Current Balance Section (Owner Only) -->
+    @if(auth()->user()->isOwner())
+    <div class="mb-5">
+        <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
+                <div>
+                    <h4 class="text-xl font-bold text-navy-700 dark:text-white mb-1 flex items-center">
+                        <i class="fas fa-wallet text-brand-500 dark:text-white mr-2"></i> Current Balance (Saldo Kas Riil)
+                    </h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">Modal Awal + Total Cash In - Total Cash Out (Sejak Awal Operasional)</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Semua Outlet</p>
+                    <h3 class="text-2xl font-bold text-navy-700 dark:text-white">Rp {{ number_format($totalCurrentBalance, 0, ',', '.') }}</h3>
+                    @if($totalCurrentBalance < 0)
+                        <span class="inline-block mt-2 px-3 py-1 text-xs font-bold text-red-700 bg-red-100 rounded-full">
+                            ⚠️ Balance Negatif
+                        </span>
+                    @elseif($totalCurrentBalance > 100000000)
+                        <span class="inline-block mt-2 px-3 py-1 text-xs font-bold text-green-700 bg-green-100 rounded-full">
+                            🚀 Excellent Performance
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Stores Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @forelse($currentBalancePerOutlet as $outlet)
+                <div class="bg-lightPrimary dark:bg-navy-700 rounded-xl p-4 hover:shadow-lg transition-all duration-200">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex-1">
+                            <h6 class="text-base font-bold text-navy-700 dark:text-white mb-1 flex items-center">
+                                <i class="fas fa-store text-brand-500 dark:text-white mr-2 text-sm"></i>
+                                {{ $outlet->store_name }}
+                            </h6>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xl font-bold {{ $outlet->current_balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                {{ number_format($outlet->current_balance / 1000000, 1) }}jt
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">💰 Modal Awal:</span>
+                            <span class="text-navy-700 dark:text-white font-medium">Rp {{ number_format($outlet->modal, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">📈 Total Cash In:</span>
+                            <span class="text-green-600 dark:text-green-400 font-medium">Rp {{ number_format($outlet->total_cash_in, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 dark:text-gray-400">📉 Total Cash Out:</span>
+                            <span class="text-red-600 dark:text-red-400 font-medium">Rp {{ number_format($outlet->total_cash_out, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="pt-2 border-t border-gray-200 dark:border-white/10">
+                            <div class="flex justify-between items-center">
+                                <span class="text-navy-700 dark:text-white font-bold">💵 Current Balance:</span>
+                                <span class="text-sm font-bold {{ $outlet->current_balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                                    Rp {{ number_format($outlet->current_balance, 0, ',', '.') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Indicator -->
+                    @if($outlet->current_balance < 0)
+                        <div class="mt-3 px-3 py-2 bg-red-100 border border-red-200 rounded-lg text-center">
+                            <span class="text-xs font-bold text-red-700">⚠️ Perlu Perhatian</span>
+                        </div>
+                    @elseif($outlet->current_balance > $outlet->modal * 2)
+                        <div class="mt-3 px-3 py-2 bg-green-100 border border-green-200 rounded-lg text-center">
+                            <span class="text-xs font-bold text-green-700">✅ Performa Bagus</span>
+                        </div>
+                    @endif
+                </div>
+                @empty
+                <div class="col-span-full text-center py-8 text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-store-slash text-4xl mb-3"></i>
+                    <p>Belum ada data toko</p>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Summary Footer -->
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center p-4 bg-lightPrimary dark:bg-navy-700 rounded-xl">
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">💰 Total Modal Awal</p>
+                        <p class="text-lg font-bold text-navy-700 dark:text-white">Rp {{ number_format(collect($currentBalancePerOutlet)->sum('modal'), 0, ',', '.') }}</p>
+                    </div>
+                    <div class="text-center p-4 bg-lightPrimary dark:bg-navy-700 rounded-xl">
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">📈 Total Cash In (All Time)</p>
+                        <p class="text-lg font-bold text-green-600 dark:text-green-400">Rp {{ number_format(collect($currentBalancePerOutlet)->sum('total_cash_in'), 0, ',', '.') }}</p>
+                    </div>
+                    <div class="text-center p-4 bg-lightPrimary dark:bg-navy-700 rounded-xl">
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">📉 Total Cash Out (All Time)</p>
+                        <p class="text-lg font-bold text-red-600 dark:text-red-400">Rp {{ number_format(collect($currentBalancePerOutlet)->sum('total_cash_out'), 0, ',', '.') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Trade-in Statistics & Top Products -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
         <!-- Trade-in Statistics -->
