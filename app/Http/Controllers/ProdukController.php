@@ -442,12 +442,15 @@ class ProdukController extends Controller
             ->orderBy('id', 'asc') // Use oldest remaining product
             ->first();
 
-        // Find stock entries that reference THIS product being deleted
-        $stokEntriesReferencingThis = \App\Models\ProdukStok::where('owner_id', $ownerId)
-            ->where('pos_produk_id', $produk->id) // Stock entries pointing to this product
+        // Find ALL stock entries for this MERK (not just those referencing this product)
+        // Stock is grouped by merk, so we need to find by merk_id
+        $stokEntriesForMerk = \App\Models\ProdukStok::where('owner_id', $ownerId)
+            ->whereHas('produk', function($query) use ($merkId) {
+                $query->where('pos_produk_merk_id', $merkId);
+            })
             ->get();
 
-        foreach ($stokEntriesReferencingThis as $stokEntry) {
+        foreach ($stokEntriesForMerk as $stokEntry) {
             // Create log stok for stock reduction
             \App\Models\LogStok::create([
                 'owner_id' => $ownerId,
@@ -465,15 +468,17 @@ class ProdukController extends Controller
             // Reduce stock count by 1
             $newStok = max(0, $stokEntry->stok - 1);
             
-            // Always update stock entry, NEVER delete it
-            // Stock entry should persist even with stok=0 until manually deleted from Produk Stok page
-            if ($newRepresentativeProduk) {
+            // Check if current stok entry references the product being deleted
+            $needsNewRepresentative = ($stokEntry->pos_produk_id == $produk->id);
+            
+            if ($needsNewRepresentative && $newRepresentativeProduk) {
+                // Update to new representative and reduce stock
                 $stokEntry->update([
                     'stok' => $newStok,
-                    'pos_produk_id' => $newRepresentativeProduk->id // Update to new representative
+                    'pos_produk_id' => $newRepresentativeProduk->id
                 ]);
             } else {
-                // No other products exist, just reduce stock to 0
+                // Just reduce stock
                 $stokEntry->update(['stok' => $newStok]);
             }
         }
@@ -538,12 +543,14 @@ class ProdukController extends Controller
                 ->orderBy('id', 'asc') // Use oldest remaining product
                 ->first();
             
-            // Find stock entries that reference any product being deleted
-            $stokEntriesReferencingDeleted = \App\Models\ProdukStok::where('owner_id', $ownerId)
-                ->whereIn('pos_produk_id', $productIdsBeingDeleted) // Stock entries pointing to products being deleted
+            // Find ALL stock entries for this MERK (not just those referencing deleted products)
+            $stokEntriesForMerk = \App\Models\ProdukStok::where('owner_id', $ownerId)
+                ->whereHas('produk', function($query) use ($merkId) {
+                    $query->where('pos_produk_merk_id', $merkId);
+                })
                 ->get();
 
-            foreach ($stokEntriesReferencingDeleted as $stokEntry) {
+            foreach ($stokEntriesForMerk as $stokEntry) {
                 // Create log stok for stock reduction
                 \App\Models\LogStok::create([
                     'owner_id' => $ownerId,
@@ -561,15 +568,17 @@ class ProdukController extends Controller
                 // Reduce stock count
                 $newStok = max(0, $stokEntry->stok - $countToReduce);
                 
-                // Always update stock entry, NEVER delete it
-                // Stock entry should persist even with stok=0 until manually deleted from Produk Stok page
-                if ($newRepresentativeProduk) {
+                // Check if current stok entry references any product being deleted
+                $needsNewRepresentative = in_array($stokEntry->pos_produk_id, $productIdsBeingDeleted);
+                
+                if ($needsNewRepresentative && $newRepresentativeProduk) {
+                    // Update to new representative and reduce stock
                     $stokEntry->update([
                         'stok' => $newStok,
-                        'pos_produk_id' => $newRepresentativeProduk->id // Update to new representative
+                        'pos_produk_id' => $newRepresentativeProduk->id
                     ]);
                 } else {
-                    // No other products exist, just reduce stock to 0
+                    // Just reduce stock
                     $stokEntry->update(['stok' => $newStok]);
                 }
             }
