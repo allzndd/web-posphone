@@ -575,7 +575,7 @@ function handleProductTypeChange(itemId) {
             option.dataset.price = service.harga;
             itemSelect.appendChild(option);
         });
-    } else if (productType === 'electronic' || productType === 'accessories') {
+    } else if (productType === 'electronic') {
         // Set hidden type field to product
         if (typeHiddenInput) typeHiddenInput.value = 'product';
         
@@ -589,16 +589,16 @@ function handleProductTypeChange(itemId) {
             return;
         }
         
-        // Filter products by selected product type and available stock
+        // Filter electronic products by available stock
         const availableProducts = products.filter(product => {
             const stok = product.stok_per_toko?.[selectedTokoId] || 0;
-            return stok > 0 && product.product_type === productType;
+            return stok > 0 && product.product_type === 'electronic';
         });
         
         if (availableProducts.length === 0) {
             const option = document.createElement('option');
             option.value = '';
-            option.textContent = `No ${productType} products with available stock in this store`;
+            option.textContent = 'No electronic products with available stock in this store';
             option.disabled = true;
             itemSelect.appendChild(option);
             return;
@@ -610,6 +610,7 @@ function handleProductTypeChange(itemId) {
         // Get products already selected in other items
         const selectedProducts = getSelectedProductsExcept(itemId);
         
+        // For electronic: show each individual product (unique IMEI)
         availableProducts.forEach(product => {
             const option = document.createElement('option');
             option.value = product.id;
@@ -643,6 +644,99 @@ function handleProductTypeChange(itemId) {
             option.dataset.imei = product.imei || '';
             
             // Mark if already selected in another item (don't disable - just mark)
+            if (selectedProducts.has(product.id.toString())) {
+                option.disabled = true;
+                option.textContent += ' (Already selected)';
+            }
+            
+            itemSelect.appendChild(option);
+        });
+        
+        // Auto-trigger dropdown display for search-enabled product types
+        if (itemSearch && itemSearch.style.display !== 'none') {
+            setTimeout(() => {
+                itemSearch.focus();
+                filterItemDropdown(itemId);
+            }, 100);
+        }
+    } else if (productType === 'accessories') {
+        // Set hidden type field to product
+        if (typeHiddenInput) typeHiddenInput.value = 'product';
+        
+        // Check if store is selected first
+        if (!selectedTokoId) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Please select a store first';
+            option.disabled = true;
+            itemSelect.appendChild(option);
+            return;
+        }
+        
+        // Filter accessories products by available stock
+        const availableProducts = products.filter(product => {
+            const stok = product.stok_per_toko?.[selectedTokoId] || 0;
+            return stok > 0 && product.product_type === 'accessories';
+        });
+        
+        if (availableProducts.length === 0) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No accessories products with available stock in this store';
+            option.disabled = true;
+            itemSelect.appendChild(option);
+            return;
+        }
+        
+        // For accessories: GROUP by merk_id (show only 1 per merk with total stock)
+        // This prevents duplicate entries for accessories with same merk
+        const groupedByMerk = {};
+        availableProducts.forEach(product => {
+            const merkId = product.pos_produk_merk_id;
+            if (!groupedByMerk[merkId]) {
+                groupedByMerk[merkId] = {
+                    product: product, // Use first product as representative
+                    totalStock: 0
+                };
+            }
+            // Accumulate stock (though stock is already grouped by merk in produk_stok)
+            const stok = product.stok_per_toko?.[selectedTokoId] || 0;
+            groupedByMerk[merkId].totalStock = stok; // Stock is same for all products with same merk
+        });
+        
+        // Build list for filtering (grouped)
+        const groupedProducts = Object.values(groupedByMerk).map(g => ({
+            ...g.product,
+            grouped_stock: g.totalStock
+        }));
+        itemSearch.dataset.products = JSON.stringify(groupedProducts);
+        
+        // Get products already selected in other items
+        const selectedProducts = getSelectedProductsExcept(itemId);
+        
+        // Add grouped options to select
+        Object.values(groupedByMerk).forEach(group => {
+            const product = group.product;
+            const totalStock = group.totalStock;
+            
+            const option = document.createElement('option');
+            option.value = product.id;
+            
+            // Build display text for accessories (no IMEI)
+            let displayText = product.nama;
+            if (product.merk && product.merk.nama) {
+                displayText += ` - ${product.merk.nama}`;
+            }
+            
+            option.textContent = displayText;
+            option.dataset.price = product.harga_jual;
+            option.dataset.stock = totalStock;
+            option.dataset.productId = product.id;
+            option.dataset.displayText = displayText;
+            option.dataset.imei = ''; // Accessories don't have IMEI
+            option.dataset.merkId = product.pos_produk_merk_id;
+            
+            // Mark if already selected in another item
             if (selectedProducts.has(product.id.toString())) {
                 option.disabled = true;
                 option.textContent += ' (Already selected)';

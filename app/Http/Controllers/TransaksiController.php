@@ -614,46 +614,43 @@ class TransaksiController extends Controller
                             'Penjualan produk'
                         );
                         
-                        // Only delete individual products for ELECTRONIC type (each has unique IMEI)
-                        // For ACCESSORIES, stock is reduced above but products are NOT deleted
-                        if ($primaryProduk->product_type === 'electronic') {
-                            // Get products to delete (FIFO - oldest first)
-                            $productsToDelete = PosProduk::where('owner_id', $ownerId)
-                                ->where('pos_produk_merk_id', $merkId)
-                                ->orderBy('id', 'asc')
-                                ->limit($data['total_quantity'])
-                                ->get();
+                        // Delete individual products for both ELECTRONIC and ACCESSORIES types
+                        // Electronic: each has unique IMEI
+                        // Accessories: each product record represents 1 unit
+                        // Get products to delete (FIFO - oldest first)
+                        $productsToDelete = PosProduk::where('owner_id', $ownerId)
+                            ->where('pos_produk_merk_id', $merkId)
+                            ->orderBy('id', 'asc')
+                            ->limit($data['total_quantity'])
+                            ->get();
+                        
+                        $deletedProductIds = $productsToDelete->pluck('id')->toArray();
+                        
+                        // IMPORTANT: Find representative product that will REMAIN after deletion
+                        // This must be done BEFORE deleting products
+                        $newRepresentative = PosProduk::where('owner_id', $ownerId)
+                            ->where('pos_produk_merk_id', $merkId)
+                            ->whereNotIn('id', $deletedProductIds)
+                            ->orderBy('id', 'asc')
+                            ->first();
+                        
+                        // Update produk_stok to point to remaining product BEFORE deletion
+                        if ($newRepresentative) {
+                            \App\Models\ProdukStok::where('owner_id', $ownerId)
+                                ->whereIn('pos_produk_id', $deletedProductIds)
+                                ->update(['pos_produk_id' => $newRepresentative->id]);
                             
-                            $deletedProductIds = $productsToDelete->pluck('id')->toArray();
-                            
-                            // IMPORTANT: Find representative product that will REMAIN after deletion
-                            // This must be done BEFORE deleting products
-                            $newRepresentative = PosProduk::where('owner_id', $ownerId)
-                                ->where('pos_produk_merk_id', $merkId)
-                                ->whereNotIn('id', $deletedProductIds)
-                                ->orderBy('id', 'asc')
-                                ->first();
-                            
-                            // Update produk_stok to point to remaining product BEFORE deletion
-                            if ($newRepresentative) {
-                                \App\Models\ProdukStok::where('owner_id', $ownerId)
-                                    ->whereIn('pos_produk_id', $deletedProductIds)
-                                    ->update(['pos_produk_id' => $newRepresentative->id]);
-                                
-                                \Log::info("storeMasuk - Updated produk_stok representative to product ID: {$newRepresentative->id}");
-                            }
-                            
-                            // Now delete the sold products
-                            foreach ($productsToDelete as $prodToDelete) {
-                                \DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $prodToDelete->id)->delete();
-                                \App\Models\LogStok::where('pos_produk_id', $prodToDelete->id)->delete();
-                                $prodToDelete->delete();
-                            }
-                            
-                            \Log::info("storeMasuk - Deleted " . count($deletedProductIds) . " electronic products for merk {$merkId}");
-                        } else {
-                            \Log::info("storeMasuk - Accessories sold for merk {$merkId}, qty: {$data['total_quantity']} - stock reduced, products preserved");
+                            \Log::info("storeMasuk - Updated produk_stok representative to product ID: {$newRepresentative->id}");
                         }
+                        
+                        // Now delete the sold products
+                        foreach ($productsToDelete as $prodToDelete) {
+                            \DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $prodToDelete->id)->delete();
+                            \App\Models\LogStok::where('pos_produk_id', $prodToDelete->id)->delete();
+                            $prodToDelete->delete();
+                        }
+                        
+                        \Log::info("storeMasuk - Deleted " . count($deletedProductIds) . " {$primaryProduk->product_type} products for merk {$merkId}");
                     }
                 }
             }
