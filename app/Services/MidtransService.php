@@ -213,16 +213,20 @@ class MidtransService
             return;
         }
 
-        $tipeLayanan = TipeLayanan::find($langganan->tipe_layanan_id);
+        // Use the target package from pembayaran (what the user actually paid for)
+        $targetPackageId = $pembayaran->target_tipe_layanan_id ?? $langganan->tipe_layanan_id;
+        $tipeLayanan = TipeLayanan::find($targetPackageId);
         if (!$tipeLayanan) {
-            Log::error('TipeLayanan not found for langganan ID: ' . $langganan->id);
+            Log::error('TipeLayanan not found for target package ID: ' . $targetPackageId);
             return;
         }
 
         $startDate = Carbon::now();
         $endDate   = $this->calculateEndDate($startDate, $tipeLayanan);
 
+        // NOW update the langganan with the new package + activate
         $langganan->update([
+            'tipe_layanan_id' => $tipeLayanan->id,
             'is_active'    => 1,
             'is_trial'     => 0,
             'started_date' => $startDate,
