@@ -14,6 +14,45 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 | contains the "web" middleware group. Now create something great!
 |
 */
+// Cache Clear Route (for shared hosting - SUPERADMIN only)
+Route::get('/clear-cache', function () {
+    // Clear view cache
+    $viewPath = storage_path('framework/views');
+    $files = glob($viewPath . '/*.php');
+    $deleted = 0;
+    foreach ($files as $file) {
+        if (is_file($file)) {
+            @unlink($file);
+            $deleted++;
+        }
+    }
+
+    // Clear config cache
+    @unlink(base_path('bootstrap/cache/config.php'));
+    @unlink(base_path('bootstrap/cache/routes-v7.php'));
+    @unlink(base_path('bootstrap/cache/packages.php'));
+    @unlink(base_path('bootstrap/cache/services.php'));
+
+    // Clear application cache files
+    $cachePath = storage_path('framework/cache/data');
+    if (is_dir($cachePath)) {
+        $cacheFiles = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($cachePath, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($cacheFiles as $cacheFile) {
+            if ($cacheFile->isFile()) {
+                @unlink($cacheFile->getRealPath());
+            }
+        }
+    }
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => "Cache cleared! Deleted {$deleted} compiled view(s). Config, route, and app cache also cleared.",
+    ]);
+})->middleware(['auth', 'role:SUPERADMIN'])->name('cache.clear');
+
 // Landing Page
 Route::get('/', function () {
     if (auth()->check()) {
