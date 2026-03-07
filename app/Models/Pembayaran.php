@@ -32,7 +32,13 @@ class Pembayaran extends Model
         'nominal',
         'metode_pembayaran',
         'status',
+        'midtrans_order_id',
+        'snap_token',
+        'midtrans_transaction_id',
+        'payment_type',
+        'midtrans_response',
         'paid_at',
+        'expired_at',
         'created_at',
     ];
 
@@ -44,6 +50,7 @@ class Pembayaran extends Model
     protected $casts = [
         'nominal' => 'decimal:2',
         'paid_at' => 'datetime',
+        'expired_at' => 'datetime',
         'created_at' => 'datetime',
     ];
 
