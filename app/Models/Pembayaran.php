@@ -29,6 +29,7 @@ class Pembayaran extends Model
     protected $fillable = [
         'owner_id',
         'langganan_id',
+        'target_tipe_layanan_id',
         'nominal',
         'metode_pembayaran',
         'status',
