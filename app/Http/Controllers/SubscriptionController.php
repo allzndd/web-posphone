@@ -92,20 +92,18 @@ class SubscriptionController extends Controller
                     'started_date' => Carbon::now(),
                     'end_date' => Carbon::now(),
                 ]);
-            } else {
-                // Update the subscription to target package (pending activation)
-                $langganan->update([
-                    'tipe_layanan_id' => $package->id,
-                ]);
             }
+            // NOTE: Do NOT update langganan.tipe_layanan_id here.
+            // It will be updated only after payment is confirmed via webhook.
 
             // Generate order ID
             $orderId = MidtransService::generateOrderId($owner->id, $package->id);
 
-            // Create pembayaran record
+            // Create pembayaran record with target package
             $pembayaran = Pembayaran::create([
                 'owner_id' => $owner->id,
                 'langganan_id' => $langganan->id,
+                'target_tipe_layanan_id' => $package->id,
                 'nominal' => $package->harga,
                 'metode_pembayaran' => 'midtrans',
                 'status' => 'Pending',
