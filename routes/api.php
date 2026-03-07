@@ -48,6 +48,9 @@ use App\Models\Langganan;
 
 // Auth Routes (Public)
 Route::post('/register', [AuthController::class, 'register']);
+
+// Midtrans Webhook (Public - no auth needed)
+Route::post('/midtrans/webhook', [\App\Http\Controllers\SubscriptionController::class, 'handleWebhook'])->name('midtrans.webhook');
 Route::post('/login', [AuthController::class, 'login']);
 
 // Public Routes (no auth required)
