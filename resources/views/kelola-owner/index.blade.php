@@ -104,7 +104,7 @@
                                     </span>
                                 @endif
                                 <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                    Until {{ $subscription->end_date->format('d M Y') }}
+                                    Until {{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d M Y') : 'Unlimited' }}
                                 </p>
                             @else
                                 <span class="text-xs text-gray-500 dark:text-gray-500">No subscription</span>
