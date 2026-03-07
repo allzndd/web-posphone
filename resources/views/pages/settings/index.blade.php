@@ -48,6 +48,16 @@
                         Finance Settings
                     </div>
                 </button>
+                <button @click="activeTab = 'subscription'" 
+                        :class="activeTab === 'subscription' ? 'border-b-2 border-brand-500 text-brand-500 dark:text-brand-400' : 'text-gray-600 dark:text-gray-400 hover:text-navy-700 dark:hover:text-white'"
+                        class="px-4 py-3 text-sm font-medium transition-all">
+                    <div class="flex items-center gap-2">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"></path>
+                        </svg>
+                        Subscription
+                    </div>
+                </button>
             </div>
         </div>
 
@@ -92,6 +102,14 @@
                 @include('pages.settings.partials.finance', [
                     'settings' => $settings ?? (object)['currency' => 'IDR'],
                     'hasData' => $hasData ?? false
+                ])
+            </div>
+
+            <!-- Subscription Tab -->
+            <div x-show="activeTab === 'subscription'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                @include('pages.settings.partials.subscription', [
+                    'subscription' => $subscription ?? null,
+                    'payments' => $payments ?? collect()
                 ])
             </div>
 
