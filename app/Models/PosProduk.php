@@ -149,12 +149,10 @@ class PosProduk extends Model
             }
         });
 
-        // Cascade delete: when product is deleted, delete related stock and logs
+        // Cascade delete: when product is deleted, clean up related records
         static::deleting(function ($model) {
-            // Delete all stock records for this product
-            $model->stok()->delete();
-            
-            // Delete all log stok records for this product
+            // Do NOT delete produk_stok entries - stock should persist even when all products are sold
+            // Only delete log stok records for this product
             \App\Models\LogStok::where('pos_produk_id', $model->id)->delete();
         });
     }

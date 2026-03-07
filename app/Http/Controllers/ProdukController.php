@@ -478,8 +478,12 @@ class ProdukController extends Controller
                     'pos_produk_id' => $newRepresentativeProduk->id
                 ]);
             } else {
-                // Just reduce stock
-                $stokEntry->update(['stok' => $newStok]);
+                // Just reduce stock, save merk_name snapshot if no representative left
+                $updateData = ['stok' => $newStok];
+                if ($needsNewRepresentative && !$newRepresentativeProduk) {
+                    $updateData['merk_name'] = $produk->merk ? $produk->merk->nama : $produk->nama;
+                }
+                $stokEntry->update($updateData);
             }
         }
 
@@ -519,6 +523,7 @@ class ProdukController extends Controller
         // Get products to be deleted with their merk info
         $products = PosProduk::where('owner_id', $ownerId)
             ->whereIn('id', $ids)
+            ->with('merk')
             ->get();
 
         // Group products by merk_id to efficiently reduce stock
@@ -578,8 +583,13 @@ class ProdukController extends Controller
                         'pos_produk_id' => $newRepresentativeProduk->id
                     ]);
                 } else {
-                    // Just reduce stock
-                    $stokEntry->update(['stok' => $newStok]);
+                    // Just reduce stock, save merk_name snapshot if no representative left
+                    $updateData = ['stok' => $newStok];
+                    if ($needsNewRepresentative && !$newRepresentativeProduk) {
+                        $firstProd = $merkProducts[0];
+                        $updateData['merk_name'] = $firstProd->merk ? $firstProd->merk->nama : $firstProd->nama;
+                    }
+                    $stokEntry->update($updateData);
                 }
             }
         }

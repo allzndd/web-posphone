@@ -18,6 +18,7 @@ class ProdukStok extends Model
         'pos_toko_id',
         'pos_produk_id',
         'stok',
+        'merk_name',
     ];
 
     protected $casts = [

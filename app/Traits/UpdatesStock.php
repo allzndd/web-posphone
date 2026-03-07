@@ -61,11 +61,15 @@ trait UpdatesStock
         if ($existingStokByMerk) {
             $stok = $existingStokByMerk;
         } else {
+            // Get merk name for snapshot
+            $merkName = $product->merk ? $product->merk->nama : null;
+            
             $stok = ProdukStok::create([
                 'owner_id' => $ownerId,
                 'pos_toko_id' => $tokoId,
                 'pos_produk_id' => $produkId, // First product becomes representative
                 'stok' => 0,
+                'merk_name' => $merkName,
             ]);
         }
 

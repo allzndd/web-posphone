@@ -669,6 +669,12 @@ class TransaksiController extends Controller
                                 ->update(['pos_produk_id' => $newRepresentative->id]);
                             
                             \Log::info("storeMasuk - Updated produk_stok representative to product ID: {$newRepresentative->id}");
+                        } else {
+                            // All products of this merk will be deleted - save merk_name snapshot on produk_stok
+                            $merkName = $primaryProduk->merk ? $primaryProduk->merk->nama : $primaryProduk->nama;
+                            \App\Models\ProdukStok::where('owner_id', $ownerId)
+                                ->whereIn('pos_produk_id', $deletedProductIds)
+                                ->update(['merk_name' => $merkName]);
                         }
                         
                         // Now delete the sold products

@@ -33,7 +33,8 @@ class ProdukStokController extends Controller
                     })
                     ->orWhereHas('toko', function($subQuery) use ($searchTerm) {
                         $subQuery->where('nama', 'like', '%' . $searchTerm . '%');
-                    });
+                    })
+                    ->orWhere('merk_name', 'like', '%' . $searchTerm . '%');
                 });
             })
             ->orderBy('id', 'desc')
@@ -116,6 +117,20 @@ class ProdukStokController extends Controller
             
             $primaryProduk = $produkStok->produk;
             
+            // If the representative product was deleted, show snapshot data
+            if (!$primaryProduk) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'produk_stok_id' => $produkStok->id,
+                        'merk_nama' => $produkStok->merk_name ?? 'Unknown',
+                        'toko_nama' => $produkStok->toko->nama ?? '-',
+                        'total_stok' => $produkStok->stok,
+                        'produk_list' => [],
+                    ]
+                ]);
+            }
+            
             $terkaitProduk = PosProduk::where('owner_id', $produkStok->owner_id)
                 ->where('pos_produk_merk_id', $primaryProduk->pos_produk_merk_id)
                 ->with(['merk', 'warna', 'ram', 'penyimpanan'])
@@ -149,7 +164,7 @@ class ProdukStokController extends Controller
                 'success' => true,
                 'data' => [
                     'produk_stok_id' => $produkStok->id,
-                    'merk_nama' => $primaryProduk->merk->nama ?? 'Unknown',
+                    'merk_nama' => $primaryProduk->merk->nama ?? $produkStok->merk_name ?? 'Unknown',
                     'toko_nama' => $produkStok->toko->nama ?? '-',
                     'total_stok' => $produkStok->stok,
                     'produk_list' => $terkaitProduk,
