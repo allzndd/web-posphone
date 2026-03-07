@@ -44,7 +44,9 @@
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Subscription Period</p>
                 <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">
                     @if($item->langganan)
-                        {{ $item->langganan->started_date->format('d M Y') }} - {{ $item->langganan->end_date->format('d M Y') }}
+                        {{ $item->langganan->started_date ? \Carbon\Carbon::parse($item->langganan->started_date)->format('d M Y') : '-' }}
+                        -
+                        {{ $item->langganan->end_date ? \Carbon\Carbon::parse($item->langganan->end_date)->format('d M Y') : 'Unlimited' }}
                     @else
                         N/A
                     @endif
