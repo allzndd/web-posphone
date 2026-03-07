@@ -66,6 +66,15 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         return view('pembayaran.expired');
     })->name('pembayaran.expired');
     
+    // Subscription Management Routes (Owner only, no subscription check needed)
+    Route::middleware(['role:OWNER'])->prefix('subscription')->name('subscription.')->group(function () {
+        Route::get('/packages', [\App\Http\Controllers\SubscriptionController::class, 'packages'])->name('packages');
+        Route::post('/checkout', [\App\Http\Controllers\SubscriptionController::class, 'checkout'])->name('checkout');
+        Route::post('/continue-payment', [\App\Http\Controllers\SubscriptionController::class, 'continuePayment'])->name('continue-payment');
+        Route::get('/payment/finish', [\App\Http\Controllers\SubscriptionController::class, 'paymentFinish'])->name('payment.finish');
+        Route::get('/status', [\App\Http\Controllers\SubscriptionController::class, 'status'])->name('status');
+    });
+    
     // Download Reports (accessible by all authenticated users)
     Route::get('dashboard/download-report', [\App\Http\Controllers\DashboardController::class, 'downloadFinancialReport'])->name('dashboard.download-report');
     Route::get('transaksi/download-report', [\App\Http\Controllers\TransaksiController::class, 'downloadReport'])->name('transaksi.download-report');
