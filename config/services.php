@@ -36,4 +36,13 @@ return [
         'model' => env('GROQ_MODEL', 'llama3-8b-8192'),
     ],
 
+    'midtrans' => [
+        'merchant_id' => env('MIDTRANS_MERCHANT_ID', 'G793710012'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY', 'Mid-client-5bHSi-ds_Z2Dd9TX'),
+        'server_key' => env('MIDTRANS_SERVER_KEY', 'Mid-server-KK1ep-BN3lIu2EM23AxXW3rI'),
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+        'is_sanitized' => env('MIDTRANS_IS_SANITIZED', true),
+        'is_3ds' => env('MIDTRANS_IS_3DS', true),
+    ],
+
 ];
