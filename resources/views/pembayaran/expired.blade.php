@@ -27,20 +27,25 @@
                             @endif
                             
                             <p class="text-muted mb-4">
-                                Your subscription has expired or is inactive. Please contact the administrator to renew your subscription and continue using the system.
+                                Your subscription has expired or is inactive. Please upgrade your plan to continue using all features.
                             </p>
 
                             <div class="mb-4">
                                 <p class="mb-2"><strong>What you can do:</strong></p>
                                 <ul class="list-unstyled">
-                                    <li class="mb-2">📞 Contact admin to renew your subscription</li>
                                     <li class="mb-2">💳 Choose a subscription plan that fits your needs</li>
                                     <li class="mb-2">🔄 Continue enjoying our services after renewal</li>
+                                    <li class="mb-2">📞 Contact admin if you need assistance</li>
                                 </ul>
                             </div>
 
                             <div class="mt-4">
-                                <a href="{{ route('landing') }}" class="btn btn-primary btn-lg px-5">
+                                @if(auth()->user() && auth()->user()->isOwner())
+                                <a href="{{ route('subscription.packages') }}" class="btn btn-primary btn-lg px-5">
+                                    <i class="fas fa-arrow-up mr-2"></i> Upgrade Plan
+                                </a>
+                                @endif
+                                <a href="{{ route('landing') }}" class="btn btn-outline-secondary btn-lg px-5 ml-2">
                                     <i class="fas fa-home mr-2"></i> Back to Home
                                 </a>
                             </div>
