@@ -430,7 +430,8 @@ function checkProductAvailability() {
     
     const availableProducts = products.filter(p => {
         const stok = p.stok_per_toko?.[selectedTokoId] || 0;
-        return stok > 0;
+        const belongsToStore = !p.pos_toko_id || p.pos_toko_id == selectedTokoId;
+        return stok > 0 && belongsToStore;
     });
     
     if (availableProducts.length === 0) {
@@ -589,10 +590,11 @@ function handleProductTypeChange(itemId) {
             return;
         }
         
-        // Filter electronic products by available stock
+        // Filter electronic products by available stock and matching store
         const availableProducts = products.filter(product => {
             const stok = product.stok_per_toko?.[selectedTokoId] || 0;
-            return stok > 0 && product.product_type === 'electronic';
+            const belongsToStore = !product.pos_toko_id || product.pos_toko_id == selectedTokoId;
+            return stok > 0 && product.product_type === 'electronic' && belongsToStore;
         });
         
         if (availableProducts.length === 0) {
@@ -673,10 +675,11 @@ function handleProductTypeChange(itemId) {
             return;
         }
         
-        // Filter accessories products by available stock
+        // Filter accessories products by available stock and matching store
         const availableProducts = products.filter(product => {
             const stok = product.stok_per_toko?.[selectedTokoId] || 0;
-            return stok > 0 && product.product_type === 'accessories';
+            const belongsToStore = !product.pos_toko_id || product.pos_toko_id == selectedTokoId;
+            return stok > 0 && product.product_type === 'accessories' && belongsToStore;
         });
         
         if (availableProducts.length === 0) {

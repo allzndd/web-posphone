@@ -142,7 +142,12 @@
                             <td class="py-4">
                                 <div class="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
                                     @php
+                                        // First try to get IMEI from snapshot (new way)
                                         $imeis = $item->items->map(function($transItem) {
+                                            // Priority: snapshot data > product relation
+                                            if ($transItem->imei) {
+                                                return $transItem->imei;
+                                            }
                                             return $transItem->produk ? $transItem->produk->imei : null;
                                         })->filter()->unique()->values();
                                     @endphp
@@ -159,7 +164,11 @@
                             <td class="py-4">
                                 <div class="text-sm max-w-xs">
                                     @php
+                                        // Priority: snapshot data > product relation
                                         $productTypes = $item->items->map(function($transItem) {
+                                            if ($transItem->product_type) {
+                                                return $transItem->product_type;
+                                            }
                                             return $transItem->produk ? $transItem->produk->product_type : null;
                                         })->filter()->unique()->values();
                                     @endphp

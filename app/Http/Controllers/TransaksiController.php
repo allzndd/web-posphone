@@ -521,6 +521,23 @@ class TransaksiController extends Controller
                 $pos_produk_id = $itemData['type'] === 'product' ? $itemData['item_id'] : null;
                 $pos_service_id = $itemData['type'] === 'service' ? $itemData['item_id'] : null;
                 
+                // Get product snapshot data before creating transaction item
+                $productSnapshot = [];
+                if ($pos_produk_id) {
+                    $produk = PosProduk::with(['merk', 'warna', 'penyimpanan', 'ram'])->find($pos_produk_id);
+                    if ($produk) {
+                        $productSnapshot = [
+                            'imei' => $produk->imei,
+                            'product_name' => $produk->nama,
+                            'product_type' => $produk->product_type,
+                            'merk_name' => $produk->merk ? $produk->merk->nama : null,
+                            'warna' => $produk->warna ? $produk->warna->warna : null,
+                            'penyimpanan' => $produk->penyimpanan ? $produk->penyimpanan->penyimpanan : null,
+                            'ram' => $produk->ram ? $produk->ram->ram : null,
+                        ];
+                    }
+                }
+                
                 // Validate stock for products (incoming = sales, stock should decrease)
                 if ($pos_produk_id) {
                     $quantity = $itemData['quantity'] ?? 1;
@@ -559,6 +576,13 @@ class TransaksiController extends Controller
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
                     'pos_service_id' => $pos_service_id,
+                    'imei' => $productSnapshot['imei'] ?? null,
+                    'product_name' => $productSnapshot['product_name'] ?? null,
+                    'product_type' => $productSnapshot['product_type'] ?? null,
+                    'merk_name' => $productSnapshot['merk_name'] ?? null,
+                    'warna' => $productSnapshot['warna'] ?? null,
+                    'penyimpanan' => $productSnapshot['penyimpanan'] ?? null,
+                    'ram' => $productSnapshot['ram'] ?? null,
                     'quantity' => $itemData['quantity'] ?? 1,
                     'harga_satuan' => $itemData['harga_satuan'] ?? 0,
                     'subtotal' => $itemData['subtotal'] ?? 0,
@@ -617,9 +641,13 @@ class TransaksiController extends Controller
                         // Delete individual products for both ELECTRONIC and ACCESSORIES types
                         // Electronic: each has unique IMEI
                         // Accessories: each product record represents 1 unit
-                        // Get products to delete (FIFO - oldest first)
+                        // Get products to delete (FIFO - oldest first, filtered by store)
                         $productsToDelete = PosProduk::where('owner_id', $ownerId)
                             ->where('pos_produk_merk_id', $merkId)
+                            ->where(function($query) use ($request) {
+                                $query->where('pos_toko_id', $request->pos_toko_id)
+                                      ->orWhereNull('pos_toko_id');
+                            })
                             ->orderBy('id', 'asc')
                             ->limit($data['total_quantity'])
                             ->get();
@@ -1094,11 +1122,35 @@ class TransaksiController extends Controller
                 // Convert quantity to integer to ensure proper calculation
                 $quantity = (int)($itemData['quantity'] ?? 1);
                 
+                // Get product snapshot data before creating transaction item
+                $productSnapshot = [];
+                if ($pos_produk_id) {
+                    $originalProduk = PosProduk::with(['merk', 'warna', 'penyimpanan', 'ram'])->find($pos_produk_id);
+                    if ($originalProduk) {
+                        $productSnapshot = [
+                            'imei' => $originalProduk->imei,
+                            'product_name' => $originalProduk->nama,
+                            'product_type' => $originalProduk->product_type,
+                            'merk_name' => $originalProduk->merk ? $originalProduk->merk->nama : null,
+                            'warna' => $originalProduk->warna ? $originalProduk->warna->warna : null,
+                            'penyimpanan' => $originalProduk->penyimpanan ? $originalProduk->penyimpanan->penyimpanan : null,
+                            'ram' => $originalProduk->ram ? $originalProduk->ram->ram : null,
+                        ];
+                    }
+                }
+                
                 // Create transaction item (one entry per item for history/audit trail)
                 $transaksiItem = PosTransaksiItem::create([
                     'pos_transaksi_id' => $transaksi->id,
                     'pos_produk_id' => $pos_produk_id,
                     'pos_service_id' => $pos_service_id,
+                    'imei' => $productSnapshot['imei'] ?? null,
+                    'product_name' => $productSnapshot['product_name'] ?? null,
+                    'product_type' => $productSnapshot['product_type'] ?? null,
+                    'merk_name' => $productSnapshot['merk_name'] ?? null,
+                    'warna' => $productSnapshot['warna'] ?? null,
+                    'penyimpanan' => $productSnapshot['penyimpanan'] ?? null,
+                    'ram' => $productSnapshot['ram'] ?? null,
                     'quantity' => $quantity,
                     'harga_satuan' => $itemData['harga_satuan'] ?? 0,
                     'subtotal' => $itemData['subtotal'] ?? 0,
@@ -1130,6 +1182,9 @@ class TransaksiController extends Controller
                         // This prevents reuse issues when multiple transactions use same template
                         for ($i = 0; $i < $quantity; $i++) {
                             $clonedProduk = $originalProduk->replicate();
+                            
+                            // Set the store this product belongs to
+                            $clonedProduk->pos_toko_id = $request->pos_toko_id;
                             
                             // Set IMEI based on product type
                             if ($originalProduk->product_type === 'accessories') {

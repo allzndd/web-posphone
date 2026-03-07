@@ -14,6 +14,7 @@ class PosProduk extends Model
 
     protected $fillable = [
         'owner_id',
+        'pos_toko_id',
         'pos_produk_merk_id',
         'pos_produk_biaya_tambahan_id',
         'product_type',

@@ -207,10 +207,28 @@
             @foreach($transaksi->items as $item)
                 <div class="item-row">
                     <div class="item-name">
-                        @if($item->produk)
-                            {{ $item->produk->nama }}
-                            @if($item->produk->merk)
+                        @if($item->product_name || $item->produk)
+                            {{-- Use snapshot data first, fallback to relation --}}
+                            {{ $item->product_name ?? ($item->produk ? $item->produk->nama : '') }}
+                            @if($item->merk_name)
+                                - {{ $item->merk_name }}
+                            @elseif($item->produk && $item->produk->merk)
                                 - {{ $item->produk->merk->nama }}
+                            @endif
+                            @if($item->warna)
+                                - {{ $item->warna }}
+                            @elseif($item->produk && $item->produk->warna)
+                                - {{ $item->produk->warna->warna }}
+                            @endif
+                            @if($item->penyimpanan)
+                                - {{ $item->penyimpanan }}GB
+                            @elseif($item->produk && $item->produk->penyimpanan)
+                                - {{ $item->produk->penyimpanan->penyimpanan }}GB
+                            @endif
+                            @if($item->ram)
+                                - {{ $item->ram }}GB RAM
+                            @elseif($item->produk && $item->produk->ram)
+                                - {{ $item->produk->ram->ram }}GB RAM
                             @endif
                         @elseif($item->service)
                             {{ $item->service->nama }} (Service)
@@ -218,6 +236,11 @@
                             Item Tidak Diketahui
                         @endif
                     </div>
+                    @if($item->imei || ($item->produk && $item->produk->imei))
+                        <div class="item-details">
+                            <span>IMEI: {{ $item->imei ?? $item->produk->imei }}</span>
+                        </div>
+                    @endif
                     <div class="item-details">
                         <span>{{ $item->quantity }} x {{ get_currency_symbol() }} {{ number_format($item->harga_satuan, get_decimal_places()) }}</span>
                         <span>{{ get_currency_symbol() }} {{ number_format($item->subtotal, get_decimal_places()) }}</span>
