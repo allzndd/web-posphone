@@ -39,8 +39,12 @@ class CheckSubscriptionStatus
 
         // If no subscription exists
         if (!$subscription) {
-            return redirect()->route('pembayaran.expired')
-                ->with('error', 'No active subscription found. Please subscribe to continue.');
+            // Redirect to subscription packages page for self-service
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'No active subscription found.'], 403);
+            }
+            return redirect()->route('subscription.packages')
+                ->with('error', 'No active subscription found. Please choose a plan to continue.');
         }
 
         // Check if subscription is expired
