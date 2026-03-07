@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\OwnerSetting;
 use App\Models\User;
+use App\Models\Langganan;
+use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +35,18 @@ class SettingsController extends Controller
         
         $hasData = $hasProducts || $hasTransactions || $hasServices;
 
-        return view('pages.settings.index', compact('settings', 'hasData'));
+        // Subscription data
+        $subscription = Langganan::where('owner_id', $ownerId)
+            ->with('tipeLayanan')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $payments = Pembayaran::where('owner_id', $ownerId)
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('pages.settings.index', compact('settings', 'hasData', 'subscription', 'payments'));
     }
 
     /**
