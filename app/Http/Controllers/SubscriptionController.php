@@ -78,6 +78,28 @@ class SubscriptionController extends Controller
 
         DB::beginTransaction();
         try {
+            // Reuse existing valid pending payment for the same owner + package
+            $existingPembayaran = Pembayaran::where('owner_id', $owner->id)
+                ->where('target_tipe_layanan_id', $package->id)
+                ->where('status', 'Pending')
+                ->where(function ($q) {
+                    $q->whereNull('expired_at')
+                      ->orWhere('expired_at', '>', Carbon::now());
+                })
+                ->whereNotNull('snap_token')
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($existingPembayaran) {
+                DB::rollBack();
+                return response()->json([
+                    'snap_token'   => $existingPembayaran->snap_token,
+                    'order_id'     => $existingPembayaran->midtrans_order_id,
+                    'package_name' => $package->nama,
+                    'amount'       => $package->harga,
+                ]);
+            }
+
             // Create or get current subscription
             $langganan = Langganan::where('owner_id', $owner->id)
                 ->orderBy('created_at', 'desc')
