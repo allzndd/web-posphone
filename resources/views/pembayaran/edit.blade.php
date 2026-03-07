@@ -32,7 +32,7 @@
                     <label class="text-sm font-bold text-navy-700 dark:text-white">Subscription</label>
                     <select name="langganan_id" id="langganan_id" required
                             class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('langganan_id') border-red-500 @enderror">
-                        <option value="{{ $item->langganan_id }}">{{ $item->langganan->tipeLayanan->nama ?? 'N/A' }} ({{ $item->langganan->started_date->format('d/m/Y') ?? '' }} - {{ $item->langganan->end_date->format('d/m/Y') ?? '' }})</option>
+                        <option value="{{ $item->langganan_id }}">{{ $item->langganan->tipeLayanan->nama ?? 'N/A' }} ({{ $item->langganan->started_date ? \Carbon\Carbon::parse($item->langganan->started_date)->format('d/m/Y') : '-' }} - {{ $item->langganan->end_date ? \Carbon\Carbon::parse($item->langganan->end_date)->format('d/m/Y') : '-' }})</option>
                     </select>
                     @error('langganan_id')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
