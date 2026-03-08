@@ -51,8 +51,8 @@
                         <h5 class="text-sm font-bold text-navy-700 dark:text-white mb-2">Current Subscription</h5>
                         <p class="text-sm text-gray-600 dark:text-gray-400">
                             Package: <span class="font-semibold">{{ $subscription->tipeLayanan->nama ?? '-' }}</span> | 
-                            Started: <span class="font-semibold">{{ $subscription->started_date->format('d M Y') }}</span> | 
-                            Expires: <span class="font-semibold">{{ $subscription->end_date->format('d M Y') }}</span>
+                            Started: <span class="font-semibold">{{ $subscription->started_date ? \Carbon\Carbon::parse($subscription->started_date)->format('d M Y') : '-' }}</span> | 
+                            Expires: <span class="font-semibold">{{ $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('d M Y') : 'Unlimited' }}</span>
                         </p>
                     </div>
                 </div>
@@ -78,7 +78,7 @@
                 
                 <div>
                     <label class="text-sm font-bold text-navy-700 dark:text-white">Started Date</label>
-                    <input type="date" name="started_date" id="startedDate" value="{{ old('started_date', $subscription->started_date->format('Y-m-d')) }}"
+                    <input type="date" name="started_date" id="startedDate" value="{{ old('started_date', $subscription->started_date ? \Carbon\Carbon::parse($subscription->started_date)->format('Y-m-d') : '') }}"
                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('started_date') border-red-500 @enderror">
                     @error('started_date')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
@@ -87,7 +87,7 @@
                 
                 <div>
                     <label class="text-sm font-bold text-navy-700 dark:text-white">End Date</label>
-                    <input type="date" name="end_date" id="endDate" value="{{ old('end_date', $subscription->end_date->format('Y-m-d')) }}"
+                    <input type="date" name="end_date" id="endDate" value="{{ old('end_date', $subscription->end_date ? \Carbon\Carbon::parse($subscription->end_date)->format('Y-m-d') : '') }}"
                            class="mt-2 flex h-12 w-full items-center justify-center rounded-xl border border-gray-200 bg-white/0 p-3 text-sm outline-none dark:!border-white/10 dark:text-white @error('end_date') border-red-500 @enderror">
                     @error('end_date')
                         <p class="mt-2 text-sm text-red-500">{{ $message }}</p>
