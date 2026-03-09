@@ -31,6 +31,7 @@ trait UpdatesStock
         }
 
         $merkId = $product->pos_produk_merk_id;
+        $merkName = $product->merk ? $product->merk->nama : null;
 
         // Log input parameters
         \Log::info('updateProductStock - Input parameters:', [
@@ -42,13 +43,32 @@ trait UpdatesStock
         ]);
 
         // Find existing stock record by MERK + STORE (grouped, not per individual product)
-        // Join with produk table to find any product with same merk in the same store
+        // Strategy 1: Join with produk table to find any product with same merk in the same store
         $existingStokByMerk = ProdukStok::where('owner_id', $ownerId)
             ->where('pos_toko_id', $tokoId)
             ->whereHas('produk', function($query) use ($merkId) {
                 $query->where('pos_produk_merk_id', $merkId);
             })
             ->first();
+
+        // Strategy 2: If not found via product relation (product may have been deleted when stock=0),
+        // look for orphaned stock records with matching merk_name snapshot
+        if (!$existingStokByMerk && $merkName) {
+            $existingStokByMerk = ProdukStok::where('owner_id', $ownerId)
+                ->where('pos_toko_id', $tokoId)
+                ->where('merk_name', $merkName)
+                ->first();
+
+            // Update the orphaned record to point to the current (existing) product
+            if ($existingStokByMerk) {
+                $existingStokByMerk->update(['pos_produk_id' => $produkId]);
+                \Log::info('updateProductStock - Recovered orphaned stock record:', [
+                    'stok_id' => $existingStokByMerk->id,
+                    'new_produk_id' => $produkId,
+                    'merk_name' => $merkName,
+                ]);
+            }
+        }
 
         \Log::info('updateProductStock - Checking existing record by MERK:', [
             'exists' => $existingStokByMerk ? 'YES - ID: ' . $existingStokByMerk->id : 'NO',
@@ -60,10 +80,11 @@ trait UpdatesStock
         // Otherwise create new stock entry with this product as representative
         if ($existingStokByMerk) {
             $stok = $existingStokByMerk;
+            // Ensure merk_name snapshot is always set for future orphan recovery
+            if (empty($stok->merk_name) && $merkName) {
+                $stok->update(['merk_name' => $merkName]);
+            }
         } else {
-            // Get merk name for snapshot
-            $merkName = $product->merk ? $product->merk->nama : null;
-            
             $stok = ProdukStok::create([
                 'owner_id' => $ownerId,
                 'pos_toko_id' => $tokoId,

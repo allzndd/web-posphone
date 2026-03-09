@@ -107,6 +107,99 @@ class TransaksiController extends Controller
     }
     
     /**
+     * Delete sold products when a sales (masuk) transaction becomes completed.
+     * Removes products referenced in transaction items from the products table.
+     *
+     * @param PosTransaksi $transaksi
+     * @return void
+     */
+    private function deleteSoldProductsForTransaction(PosTransaksi $transaksi)
+    {
+        $ownerId = $transaksi->owner_id;
+        $tokoId = $transaksi->pos_toko_id;
+
+        if (!$transaksi->relationLoaded('items')) {
+            $transaksi->load('items.produk');
+        }
+
+        // Group items by brand (merk) for product deletion
+        $groupedByBrand = [];
+        foreach ($transaksi->items as $item) {
+            if (!$item->pos_produk_id) continue;
+
+            $produk = PosProduk::find($item->pos_produk_id);
+            if (!$produk) continue; // Product already deleted, skip
+
+            $merkId = $produk->pos_produk_merk_id;
+            $quantity = $item->quantity ?? 1;
+
+            if (!isset($groupedByBrand[$merkId])) {
+                $groupedByBrand[$merkId] = [
+                    'product_ids' => [],
+                    'total_quantity' => 0,
+                ];
+            }
+            $groupedByBrand[$merkId]['product_ids'][] = $item->pos_produk_id;
+            $groupedByBrand[$merkId]['total_quantity'] += $quantity;
+        }
+
+        foreach ($groupedByBrand as $merkId => $data) {
+            // Prioritize deleting the specific products from transaction items
+            $productsToDelete = PosProduk::where('owner_id', $ownerId)
+                ->where('pos_produk_merk_id', $merkId)
+                ->whereIn('id', $data['product_ids'])
+                ->get();
+
+            // If quantity > specific products count, get additional by FIFO
+            $remainingQty = $data['total_quantity'] - $productsToDelete->count();
+            if ($remainingQty > 0) {
+                $additional = PosProduk::where('owner_id', $ownerId)
+                    ->where('pos_produk_merk_id', $merkId)
+                    ->whereNotIn('id', $data['product_ids'])
+                    ->where(function($q) use ($tokoId) {
+                        $q->where('pos_toko_id', $tokoId)->orWhereNull('pos_toko_id');
+                    })
+                    ->orderBy('id', 'asc')
+                    ->limit($remainingQty)
+                    ->get();
+                $productsToDelete = $productsToDelete->merge($additional);
+            }
+
+            $deletedIds = $productsToDelete->pluck('id')->toArray();
+            if (empty($deletedIds)) continue;
+
+            // Find representative product that will REMAIN after deletion
+            $newRepresentative = PosProduk::where('owner_id', $ownerId)
+                ->where('pos_produk_merk_id', $merkId)
+                ->whereNotIn('id', $deletedIds)
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($newRepresentative) {
+                \App\Models\ProdukStok::where('owner_id', $ownerId)
+                    ->whereIn('pos_produk_id', $deletedIds)
+                    ->update(['pos_produk_id' => $newRepresentative->id]);
+            } else {
+                // All products of this merk will be deleted - save merk_name snapshot
+                $firstProduk = $productsToDelete->first();
+                $merkName = $firstProduk->merk ? $firstProduk->merk->nama : $firstProduk->nama;
+                \App\Models\ProdukStok::where('owner_id', $ownerId)
+                    ->whereIn('pos_produk_id', $deletedIds)
+                    ->update(['merk_name' => $merkName]);
+            }
+
+            // Delete products and related records
+            foreach ($productsToDelete as $prodToDelete) {
+                \DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $prodToDelete->id)->delete();
+                \App\Models\LogStok::where('pos_produk_id', $prodToDelete->id)->delete();
+                $prodToDelete->delete();
+            }
+
+            \Log::info("deleteSoldProducts - Deleted " . count($deletedIds) . " products for merk {$merkId}");
+        }
+    }
+
+    /**
      * Generate unique invoice number with retry mechanism
      * 
      * @param int $ownerId
@@ -387,7 +480,7 @@ class TransaksiController extends Controller
 
         $transaksi = PosTransaksi::where('owner_id', $ownerId)
             ->where('is_transaksi_masuk', 1)
-            ->with(['toko', 'pelanggan'])
+            ->with(['toko', 'pelanggan', 'items.produk'])
             ->when($request->input('search'), function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('invoice', 'like', '%' . $search . '%')
@@ -846,6 +939,12 @@ class TransaksiController extends Controller
                         );
                     }
                 }
+
+                // Delete sold products when new status is completed
+                if ($newStatus === 'completed') {
+                    $transaksi->load('items.produk');
+                    $this->deleteSoldProductsForTransaction($transaksi);
+                }
             }
             
             // Reload transaksi to reflect new items
@@ -868,6 +967,8 @@ class TransaksiController extends Controller
                 // Status changed TO completed - reduce stock (sales = stock out)
                 \Log::info('DEBUG updateMasuk - CALLING processStockForTransaction with reverse=false (REDUCE stock)');
                 $this->processStockForTransaction($transaksi, false);
+                // Delete sold products (remove from product list)
+                $this->deleteSoldProductsForTransaction($transaksi);
             } elseif ($oldStatus === 'completed' && $newStatus !== 'completed') {
                 // Status changed FROM completed - return stock (reverse the reduction)
                 \Log::info('DEBUG updateMasuk - CALLING processStockForTransaction with reverse=true (RETURN stock)');
@@ -1743,6 +1844,8 @@ class TransaksiController extends Controller
                     'paid_amount' => $transaksi->total_harga,
                 ]);
                 $this->processStockForTransaction($transaksi);
+                // Delete sold products (remove from product list)
+                $this->deleteSoldProductsForTransaction($transaksi);
             }
             // If changing FROM completed, reverse stock
             elseif ($oldStatus === 'completed' && $newStatus !== 'completed') {

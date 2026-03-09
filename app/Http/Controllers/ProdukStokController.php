@@ -133,6 +133,10 @@ class ProdukStokController extends Controller
             
             $terkaitProduk = PosProduk::where('owner_id', $produkStok->owner_id)
                 ->where('pos_produk_merk_id', $primaryProduk->pos_produk_merk_id)
+                ->where(function($query) use ($produkStok) {
+                    $query->where('pos_toko_id', $produkStok->pos_toko_id)
+                          ->orWhereNull('pos_toko_id');
+                })
                 ->with(['merk', 'warna', 'ram', 'penyimpanan'])
                 ->orderBy('id', 'asc')
                 ->get()
