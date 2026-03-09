@@ -48,6 +48,15 @@
                     Delete Selected
                 </button>
 
+                <!-- Export Button -->
+                <button onclick="openExportModal()" 
+                        class="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-4 py-2.5 text-sm font-bold text-navy-700 dark:text-white transition duration-200 hover:bg-gray-100 dark:hover:bg-navy-700">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Ekspor
+                </button>
+
                 @permission('transaksi.create')
                 <a href="{{ route('transaksi.keluar.create') }}" 
                    class="flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-bold text-white transition duration-200 hover:bg-red-600 active:bg-red-700 dark:bg-red-400 dark:hover:bg-red-300 dark:active:bg-red-200">
@@ -372,6 +381,92 @@
         </div>
     </div>
 </div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-2xl shadow-xl max-w-md w-full mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <div>
+                <h3 class="text-lg font-bold text-navy-700 dark:text-white">Ekspor Transaksi Keluar</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pilih opsi ekspor data</p>
+            </div>
+            <button type="button" onclick="closeExportModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="exportForm" method="GET" action="{{ route('transaksi.keluar.export') }}">
+            <div class="p-6 space-y-4">
+                <!-- Quick Period Selector -->
+                <div>
+                    <label class="block text-sm font-semibold text-navy-700 dark:text-white mb-2">Periode Cepat</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="setQuickPeriod('today')" class="quick-period-btn px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-500 dark:hover:text-red-400 transition">Hari Ini</button>
+                        <button type="button" onclick="setQuickPeriod('week')" class="quick-period-btn px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-500 dark:hover:text-red-400 transition">Minggu Ini</button>
+                        <button type="button" onclick="setQuickPeriod('month')" class="quick-period-btn px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-500 dark:hover:text-red-400 transition">Bulan Ini</button>
+                        <button type="button" onclick="setQuickPeriod('last_month')" class="quick-period-btn px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-500 dark:hover:text-red-400 transition">Bulan Lalu</button>
+                        <button type="button" onclick="setQuickPeriod('year')" class="quick-period-btn px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-500 dark:hover:text-red-400 transition">Tahun Ini</button>
+                        <button type="button" onclick="setQuickPeriod('all')" class="quick-period-btn px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:border-red-300 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:border-red-500 dark:hover:text-red-400 transition">Semua</button>
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="export_start_date" class="block text-sm font-semibold text-navy-700 dark:text-white mb-1">Dari Tanggal</label>
+                        <input type="date" id="export_start_date" name="start_date" 
+                               class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-3 py-2 text-sm text-navy-700 dark:text-white outline-none focus:border-red-500 dark:focus:border-red-400">
+                    </div>
+                    <div>
+                        <label for="export_end_date" class="block text-sm font-semibold text-navy-700 dark:text-white mb-1">Sampai Tanggal</label>
+                        <input type="date" id="export_end_date" name="end_date" 
+                               class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-3 py-2 text-sm text-navy-700 dark:text-white outline-none focus:border-red-500 dark:focus:border-red-400">
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label for="export_status" class="block text-sm font-semibold text-navy-700 dark:text-white mb-1">Status</label>
+                    <select id="export_status" name="status" 
+                            class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-lightPrimary dark:bg-navy-900 px-3 py-2 text-sm text-navy-700 dark:text-white outline-none focus:border-red-500 dark:focus:border-red-400">
+                        <option value="all">Semua Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <!-- Format -->
+                <div>
+                    <label class="block text-sm font-semibold text-navy-700 dark:text-white mb-2">Format File</label>
+                    <div class="flex gap-3">
+                        <label class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition has-[:checked]:border-red-500 has-[:checked]:bg-red-50 dark:has-[:checked]:border-red-400 dark:has-[:checked]:bg-red-900/20">
+                            <input type="radio" name="format" value="xlsx" checked class="text-red-500 focus:ring-red-500">
+                            <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM8.5 18H7v-6h1.5v6zm3.5 0h-1.5l-1-2.5L9 18H7.5l1.75-3.5L7.5 11H9l1 2.5 1-2.5h1.5l-1.75 3.5L13.5 18h-1.5z"/></svg>
+                            <span class="text-sm font-medium text-navy-700 dark:text-white">Excel</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition has-[:checked]:border-red-500 has-[:checked]:bg-red-50 dark:has-[:checked]:border-red-400 dark:has-[:checked]:bg-red-900/20">
+                            <input type="radio" name="format" value="csv" class="text-red-500 focus:ring-red-500">
+                            <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM9 13h6v1H9v-1zm0 2h6v1H9v-1zm0 2h4v1H9v-1z"/></svg>
+                            <span class="text-sm font-medium text-navy-700 dark:text-white">CSV</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+                <button type="button" onclick="closeExportModal()" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition">Batal</button>
+                <button type="submit" class="flex items-center gap-2 px-5 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition font-semibold">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -694,5 +789,77 @@
         document.body.appendChild(toast);
         setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
     }
+
+    // ============= EXPORT FUNCTIONS =============
+    function openExportModal() {
+        // Set default dates (this month)
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        document.getElementById('export_start_date').value = formatDateInput(firstDay);
+        document.getElementById('export_end_date').value = formatDateInput(now);
+        highlightQuickPeriod('month');
+        document.getElementById('exportModal').classList.remove('hidden');
+    }
+
+    function closeExportModal() {
+        document.getElementById('exportModal').classList.add('hidden');
+    }
+
+    function formatDateInput(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+
+    function setQuickPeriod(period) {
+        const now = new Date();
+        let start, end;
+
+        switch (period) {
+            case 'today':
+                start = end = new Date(now);
+                break;
+            case 'week':
+                start = new Date(now);
+                start.setDate(now.getDate() - now.getDay());
+                end = new Date(now);
+                break;
+            case 'month':
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                end = new Date(now);
+                break;
+            case 'last_month':
+                start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                end = new Date(now.getFullYear(), now.getMonth(), 0);
+                break;
+            case 'year':
+                start = new Date(now.getFullYear(), 0, 1);
+                end = new Date(now);
+                break;
+            case 'all':
+                start = new Date(2020, 0, 1);
+                end = new Date(now);
+                break;
+        }
+
+        document.getElementById('export_start_date').value = formatDateInput(start);
+        document.getElementById('export_end_date').value = formatDateInput(end);
+        highlightQuickPeriod(period);
+    }
+
+    function highlightQuickPeriod(activePeriod) {
+        const buttons = document.querySelectorAll('.quick-period-btn');
+        const periods = ['today', 'week', 'month', 'last_month', 'year', 'all'];
+        buttons.forEach((btn, index) => {
+            if (periods[index] === activePeriod) {
+                btn.classList.add('!bg-red-50', '!border-red-500', '!text-red-600', 'dark:!bg-red-900/20', 'dark:!border-red-400', 'dark:!text-red-400');
+            } else {
+                btn.classList.remove('!bg-red-50', '!border-red-500', '!text-red-600', 'dark:!bg-red-900/20', 'dark:!border-red-400', 'dark:!text-red-400');
+            }
+        });
+    }
+
+    // Close export modal on outside click
+    document.getElementById('exportModal').addEventListener('click', function(e) {
+        if (e.target.id === 'exportModal') closeExportModal();
+    });
 </script>
 @endpush
