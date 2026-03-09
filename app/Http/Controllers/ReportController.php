@@ -140,11 +140,13 @@ class ReportController extends Controller
 
                 $totalRevenue += $itemRevenue;
 
-                $productType = $item->produk && $item->produk->product_type ? $item->produk->product_type : 'electronic';
+                // Use snapshot fields first, then fall back to product relation
+                $productName = $item->product_name ?? ($item->produk ? $item->produk->nama : null) ?? 'Unknown';
+                $productType = $item->product_type ?? ($item->produk ? $item->produk->product_type : null) ?? 'electronic';
 
                 $itemDetails[] = [
                     'invoice' => $transaction->invoice,
-                    'product_name' => $item->produk ? $item->produk->nama : 'Unknown',
+                    'product_name' => $productName,
                     'product_type' => $productType,
                     'quantity' => $quantity,
                     'revenue' => $itemRevenue,
