@@ -5,6 +5,13 @@
 @push('style')
 <style>
 .hidden { display: none; }
+/* Disable number input spinner */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
 </style>
 @endpush
 
@@ -131,8 +138,8 @@
                         <label for="harga_jual_keluar" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Sale Price <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" id="harga_jual_keluar" name="harga_jual_keluar" required min="0" step="0.01"
-                            value="{{ old('harga_jual_keluar', $tukarTambah->transaksiPenjualan->items->first()->harga_satuan ?? 0) }}"
+                        <input type="text" id="harga_jual_keluar" name="harga_jual_keluar" required
+                            value="{{ old('harga_jual_keluar') ? old('harga_jual_keluar') : number_format($tukarTambah->transaksiPenjualan->items->first()->harga_satuan ?? 0, 0, ',', '.') }}"
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                     </div>
 
@@ -140,8 +147,8 @@
                         <label for="diskon_keluar" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Discount
                         </label>
-                        <input type="number" id="diskon_keluar" name="diskon_keluar" min="0" step="0.01"
-                            value="{{ old('diskon_keluar', $tukarTambah->transaksiPenjualan->items->first()->diskon ?? 0) }}"
+                        <input type="text" id="diskon_keluar" name="diskon_keluar"
+                            value="{{ old('diskon_keluar') ? old('diskon_keluar') : number_format($tukarTambah->transaksiPenjualan->items->first()->diskon ?? 0, 0, ',', '.') }}"
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                     </div>
 
@@ -186,8 +193,8 @@
                         <label for="harga_beli_masuk" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Purchase Price <span class="text-red-500">*</span>
                         </label>
-                        <input type="number" id="harga_beli_masuk" name="harga_beli_masuk" required min="0" step="0.01"
-                            value="{{ old('harga_beli_masuk', $tukarTambah->transaksiPembelian->items->first()->harga_satuan ?? 0) }}"
+                        <input type="text" id="harga_beli_masuk" name="harga_beli_masuk" required
+                            value="{{ old('harga_beli_masuk') ? old('harga_beli_masuk') : number_format($tukarTambah->transaksiPembelian->items->first()->harga_satuan ?? 0, 0, ',', '.') }}"
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                     </div>
                 </div>
@@ -232,15 +239,15 @@
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <div class="text-center p-3 rounded-lg bg-white dark:bg-navy-900">
                         <p class="text-xs text-gray-600 dark:text-gray-400">Sale Revenue</p>
-                        <p class="text-xl font-bold text-green-600 dark:text-green-400" id="summary_sale">Rp 0</p>
+                        <p class="text-xl font-bold text-green-600 dark:text-green-400" id="summary_sale">{{ get_currency_symbol() }} 0</p>
                     </div>
                     <div class="text-center p-3 rounded-lg bg-white dark:bg-navy-900">
                         <p class="text-xs text-gray-600 dark:text-gray-400">Purchase Cost</p>
-                        <p class="text-xl font-bold text-red-600 dark:text-red-400" id="summary_purchase">Rp 0</p>
+                        <p class="text-xl font-bold text-red-600 dark:text-red-400" id="summary_purchase">{{ get_currency_symbol() }} 0</p>
                     </div>
                     <div class="text-center p-3 rounded-lg bg-white dark:bg-navy-900">
                         <p class="text-xs text-gray-600 dark:text-gray-400">Net Profit</p>
-                        <p class="text-xl font-bold text-navy-700 dark:text-white" id="summary_profit">Rp 0</p>
+                        <p class="text-xl font-bold text-navy-700 dark:text-white" id="summary_profit">{{ get_currency_symbol() }} 0</p>
                     </div>
                 </div>
             </div>
@@ -286,49 +293,53 @@
 
 @push('scripts')
 <script>
-// Currency formatter using server-side settings
 const currency = '{{ get_currency() }}';
 const currencySymbol = '{{ get_currency_symbol() }}';
 const decimalPlaces = {{ get_decimal_places() }};
 
 function formatCurrency(amount) {
     let formatted;
-    
     if (currency === 'IDR') {
-        // Indonesian: Rp 100.000 (no decimals)
-        formatted = new Intl.NumberFormat('id-ID', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(amount);
-    } else if (currency === 'MYR' || currency === 'USD') {
-        // Malaysian/US: RM 100.00 or $ 100.00 (2 decimals)
-        formatted = new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(amount);
+        formatted = new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
     } else {
-        formatted = new Intl.NumberFormat('id-ID', {
-            minimumFractionDigits: decimalPlaces,
-            maximumFractionDigits: decimalPlaces
-        }).format(amount);
+        formatted = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
     }
-    
     return currencySymbol + ' ' + formatted;
 }
 
+function parseCurrencyValue(value) {
+    if (!value) return 0;
+    let str = String(value);
+    if (currency === 'IDR') {
+        // IDR uses dots as thousands separator - strip all non-digits
+        return parseInt(str.replace(/\D/g, '')) || 0;
+    } else {
+        // Other currencies: commas as thousands, dot as decimal
+        str = str.replace(/[^0-9.,-]/g, '').replace(/,/g, '');
+        return parseFloat(str) || 0;
+    }
+}
+
+function formatCurrencyInput(input) {
+    let value = input.value.replace(/[^0-9]/g, '');
+    if (value) {
+        value = parseInt(value).toLocaleString('id-ID');
+    }
+    input.value = value;
+}
+
 function calculateNet() {
-    const hargaJual = parseFloat(document.getElementById('harga_jual_keluar').value) || 0;
-    const diskon = parseFloat(document.getElementById('diskon_keluar').value) || 0;
+    const hargaJual = parseCurrencyValue(document.getElementById('harga_jual_keluar').value);
+    const diskon = parseCurrencyValue(document.getElementById('diskon_keluar').value);
     const net = hargaJual - diskon;
     document.getElementById('net_keluar').value = formatCurrency(net);
-    
     updateSummary();
 }
 
 function updateSummary() {
-    const saleAmount = (parseFloat(document.getElementById('harga_jual_keluar').value) || 0) - 
-                       (parseFloat(document.getElementById('diskon_keluar').value) || 0);
-    const purchaseAmount = parseFloat(document.getElementById('harga_beli_masuk').value) || 0;
+    const saleAmount = parseCurrencyValue(document.getElementById('harga_jual_keluar').value) -
+                       parseCurrencyValue(document.getElementById('diskon_keluar').value);
+    const purchaseAmount = parseCurrencyValue(document.getElementById('harga_beli_masuk').value);
     const profit = saleAmount - purchaseAmount;
     
     document.getElementById('summary_sale').textContent = formatCurrency(saleAmount);
@@ -340,33 +351,43 @@ function updateSummary() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-fill harga jual when product keluar selected
     document.getElementById('pos_produk_keluar_id').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const harga = selected.getAttribute('data-harga');
         if (harga) {
-            document.getElementById('harga_jual_keluar').value = harga;
+            document.getElementById('harga_jual_keluar').value = parseInt(harga).toLocaleString('id-ID');
             calculateNet();
         }
     });
 
-    // Auto-fill harga beli when product masuk selected
     document.getElementById('pos_produk_masuk_id').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const harga = selected.getAttribute('data-harga');
         if (harga) {
-            document.getElementById('harga_beli_masuk').value = harga;
+            document.getElementById('harga_beli_masuk').value = parseInt(harga).toLocaleString('id-ID');
             updateSummary();
         }
     });
 
-    // Calculate net on input change
-    document.getElementById('harga_jual_keluar').addEventListener('input', calculateNet);
-    document.getElementById('diskon_keluar').addEventListener('input', calculateNet);
-    document.getElementById('harga_beli_masuk').addEventListener('input', updateSummary);
+    document.getElementById('harga_jual_keluar').addEventListener('input', function() {
+        formatCurrencyInput(this); calculateNet();
+    });
+    document.getElementById('diskon_keluar').addEventListener('input', function() {
+        formatCurrencyInput(this); calculateNet();
+    });
+    document.getElementById('harga_beli_masuk').addEventListener('input', function() {
+        formatCurrencyInput(this); updateSummary();
+    });
 
-    // Initialize
     calculateNet();
+});
+
+// Convert formatted values back to numbers on submit
+document.querySelector('form:not(#deleteForm)').addEventListener('submit', function() {
+    ['harga_jual_keluar', 'diskon_keluar', 'harga_beli_masuk'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = parseCurrencyValue(input.value);
+    });
 });
 </script>
 @endpush
