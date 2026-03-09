@@ -742,7 +742,7 @@ class ProdukController extends Controller
                     'pos_produk_merk_id' => $request->pos_produk_merk_id,
                     'nama' => $nama,
                     'product_type' => $request->product_type,
-                    'harga_beli' => $finalPurchasePrice, // Include biaya tambahan in purchase price
+                    'harga_beli' => $basePurchasePrice, // Only base purchase price (biaya_tambahan stored separately)
                     'harga_jual' => $request->harga_jual,
                     'pos_warna_id' => !empty($request->warna) ? $request->warna : null,
                     'pos_ram_id' => !empty($request->ram) ? $request->ram : null,

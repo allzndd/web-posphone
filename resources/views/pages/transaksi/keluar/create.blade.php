@@ -2021,11 +2021,12 @@ function submitQuickProduct(event) {
         itemSelectElem.value = `temp_${currentItemIdForModal}`; // Temporary ID
     }
     
-    // Update prices in the item row - USE PURCHASE PRICE (including biaya tambahan)
-    // For transaksi keluar (purchase from supplier), unit price = purchase price, NOT selling price
+    // Update prices in the item row - Unit price for transaction = what was actually paid
+    // This includes both base purchase price + biaya tambahan because that's the actual cost per unit
+    // (The product itself will store harga_beli and biaya_tambahan separately)
     const unitPriceInput = document.getElementById(`unit-price-${currentItemIdForModal}`);
     if (unitPriceInput) {
-        unitPriceInput.value = basePurchasePrice + totalBiayaTambahan; // Total purchase price
+        unitPriceInput.value = basePurchasePrice + totalBiayaTambahan; // Total cost per unit (for transaction tracking)
         calculateSubtotal(currentItemIdForModal);
     }
     

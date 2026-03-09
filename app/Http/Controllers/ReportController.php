@@ -135,17 +135,12 @@ class ReportController extends Controller
 
                 $quantity = $item->quantity ?? 0;
                 $hargaJual = $item->harga_satuan ?? ($item->produk ? $item->produk->harga_jual : 0);
-                $hargaBeli = $item->produk ? $item->produk->harga_beli : 0;
 
                 $itemRevenue = $hargaJual * $quantity;
-                $itemHpp = $hargaBeli * $quantity;
 
                 $totalRevenue += $itemRevenue;
-                $totalHPP += $itemHpp;
 
                 $productType = $item->produk && $item->produk->product_type ? $item->produk->product_type : 'electronic';
-                $grossProfit = $itemRevenue - $itemHpp;
-                $grossMargin = $itemRevenue > 0 ? ($grossProfit / $itemRevenue) * 100 : 0;
 
                 $itemDetails[] = [
                     'invoice' => $transaction->invoice,
@@ -153,16 +148,36 @@ class ReportController extends Controller
                     'product_type' => $productType,
                     'quantity' => $quantity,
                     'revenue' => $itemRevenue,
-                    'hpp' => $itemHpp,
-                    'gross_profit' => $grossProfit,
-                    'gross_margin' => $grossMargin,
+                    'hpp' => 0,
+                    'gross_profit' => 0,
+                    'gross_margin' => 0,
                 ];
             }
         }
 
+        // Calculate HPP from completed purchases only
+        $purchaseQuery = PosTransaksi::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->where('is_transaksi_masuk', 0)
+            ->whereNull('pos_kategori_expense_id')
+            ->where('status', 'completed');
+
+        if ($storeId) {
+            $purchaseQuery->where('pos_toko_id', $storeId);
+        }
+
+        $totalHPP = $purchaseQuery->sum('total_harga');
+
         // Calculate profit metrics
         $grossProfit = $totalRevenue - $totalHPP;
         $grossMargin = $totalRevenue > 0 ? ($grossProfit / $totalRevenue) * 100 : 0;
+        
+        // Recalculate itemDetails with correct HPP
+        foreach ($itemDetails as &$item) {
+            $item['hpp'] = $totalRevenue > 0 ? ($totalHPP / count(array_filter($itemDetails))) : 0;
+            $item['gross_profit'] = $item['revenue'] - $item['hpp'];
+            $item['gross_margin'] = $item['revenue'] > 0 ? ($item['gross_profit'] / $item['revenue']) * 100 : 0;
+        }
 
         // Get operating expenses (transactions marked as expenses: is_transaksi_masuk = 0 and pos_kategori_expense_id is set)
         // Only include COMPLETED expense transactions
@@ -310,23 +325,15 @@ class ReportController extends Controller
                 ->where('status', 'completed')
                 ->sum('total_harga');
             
-            // Calculate HPP for this store
-            $storeHpp = 0;
-            $storeTransactions = PosTransaksi::where('owner_id', $ownerId)
+            // Calculate HPP for this store (from completed purchases only)
+            $storeHpp = DB::table('pos_transaksi')
+                ->where('owner_id', $ownerId)
                 ->where('pos_toko_id', $store->id)
                 ->whereBetween('created_at', [$start, $end])
-                ->where('is_transaksi_masuk', 1)
+                ->where('is_transaksi_masuk', 0)
+                ->whereNull('pos_kategori_expense_id')
                 ->where('status', 'completed')
-                ->with(['items.produk'])
-                ->get();
-            
-            foreach ($storeTransactions as $transaction) {
-                foreach ($transaction->items as $item) {
-                    $quantity = $item->quantity ?? 0;
-                    $hargaBeli = $item->produk ? $item->produk->harga_beli : 0;
-                    $storeHpp += $hargaBeli * $quantity;
-                }
-            }
+                ->sum('total_harga');
             
             // Calculate operating expenses for this store
             $storeExpenses = DB::table('pos_transaksi')

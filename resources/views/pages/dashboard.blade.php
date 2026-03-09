@@ -301,24 +301,31 @@
     @if(auth()->user()->isOwner())
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
         <!-- Top Profit Products -->
-        <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shadow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
+        <div class="!z-5 relative flex flex-col rounded-[20px] bg-white bg-clip-border shladow-3xl shadow-shadow-500 dark:!bg-navy-800 dark:text-white dark:shadow-none p-6">
             <h4 class="text-xl font-bold text-navy-700 dark:text-white mb-4 flex items-center">
                 <i class="fas fa-trophy text-brand-500 dark:text-white mr-2"></i> HP Profit Tertinggi
             </h4>
             <div class="space-y-3">
                 @forelse($topProfitProducts as $index => $product)
                 <div class="p-3 bg-lightPrimary dark:bg-navy-700 rounded-xl">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-1">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold mr-2">{{ $index + 1 }}</span>
-                                <h6 class="text-sm font-bold text-navy-700 dark:text-white">{{ $product->name }}</h6>
-                            </div>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">Stok: {{ $product->stock }} unit</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex-shrink-0">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold">{{ $index + 1 }}</span>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-green-500">Rp {{ number_format($product->profit, 0, ',', '.') }}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ $product->sold }} unit terjual</p>
+                        <div class="flex-1 min-w-0">
+                            <h6 class="text-sm font-bold text-navy-700 dark:text-white truncate">{{ $product->name }}</h6>
+                            <div class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5 mt-1">
+                                @if($product->merk_name)
+                                    <p>Brand: <span class="font-medium">{{ $product->merk_name }}</span></p>
+                                @endif
+                                @if($product->penyimpanan)
+                                    <p>Storage: <span class="font-medium">{{ $product->penyimpanan }} GB</span></p>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            <p class="text-lg font-bold text-green-500">Rp {{ number_format($product->profit, 0, ',', '.') }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Profit</p>
                         </div>
                     </div>
                 </div>
@@ -336,17 +343,25 @@
             <div class="space-y-3">
                 @forelse($bestSellingProducts as $index => $product)
                 <div class="p-3 bg-lightPrimary dark:bg-navy-700 rounded-xl">
-                    <div class="flex items-start justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center mb-1">
-                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold mr-2">{{ $index + 1 }}</span>
-                                <h6 class="text-sm font-bold text-navy-700 dark:text-white">{{ $product->name }}</h6>
-                            </div>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">Harga: Rp {{ number_format($product->sell_price, 0, ',', '.') }}</p>
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex-shrink-0">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-500 text-white text-xs font-bold">{{ $index + 1 }}</span>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-brand-500">{{ $product->total_sold }} unit</p>
-                            <p class="text-xs text-gray-600">terjual</p>
+                        <div class="flex-1 min-w-0">
+                            <h6 class="text-sm font-bold text-navy-700 dark:text-white truncate">{{ $product->name }}</h6>
+                            <div class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5 mt-1">
+                                @if($product->merk_name)
+                                    <p>Brand: <span class="font-medium">{{ $product->merk_name }}</span></p>
+                                @endif
+                                @if($product->penyimpanan)
+                                    <p>Storage: <span class="font-medium">{{ $product->penyimpanan }} GB</span></p>
+                                @endif
+                                <p class="pt-1 font-medium text-navy-700 dark:text-white">Harga: Rp {{ number_format($product->sell_price, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            <p class="text-xl font-bold text-brand-500">{{ $product->total_sold }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">unit terjual</p>
                         </div>
                     </div>
                 </div>

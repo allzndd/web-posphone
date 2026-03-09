@@ -219,77 +219,118 @@ class DashboardController extends Controller
             ->values()
             ->toArray();
 
-        // Recommendations - Top Profit Products (from actual completed transactions)
-        $topProfitProducts = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
+        // Recommendations - Top Profit Products (Electronic HP only, from completed sales)
+        // Get all completed sales items (transaksi masuk = selling)
+        $salesItems = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
                 $query->where('owner_id', $ownerId)
-                    ->where('is_transaksi_masuk', 1) // Only sales transactions
-                    ->where('status', 'completed'); // Only completed
+                    ->where('is_transaksi_masuk', 1)
+                    ->where('status', 'completed');
             })
-            ->with(['produk', 'transaksi'])
+            ->with(['produk.merk', 'produk.warna', 'produk.penyimpanan', 'produk.ram', 'transaksi'])
             ->get()
             ->filter(function($item) {
-                // Filter out items with deleted products or invalid prices
-                return $item->produk !== null 
-                    && $item->harga_satuan > 0 
-                    && $item->produk->harga_beli > 0;
-            })
+                // Must have valid selling price
+                if (($item->harga_satuan ?? 0) <= 0) return false;
+                // Electronic only: check snapshot first, then master product
+                $productType = $item->product_type ?? ($item->produk ? $item->produk->product_type : null);
+                return $productType === 'electronic';
+            });
+
+        // Get purchase prices from transaksi keluar items (buying = is_transaksi_masuk 0)
+        $purchasePrices = [];
+        $soldProductIds = $salesItems->pluck('pos_produk_id')->unique()->filter();
+        if ($soldProductIds->isNotEmpty()) {
+            $purchaseItems = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
+                    $query->where('owner_id', $ownerId)
+                        ->where('is_transaksi_masuk', 0)
+                        ->where('status', 'completed');
+                })
+                ->whereIn('pos_produk_id', $soldProductIds)
+                ->get();
+            foreach ($purchaseItems as $pi) {
+                if ($pi->pos_produk_id && $pi->harga_satuan > 0) {
+                    $purchasePrices[$pi->pos_produk_id] = (float)$pi->harga_satuan;
+                }
+            }
+        }
+
+        $topProfitProducts = $salesItems
             ->groupBy(function($item) {
-                // Group by product name
-                return $item->produk->nama ?? 'Unknown';
+                // Use snapshot name, fallback to master product name
+                return $item->product_name ?? ($item->produk ? $item->produk->nama : 'Unknown');
             })
-            ->map(function($items, $nama) {
-                // Calculate total profit from actual sales
-                $totalProfit = $items->sum(function($item) {
-                    // Profit per unit = harga jual (harga_satuan) - harga beli (dari master produk)
-                    $unitProfit = ($item->harga_satuan ?? 0) - ($item->produk->harga_beli ?? 0);
-                    return $unitProfit * $item->quantity;
+            ->map(function($items, $nama) use ($purchasePrices) {
+                $firstItem = $items->first();
+
+                $totalProfit = $items->sum(function($item) use ($purchasePrices) {
+                    $sellingPrice = (float)($item->harga_satuan ?? 0);
+                    // Get purchase price: from purchase transaction, then from product master
+                    $purchasePrice = 0;
+                    if (isset($purchasePrices[$item->pos_produk_id])) {
+                        $purchasePrice = $purchasePrices[$item->pos_produk_id];
+                    } elseif ($item->produk) {
+                        $purchasePrice = (float)($item->produk->harga_beli ?? 0);
+                    }
+                    return ($sellingPrice - $purchasePrice) * ($item->quantity ?? 1);
                 });
-                
-                // Count total sold units
+
                 $totalSold = $items->sum('quantity');
                 
-                // Get current stock (sum from all variants with same name)
-                $productIds = $items->pluck('pos_produk_id')->unique();
-                $totalStok = \App\Models\ProdukStok::whereIn('pos_produk_id', $productIds)
-                    ->where('owner_id', $items->first()->transaksi->owner_id)
-                    ->sum('stok');
-                
+                // Calculate total revenue (total harga keseluruhan penjualan)
+                $totalRevenue = $items->sum(function($item) {
+                    return ((float)($item->harga_satuan ?? 0)) * ($item->quantity ?? 1);
+                });
+
+                // Get current stock
+                $productIds = $items->pluck('pos_produk_id')->unique()->filter();
+                $totalStok = $productIds->isNotEmpty()
+                    ? \App\Models\ProdukStok::whereIn('pos_produk_id', $productIds)->sum('stok')
+                    : 0;
+
                 return (object)[
                     'name' => $nama,
+                    'merk_name' => $firstItem->merk_name ?? ($firstItem->produk && $firstItem->produk->merk ? $firstItem->produk->merk->nama : null),
+                    'penyimpanan' => $firstItem->penyimpanan ?? ($firstItem->produk && $firstItem->produk->penyimpanan ? $firstItem->produk->penyimpanan->kapasitas : null),
+                    'ram' => $firstItem->ram ?? ($firstItem->produk && $firstItem->produk->ram ? $firstItem->produk->ram->kapasitas : null),
                     'profit' => $totalProfit,
+                    'total_revenue' => $totalRevenue,
                     'stock' => $totalStok,
                     'sold' => $totalSold
                 ];
             })
+            ->filter(fn($p) => $p->profit > 0)
             ->sortByDesc('profit')
             ->take(5)
             ->values();
 
-        // Best Selling Products (from actual completed transactions)
+        // Best Selling Products (Electronic HP only, from completed sales)
         $bestSellingProducts = \App\Models\PosTransaksiItem::whereHas('transaksi', function($query) use ($ownerId) {
                 $query->where('owner_id', $ownerId)
-                    ->where('is_transaksi_masuk', 1) // Only sales transactions
-                    ->where('status', 'completed'); // Only completed
+                    ->where('is_transaksi_masuk', 1)
+                    ->where('status', 'completed');
             })
-            ->with(['produk', 'transaksi'])
+            ->with(['produk.merk', 'produk.warna', 'produk.penyimpanan', 'produk.ram', 'transaksi'])
             ->get()
             ->filter(function($item) {
-                // Filter out items with deleted products
-                return $item->produk !== null;
+                // Electronic only: check snapshot first, then master product
+                $productType = $item->product_type ?? ($item->produk ? $item->produk->product_type : null);
+                return $productType === 'electronic';
             })
             ->groupBy(function($item) {
-                // Group by product name
-                return $item->produk->nama ?? 'Unknown';
+                // Use snapshot name, fallback to master product name
+                return $item->product_name ?? ($item->produk ? $item->produk->nama : 'Unknown');
             })
             ->map(function($items, $nama) {
-                // Count total sold units
+                $firstItem = $items->first();
+
                 $totalSold = $items->sum('quantity');
-                
-                // Get average sell price (from harga_satuan in transaction items)
                 $avgSellPrice = $items->avg('harga_satuan');
-                
+
                 return (object)[
                     'name' => $nama,
+                    'merk_name' => $firstItem->merk_name ?? ($firstItem->produk && $firstItem->produk->merk ? $firstItem->produk->merk->nama : null),
+                    'penyimpanan' => $firstItem->penyimpanan ?? ($firstItem->produk && $firstItem->produk->penyimpanan ? $firstItem->produk->penyimpanan->kapasitas : null),
+                    'ram' => $firstItem->ram ?? ($firstItem->produk && $firstItem->produk->ram ? $firstItem->produk->ram->kapasitas : null),
                     'sell_price' => $avgSellPrice,
                     'total_sold' => $totalSold
                 ];
