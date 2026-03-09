@@ -127,6 +127,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         // Incoming Transactions (Sales) - Must come before resource route
         Route::prefix('transaksi/masuk')->name('transaksi.masuk.')->group(function () {
             Route::delete('bulk-destroy', [\App\Http\Controllers\TransaksiController::class, 'bulkDestroyMasuk'])->name('bulk-destroy');
+            Route::get('/export', [\App\Http\Controllers\TransaksiController::class, 'exportMasuk'])->name('export');
             Route::get('/', [\App\Http\Controllers\TransaksiController::class, 'indexMasuk'])->name('index');
             Route::get('/create', [\App\Http\Controllers\TransaksiController::class, 'createMasuk'])->name('create');
             Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeMasuk'])->name('store');
@@ -140,6 +141,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         // Outgoing Transactions (Purchases) - Must come before resource route
         Route::prefix('transaksi/keluar')->name('transaksi.keluar.')->group(function () {
             Route::delete('bulk-destroy', [\App\Http\Controllers\TransaksiController::class, 'bulkDestroyKeluar'])->name('bulk-destroy');
+            Route::get('/export', [\App\Http\Controllers\TransaksiController::class, 'exportKeluar'])->name('export');
             Route::get('/', [\App\Http\Controllers\TransaksiController::class, 'indexKeluar'])->name('index');
             Route::get('/create', [\App\Http\Controllers\TransaksiController::class, 'createKeluar'])->name('create');
             Route::post('/', [\App\Http\Controllers\TransaksiController::class, 'storeKeluar'])->name('store');
