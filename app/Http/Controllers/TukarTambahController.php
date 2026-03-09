@@ -7,6 +7,9 @@ use App\Models\PosToko;
 use App\Models\PosPelanggan;
 use App\Models\PosProduk;
 use App\Models\PosProdukMerk;
+use App\Models\PosWarna;
+use App\Models\PosRam;
+use App\Models\PosPenyimpanan;
 use App\Models\PosTransaksi;
 use App\Models\PosTransaksiItem;
 use App\Traits\UpdatesStock;
@@ -86,9 +89,39 @@ class TukarTambahController extends Controller
         $tokos = PosToko::where('owner_id', $ownerId)->get();
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
         $produks = PosProduk::where('owner_id', $ownerId)->get();
-        $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
+        
+        // Get merks with their product types (nama) for brand -> type dropdown
+        $merks = PosProdukMerk::where('owner_id', $ownerId)
+            ->orWhereNull('owner_id') // Include global merks
+            ->orderBy('merk')
+            ->orderBy('nama')
+            ->get();
+        
+        // Get master data for dropdowns (these tables use id_owner, not owner_id)
+        $warnas = PosWarna::where('id_owner', $ownerId)
+            ->orWhereNull('id_owner')
+            ->orderBy('warna')
+            ->get();
+        
+        $rams = PosRam::where('id_owner', $ownerId)
+            ->orWhereNull('id_owner')
+            ->orderBy('kapasitas')
+            ->get();
+        
+        $penyimpanans = PosPenyimpanan::where('id_owner', $ownerId)
+            ->orWhereNull('id_owner')
+            ->orderBy('kapasitas')
+            ->get();
 
-        return view('pages.tukar-tambah.create', compact('tokos', 'pelanggans', 'produks', 'merks'));
+        return view('pages.tukar-tambah.create', compact(
+            'tokos', 
+            'pelanggans', 
+            'produks', 
+            'merks',
+            'warnas',
+            'rams',
+            'penyimpanans'
+        ));
     }
 
     public function store(Request $request)
@@ -116,12 +149,18 @@ class TukarTambahController extends Controller
             'pos_produk_merk_id' => 'nullable|exists:pos_produk_merk,id',
             'merk_nama_baru' => 'nullable|string|max:255',
             'produk_nama_baru' => 'required_if:produk_masuk_type,new|nullable|string|max:255',
-            'warna' => 'nullable|string|max:255',
-            'penyimpanan' => 'nullable|string|max:255',
+            'pos_warna_id' => 'nullable|exists:pos_warna,id',
+            'pos_ram_id' => 'nullable|exists:pos_ram,id',
+            'pos_penyimpanan_id' => 'nullable|exists:pos_penyimpanan,id',
             'battery_health' => 'nullable|string|max:255',
             'imei' => 'nullable|string|max:255',
             'aksesoris' => 'nullable|string|max:255',
             'harga_beli_masuk' => 'required|numeric|min:0',
+            'harga_jual_masuk' => 'nullable|numeric|min:0',
+            'biaya_tambahan_nama' => 'nullable|array',
+            'biaya_tambahan_nama.*' => 'nullable|string|max:255',
+            'biaya_tambahan_nilai' => 'nullable|array',
+            'biaya_tambahan_nilai.*' => 'nullable|numeric|min:0',
             
             // Transaction details
             'metode_pembayaran' => 'required|string|max:45',
@@ -158,19 +197,38 @@ class TukarTambahController extends Controller
                     $validated['pos_produk_merk_id'] = $merk->id;
                 }
 
+                // Build biaya_tambahan array from form data
+                $biayaTambahan = [];
+                if (!empty($request->biaya_tambahan_nama)) {
+                    foreach ($request->biaya_tambahan_nama as $index => $nama) {
+                        if (!empty($nama) && isset($request->biaya_tambahan_nilai[$index])) {
+                            $biayaTambahan[] = [
+                                'nama' => $nama,
+                                'nilai' => (float) $request->biaya_tambahan_nilai[$index],
+                            ];
+                        }
+                    }
+                }
+
+                // Use provided selling price, or default to purchase price
+                $hargaJual = $validated['harga_jual_masuk'] ?? $validated['harga_beli_masuk'];
+
                 // Create new product
                 $produkMasuk = PosProduk::create([
                     'owner_id' => $ownerId,
+                    'pos_toko_id' => $validated['pos_toko_id'],
                     'pos_produk_merk_id' => $validated['pos_produk_merk_id'],
                     'nama' => $validated['produk_nama_baru'],
                     'slug' => Str::slug($validated['produk_nama_baru']),
-                    'warna' => $validated['warna'] ?? null,
-                    'penyimpanan' => $validated['penyimpanan'] ?? null,
+                    'pos_warna_id' => $validated['pos_warna_id'] ?? null,
+                    'pos_ram_id' => $validated['pos_ram_id'] ?? null,
+                    'pos_penyimpanan_id' => $validated['pos_penyimpanan_id'] ?? null,
                     'battery_health' => $validated['battery_health'] ?? null,
                     'imei' => $validated['imei'] ?? null,
                     'aksesoris' => $validated['aksesoris'] ?? null,
                     'harga_beli' => $validated['harga_beli_masuk'],
-                    'harga_jual' => $validated['harga_beli_masuk'] * 1.2, // Default margin 20%
+                    'harga_jual' => $hargaJual,
+                    'biaya_tambahan' => !empty($biayaTambahan) ? $biayaTambahan : null,
                 ]);
                 $validated['pos_produk_masuk_id'] = $produkMasuk->id;
             }
