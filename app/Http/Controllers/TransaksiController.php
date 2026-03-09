@@ -15,6 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\IncomingTransactionExport;
+use App\Exports\OutgoingTransactionExport;
 
 class TransaksiController extends Controller
 {
@@ -1848,5 +1851,192 @@ class TransaksiController extends Controller
             }
             return redirect()->back()->with('error', 'Gagal mengubah status: ' . $e->getMessage());
         }
+    }
+
+    // ============================================
+    // EXPORT METHODS
+    // ============================================
+
+    /**
+     * Export incoming transactions (sales) to Excel
+     */
+    public function exportMasuk(Request $request)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $status = $request->get('status');
+        $format = $request->get('format', 'xlsx');
+
+        $query = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 1)
+            ->with(['toko', 'pelanggan', 'items.produk.merk', 'items.service'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $transactions = $query->orderBy('created_at', 'asc')->get();
+
+        $filename = 'Transaksi_Masuk_' . $startDate . '_sd_' . $endDate;
+
+        if ($format === 'csv') {
+            return $this->exportMasukCsv($transactions, $startDate, $endDate, $filename);
+        }
+
+        return Excel::download(
+            new IncomingTransactionExport($transactions, $startDate, $endDate),
+            $filename . '.xlsx'
+        );
+    }
+
+    /**
+     * Export incoming transactions as CSV
+     */
+    private function exportMasukCsv($transactions, $startDate, $endDate, $filename)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
+        ];
+
+        $callback = function () use ($transactions, $startDate, $endDate) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($file, ['LAPORAN TRANSAKSI MASUK (PENJUALAN)']);
+            fputcsv($file, ['Periode', $startDate . ' s/d ' . $endDate]);
+            fputcsv($file, ['Diekspor', now()->format('d/m/Y H:i:s')]);
+            fputcsv($file, []);
+
+            fputcsv($file, ['No', 'Tanggal', 'Invoice', 'Toko', 'Pelanggan', 'Produk/Service', 'Qty', 'Total Harga', 'Pembayaran', 'Status']);
+
+            foreach ($transactions as $index => $trans) {
+                $itemNames = $trans->items->map(function ($item) {
+                    return $item->produk ? ($item->produk->nama ?? '-') : ($item->service->nama ?? '-');
+                })->implode(', ');
+
+                fputcsv($file, [
+                    $index + 1,
+                    $trans->created_at->format('d/m/Y H:i'),
+                    $trans->invoice ?? '-',
+                    $trans->toko->nama ?? '-',
+                    $trans->pelanggan->nama ?? '-',
+                    $itemNames,
+                    $trans->items->sum('quantity'),
+                    'Rp ' . number_format($trans->total_harga, 0, ',', '.'),
+                    ucfirst($trans->metode_pembayaran ?? '-'),
+                    ucfirst($trans->status ?? '-'),
+                ]);
+            }
+
+            $completed = $transactions->filter(fn($t) => strtolower($t->status) === 'completed');
+            fputcsv($file, []);
+            fputcsv($file, ['RINGKASAN']);
+            fputcsv($file, ['Total Transaksi', $transactions->count()]);
+            fputcsv($file, ['Transaksi Selesai', $completed->count()]);
+            fputcsv($file, ['Total Penjualan', 'Rp ' . number_format($completed->sum('total_harga'), 0, ',', '.')]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export outgoing transactions (purchases) to Excel
+     */
+    public function exportKeluar(Request $request)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $startDate = $request->get('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->get('end_date', now()->format('Y-m-d'));
+        $status = $request->get('status');
+        $format = $request->get('format', 'xlsx');
+
+        $query = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->with(['toko', 'supplier', 'items.produk.merk', 'items.service'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        if ($status && $status !== 'all') {
+            $query->where('status', $status);
+        }
+
+        $transactions = $query->orderBy('created_at', 'asc')->get();
+
+        $filename = 'Transaksi_Keluar_' . $startDate . '_sd_' . $endDate;
+
+        if ($format === 'csv') {
+            return $this->exportKeluarCsv($transactions, $startDate, $endDate, $filename);
+        }
+
+        return Excel::download(
+            new OutgoingTransactionExport($transactions, $startDate, $endDate),
+            $filename . '.xlsx'
+        );
+    }
+
+    /**
+     * Export outgoing transactions as CSV
+     */
+    private function exportKeluarCsv($transactions, $startDate, $endDate, $filename)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
+        ];
+
+        $callback = function () use ($transactions, $startDate, $endDate) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($file, ['LAPORAN TRANSAKSI KELUAR (PEMBELIAN)']);
+            fputcsv($file, ['Periode', $startDate . ' s/d ' . $endDate]);
+            fputcsv($file, ['Diekspor', now()->format('d/m/Y H:i:s')]);
+            fputcsv($file, []);
+
+            fputcsv($file, ['No', 'Tanggal', 'Invoice', 'Toko', 'Supplier', 'IMEI', 'Produk/Service', 'Qty', 'Total Harga', 'Pembayaran', 'Status']);
+
+            foreach ($transactions as $index => $trans) {
+                $itemNames = $trans->items->map(function ($item) {
+                    return $item->produk ? ($item->produk->nama ?? '-') : ($item->service->nama ?? '-');
+                })->implode(', ');
+
+                $imeis = $trans->items->map(function ($item) {
+                    return $item->produk->imei ?? null;
+                })->filter()->implode(', ');
+
+                fputcsv($file, [
+                    $index + 1,
+                    $trans->created_at->format('d/m/Y H:i'),
+                    $trans->invoice ?? '-',
+                    $trans->toko->nama ?? '-',
+                    $trans->supplier->nama ?? '-',
+                    $imeis ?: '-',
+                    $itemNames,
+                    $trans->items->sum('quantity'),
+                    'Rp ' . number_format($trans->total_harga, 0, ',', '.'),
+                    ucfirst($trans->metode_pembayaran ?? '-'),
+                    ucfirst($trans->status ?? '-'),
+                ]);
+            }
+
+            $completed = $transactions->filter(fn($t) => strtolower($t->status) === 'completed');
+            fputcsv($file, []);
+            fputcsv($file, ['RINGKASAN']);
+            fputcsv($file, ['Total Transaksi', $transactions->count()]);
+            fputcsv($file, ['Transaksi Selesai', $completed->count()]);
+            fputcsv($file, ['Total Pembelian', 'Rp ' . number_format($completed->sum('total_harga'), 0, ',', '.')]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
