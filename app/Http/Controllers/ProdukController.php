@@ -491,8 +491,7 @@ class ProdukController extends Controller
         // 1. Delete biaya tambahan
         DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $produk->id)->delete();
         
-        // 2. Delete log stok for this specific product
-        \App\Models\LogStok::where('pos_produk_id', $produk->id)->delete();
+        // 2. Log stok tidak dihapus - history harus tetap tersimpan
         
         // 3. Delete the product
         $produk->delete();
@@ -598,8 +597,7 @@ class ProdukController extends Controller
         // 1. Delete biaya tambahan for all products
         DB::table('pos_produk_biaya_tambahan')->whereIn('pos_produk_id', $ids)->delete();
         
-        // 2. Delete log stok for all products  
-        \App\Models\LogStok::whereIn('pos_produk_id', $ids)->delete();
+        // 2. Log stok tidak dihapus - history harus tetap tersimpan
         
         // 3. Delete the products
         $deletedCount = PosProduk::where('owner_id', $ownerId)

@@ -118,6 +118,8 @@ trait UpdatesStock
             'owner_id' => $ownerId,
             'pos_produk_id' => $produkId,
             'pos_toko_id' => $tokoId,
+            'nama_produk' => $product->nama,
+            'imei' => $product->imei,
             'stok_sebelum' => $stokSebelum,
             'stok_sesudah' => $stokSesudah,
             'perubahan' => $quantity,

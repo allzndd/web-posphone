@@ -24,10 +24,8 @@
                 <select name="tipe" onchange="this.form.submit()" 
                         class="rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-2 text-sm font-medium text-navy-700 dark:text-white outline-none focus:border-brand-500 dark:focus:border-brand-400">
                     <option value="">All Types</option>
-                    <option value="masuk" {{ request('tipe') == 'masuk' ? 'selected' : '' }}>Incoming</option>
-                    <option value="keluar" {{ request('tipe') == 'keluar' ? 'selected' : '' }}>Outgoing</option>
-                    <option value="retur" {{ request('tipe') == 'retur' ? 'selected' : '' }}>Return</option>
-                    <option value="adjustment" {{ request('tipe') == 'adjustment' ? 'selected' : '' }}>Adjustment</option>
+                    <option value="masuk" {{ request('tipe') == 'masuk' ? 'selected' : '' }}>Outgoing</option>
+                    <option value="keluar" {{ request('tipe') == 'keluar' ? 'selected' : '' }}>Incoming</option>
                 </select>
 
                 <!-- Reference Search -->
@@ -106,13 +104,18 @@
                         
                         <!-- Product -->
                         <td class="py-3 px-2 text-left">
-                            <p class="text-sm font-bold text-navy-700 dark:text-white truncate">{{ $log->produk->nama ?? '-' }}</p>
+                            <p class="text-sm font-bold text-navy-700 dark:text-white truncate">{{ $log->nama_produk ?? ($log->produk->nama ?? '-') }}</p>
                         </td>
                         
                         <!-- IMEI -->
                         <td class="py-3 px-2 text-left">
-                            @if($log->produk?->imei)
-                                <p class="text-sm font-mono text-gray-600 dark:text-gray-400 truncate">{{ $log->produk->imei }}</p>
+                            @php $imeiList = $log->imei_list ?? ($log->imei ? [$log->imei] : ($log->produk?->imei ? [$log->produk->imei] : [])); @endphp
+                            @if(count($imeiList) > 0)
+                                <div class="flex flex-col gap-0.5">
+                                    @foreach($imeiList as $imeiItem)
+                                        <p class="text-sm font-mono text-gray-600 dark:text-gray-400 truncate">{{ $imeiItem }}</p>
+                                    @endforeach
+                                </div>
                             @else
                                 <p class="text-sm text-gray-400 dark:text-gray-600">-</p>
                             @endif
@@ -126,6 +129,12 @@
                         <!-- Type -->
                         <td class="py-3 px-2 text-center">
                             @php
+                                $tipeLabel = [
+                                    'masuk' => 'Pembelian',
+                                    'keluar' => 'Penjualan',
+                                    'retur' => 'Retur',
+                                    'adjustment' => 'Adjustment',
+                                ];
                                 $colors = [
                                     'masuk' => 'green',
                                     'keluar' => 'red',
@@ -135,7 +144,7 @@
                                 $color = $colors[$log->tipe] ?? 'gray';
                             @endphp
                             <span class="inline-flex items-center rounded-lg bg-{{ $color }}-100 dark:bg-{{ $color }}-500/20 px-3 py-1 text-xs font-bold text-{{ $color }}-600 dark:text-{{ $color }}-300">
-                                {{ ucfirst($log->tipe) }}
+                                {{ $tipeLabel[$log->tipe] ?? ucfirst($log->tipe) }}
                             </span>
                         </td>
                         

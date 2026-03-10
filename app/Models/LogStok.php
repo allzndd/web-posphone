@@ -15,6 +15,8 @@ class LogStok extends Model
         'owner_id',
         'pos_produk_id',
         'pos_toko_id',
+        'nama_produk',
+        'imei',
         'stok_sebelum',
         'stok_sesudah',
         'perubahan',

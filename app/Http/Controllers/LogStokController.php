@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LogStok;
+use App\Models\PosTransaksiItem;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
@@ -45,6 +46,50 @@ class LogStokController extends Controller
         }
 
         $logs = $query->paginate($perPage);
+
+        // Ambil semua invoice dari semua log yang punya referensi
+        $allInvoices = $logs->filter(fn($l) => $l->referensi)->pluck('referensi')->unique()->values()->toArray();
+
+        $transaksiItemsByInvoice = collect();
+        if (!empty($allInvoices)) {
+            $rows = PosTransaksiItem::join('pos_transaksi', 'pos_transaksi.id', '=', 'pos_transaksi_item.pos_transaksi_id')
+                ->whereIn('pos_transaksi.invoice', $allInvoices)
+                ->select(
+                    'pos_transaksi.invoice',
+                    'pos_transaksi_item.pos_produk_id',
+                    'pos_transaksi_item.product_name',
+                    'pos_transaksi_item.imei'
+                )
+                ->get();
+            $transaksiItemsByInvoice = $rows->groupBy('invoice');
+        }
+
+        $logs->each(function ($log) use ($transaksiItemsByInvoice) {
+            $itemsForInvoice = $log->referensi ? $transaksiItemsByInvoice->get($log->referensi) : null;
+
+            // Fallback nama_produk untuk log lama
+            if (!$log->nama_produk && $itemsForInvoice) {
+                $matched = $itemsForInvoice->firstWhere('pos_produk_id', $log->pos_produk_id)
+                    ?? $itemsForInvoice->first();
+                if ($matched) {
+                    $log->nama_produk = $matched->product_name;
+                }
+            }
+
+            // Kumpulkan SEMUA IMEI dari invoice ini (bisa lebih dari 1)
+            if ($itemsForInvoice) {
+                $allImeis = $itemsForInvoice
+                    ->pluck('imei')
+                    ->filter(fn($v) => !empty($v))
+                    ->unique()
+                    ->values()
+                    ->toArray();
+                $log->imei_list = $allImeis;
+            } else {
+                // Untuk log baru yang sudah punya snapshot imei
+                $log->imei_list = $log->imei ? [$log->imei] : [];
+            }
+        });
 
         return view('pages.log-stok.index', compact('logs', 'hasAccessRead'));
     }

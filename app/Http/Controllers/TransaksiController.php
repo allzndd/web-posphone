@@ -191,7 +191,7 @@ class TransaksiController extends Controller
             // Delete products and related records
             foreach ($productsToDelete as $prodToDelete) {
                 \DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $prodToDelete->id)->delete();
-                \App\Models\LogStok::where('pos_produk_id', $prodToDelete->id)->delete();
+                // Do NOT delete log stok - history must be preserved
                 $prodToDelete->delete();
             }
 
@@ -790,7 +790,7 @@ class TransaksiController extends Controller
                         // Now delete the sold products
                         foreach ($productsToDelete as $prodToDelete) {
                             \DB::table('pos_produk_biaya_tambahan')->where('pos_produk_id', $prodToDelete->id)->delete();
-                            \App\Models\LogStok::where('pos_produk_id', $prodToDelete->id)->delete();
+                            // Do NOT delete log stok - history must be preserved
                             $prodToDelete->delete();
                         }
                         
