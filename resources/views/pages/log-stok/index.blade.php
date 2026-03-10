@@ -111,7 +111,7 @@
                         
                         <!-- IMEI -->
                         <td class="py-3 px-2 text-left">
-                            @if($log->produk->imei)
+                            @if($log->produk?->imei)
                                 <p class="text-sm font-mono text-gray-600 dark:text-gray-400 truncate">{{ $log->produk->imei }}</p>
                             @else
                                 <p class="text-sm text-gray-400 dark:text-gray-600">-</p>

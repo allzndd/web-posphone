@@ -696,14 +696,16 @@ class TransaksiController extends Controller
                         $quantity = $itemData['quantity'] ?? 1;
                         
                         // Group key: brand/merk ID (same toko for all items in this transaction)
-                        // Store only the FIRST product_id (primary), but accumulate quantities
+                        // Track all selected product_ids to ensure exact products are deleted
                         if (!isset($groupedByBrand[$merkId])) {
                             $groupedByBrand[$merkId] = [
                                 'pos_produk_id' => $pos_produk_id, // Primary product for this brand
+                                'product_ids' => [],
                                 'total_quantity' => 0,
                             ];
                         }
                         
+                        $groupedByBrand[$merkId]['product_ids'][] = $pos_produk_id;
                         $groupedByBrand[$merkId]['total_quantity'] += $quantity;
                     }
                 }
@@ -737,16 +739,28 @@ class TransaksiController extends Controller
                         // Delete individual products for both ELECTRONIC and ACCESSORIES types
                         // Electronic: each has unique IMEI
                         // Accessories: each product record represents 1 unit
-                        // Get products to delete (FIFO - oldest first, filtered by store)
+                        // Delete the specific products that were selected in the transaction
                         $productsToDelete = PosProduk::where('owner_id', $ownerId)
                             ->where('pos_produk_merk_id', $merkId)
-                            ->where(function($query) use ($request) {
-                                $query->where('pos_toko_id', $request->pos_toko_id)
-                                      ->orWhereNull('pos_toko_id');
-                            })
-                            ->orderBy('id', 'asc')
-                            ->limit($data['total_quantity'])
+                            ->whereIn('id', $data['product_ids'] ?? [])
                             ->get();
+
+                        // If quantity exceeds specific products selected, fill remainder with FIFO
+                        $remainingQty = $data['total_quantity'] - $productsToDelete->count();
+                        if ($remainingQty > 0) {
+                            $specificIds = $productsToDelete->pluck('id')->toArray();
+                            $additional = PosProduk::where('owner_id', $ownerId)
+                                ->where('pos_produk_merk_id', $merkId)
+                                ->whereNotIn('id', $specificIds)
+                                ->where(function($query) use ($request) {
+                                    $query->where('pos_toko_id', $request->pos_toko_id)
+                                          ->orWhereNull('pos_toko_id');
+                                })
+                                ->orderBy('id', 'asc')
+                                ->limit($remainingQty)
+                                ->get();
+                            $productsToDelete = $productsToDelete->merge($additional);
+                        }
                         
                         $deletedProductIds = $productsToDelete->pluck('id')->toArray();
                         
