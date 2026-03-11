@@ -32,7 +32,7 @@
             <div class="!z-5 relative flex flex-col rounded-[20px] bg-gradient-to-br from-green-400 to-green-600 bg-clip-border shadow-3xl shadow-shadow-500 dark:shadow-none p-6">
                 <div>
                     <p class="text-sm font-medium text-white/80">Gross Profit (Laba Kotor)</p>
-                    <h4 class="mt-2 text-3xl font-bold text-white">Rp {{ number_format($cashIn, 0, ',', '.') }}</h4>
+                    <h4 class="mt-2 text-3xl font-bold text-white">Rp {{ number_format($grossProfit, 0, ',', '.') }}</h4>
                     <p class="mt-1 text-xs text-white/70">Margin: {{ number_format($grossMargin, 2) }}%</p>
                 </div>
             </div>
