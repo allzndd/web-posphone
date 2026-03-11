@@ -130,8 +130,8 @@
                         <td class="py-3 px-2 text-center">
                             @php
                                 $tipeLabel = [
-                                    'masuk' => 'Pembelian',
-                                    'keluar' => 'Penjualan',
+                                    'masuk' => 'Outgoing',
+                                    'keluar' => 'Incoming',
                                     'retur' => 'Retur',
                                     'adjustment' => 'Adjustment',
                                 ];

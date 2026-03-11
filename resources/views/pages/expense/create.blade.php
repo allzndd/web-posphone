@@ -160,13 +160,13 @@
                                 <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">{{ get_currency_symbol() }}</span>
                             </div>
                             <input 
-                                type="number" 
+                                type="text" 
                                 id="total_harga"
                                 name="total_harga" 
-                                value="{{ old('total_harga') }}"
-                                step="0.01"
-                                min="0"
-                                placeholder="0{{ get_decimal_places() > 0 ? '.' . str_repeat('0', get_decimal_places()) : '' }}"
+                                value="{{ old('total_harga') ? number_format((int)old('total_harga'), 0, ',', '.') : '' }}"
+                                placeholder="0"
+                                inputmode="numeric"
+                                autocomplete="off"
                                 class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 pl-12 pr-4 py-3 text-sm font-semibold text-navy-700 dark:text-white outline-none transition-all focus:border-brand-500 dark:focus:border-brand-400 @error('total_harga') !border-red-500 @enderror"
                             >
                         </div>
@@ -265,8 +265,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('expenseForm');
     const submitBtn = document.getElementById('submitBtn');
     const submitBtnText = document.getElementById('submitBtnText');
-    
+    const totalHargaInput = document.getElementById('total_harga');
+
+    function formatRibuan(value) {
+        let raw = value.replace(/\D/g, '');
+        if (!raw) return '';
+        return parseInt(raw).toLocaleString('id-ID');
+    }
+
+    totalHargaInput.addEventListener('input', function() {
+        let pos = this.selectionStart;
+        let oldLen = this.value.length;
+        this.value = formatRibuan(this.value);
+        let newLen = this.value.length;
+        pos = Math.max(0, pos + (newLen - oldLen));
+        this.setSelectionRange(pos, pos);
+    });
+
     form.addEventListener('submit', function(e) {
+        // Strip thousand separators before sending to server
+        totalHargaInput.value = totalHargaInput.value.replace(/\./g, '');
         submitBtn.disabled = true;
         submitBtnText.textContent = 'Creating...';
     });
