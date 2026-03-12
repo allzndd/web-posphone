@@ -879,7 +879,17 @@ class ReportController extends Controller
         // Build base query for trade-ins
         $tradeInsQuery = PosTukarTambah::where('owner_id', $ownerId)
             ->whereBetween('created_at', [$start, $end])
-            ->with(['pelanggan', 'produkMasuk', 'produkKeluar', 'toko']);
+            ->with([
+                'pelanggan',
+                'toko',
+                'produkMasuk.merk',
+                'produkMasuk.warna',
+                'produkMasuk.ram',
+                'produkMasuk.penyimpanan',
+                'produkKeluar',
+                'transaksiPenjualan',
+                'transaksiPembelian',
+            ]);
 
         // Apply store filter
         if ($storeId) {
@@ -894,6 +904,7 @@ class ReportController extends Controller
         $totalTradeInValue = 0;
         $totalAdditionalPayment = 0;
         $totalValue = 0;
+        $totalProfit = 0;
 
         foreach ($tradeIns as $tradeIn) {
             // Get transaction for this trade-in (usually 2 transactions: one for old product, one for new)
@@ -907,16 +918,18 @@ class ReportController extends Controller
                 }
                 
                 if ($transaksi->is_transaksi_masuk == 0) {
-                    // Incoming product (old item being traded in)
+                    // Incoming product (old item being traded in - purchase cost)
                     $totalTradeInValue += $transaksi->total_harga;
                 } elseif ($transaksi->is_transaksi_masuk == 1) {
-                    // Outgoing product (new item being sold)
+                    // Outgoing product (new item being sold - sale revenue)
                     $totalAdditionalPayment += $transaksi->total_harga;
                 }
             }
         }
 
         $totalValue = $totalTradeInValue + $totalAdditionalPayment;
+        // Profit = sale revenue - purchase cost
+        $totalProfit = $totalAdditionalPayment - $totalTradeInValue;
 
         return view('reports.trade-in', [
             'hasAccessRead' => $hasAccessRead,
@@ -925,6 +938,7 @@ class ReportController extends Controller
             'totalTradeInValue' => $totalTradeInValue,
             'totalAdditionalPayment' => $totalAdditionalPayment,
             'totalValue' => $totalValue,
+            'totalProfit' => $totalProfit,
             'stores' => $stores,
             'period' => $period,
             'startDate' => $startDate,
@@ -938,13 +952,93 @@ class ReportController extends Controller
      */
     public function exportTradeIn(Request $request)
     {
-        if (!PermissionService::check('report.trade-in.export')) {
+        if (!PermissionService::check('report.trade-in.read')) {
             return redirect()->route('reports.trade-in')->with('error', 'Anda tidak memiliki akses untuk export laporan.');
         }
-        
-        // Similar implementation to get trade-in data and export
-        // For now, returning a placeholder
-        return response()->json(['message' => 'Export functionality pending']);
+
+        $user = auth()->user();
+        $ownerId = $user->owner_id ?? ($user->owner ? $user->owner->id : null);
+
+        if (!$ownerId) {
+            return redirect()->route('login')->with('error', 'Owner tidak ditemukan');
+        }
+
+        $period    = $request->get('period', 'month');
+        $startDate = $request->get('start_date', '');
+        $endDate   = $request->get('end_date', '');
+        $storeId   = $request->get('store_id', '');
+
+        if ($period === 'custom' && $startDate && $endDate) {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end   = Carbon::parse($endDate)->endOfDay();
+        } elseif ($period === 'today') {
+            $start = Carbon::now()->startOfDay();
+            $end   = Carbon::now()->endOfDay();
+        } elseif ($period === 'week') {
+            $start = Carbon::now()->startOfWeek();
+            $end   = Carbon::now()->endOfWeek();
+        } elseif ($period === 'year') {
+            $start = Carbon::now()->startOfYear();
+            $end   = Carbon::now()->endOfYear();
+        } elseif ($period === 'all') {
+            $start = Carbon::createFromYear(2000);
+            $end   = Carbon::now()->endOfDay();
+        } else {
+            $start = Carbon::now()->startOfMonth();
+            $end   = Carbon::now()->endOfMonth();
+        }
+
+        $query = PosTukarTambah::where('owner_id', $ownerId)
+            ->whereBetween('created_at', [$start, $end])
+            ->with([
+                'pelanggan',
+                'toko',
+                'produkMasuk.merk',
+                'produkMasuk.warna',
+                'produkMasuk.ram',
+                'produkMasuk.penyimpanan',
+                'produkKeluar',
+                'transaksiPenjualan',
+                'transaksiPembelian',
+            ]);
+
+        if ($storeId) {
+            $query->where('pos_toko_id', $storeId);
+        }
+
+        $tradeIns = $query->orderBy('created_at', 'desc')->get();
+
+        $totalTradeInValue       = 0;
+        $totalAdditionalPayment  = 0;
+
+        foreach ($tradeIns as $tradeIn) {
+            foreach ($tradeIn->transaksi as $t) {
+                if (strtolower($t->status) !== 'completed') continue;
+                if ($t->is_transaksi_masuk == 0) {
+                    $totalTradeInValue += $t->total_harga;
+                } else {
+                    $totalAdditionalPayment += $t->total_harga;
+                }
+            }
+        }
+
+        $summary = [
+            'totalTradeIns'          => $tradeIns->count(),
+            'totalTradeInValue'      => $totalTradeInValue,
+            'totalAdditionalPayment' => $totalAdditionalPayment,
+            'totalValue'             => $totalTradeInValue + $totalAdditionalPayment,
+            'totalProfit'            => $totalAdditionalPayment - $totalTradeInValue,
+            'period'                 => $period,
+            'start'                  => $start->format('d/m/Y'),
+            'end'                    => $end->format('d/m/Y'),
+        ];
+
+        $filename = 'Laporan_Tukar_Tambah_' . $start->format('Ymd') . '_' . $end->format('Ymd') . '.xlsx';
+
+        return Excel::download(
+            new \App\Exports\TradeInReportExport($tradeIns, $summary, $period),
+            $filename
+        );
     }
 
     /**
