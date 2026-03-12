@@ -135,6 +135,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateMasuk'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\TransaksiController::class, 'destroyMasuk'])->name('destroy');
             Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printMasuk'])->name('print');
+            Route::get('/{id}/pdf', [\App\Http\Controllers\TransaksiController::class, 'pdfMasuk'])->name('pdf');
             Route::patch('/{id}/update-status', [\App\Http\Controllers\TransaksiController::class, 'updateStatusMasuk'])->name('update-status');
         });
         
@@ -149,6 +150,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
             Route::put('/{id}', [\App\Http\Controllers\TransaksiController::class, 'updateKeluar'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\TransaksiController::class, 'destroyKeluar'])->name('destroy');
             Route::get('/{id}/print', [\App\Http\Controllers\TransaksiController::class, 'printKeluar'])->name('print');
+            Route::get('/{id}/pdf', [\App\Http\Controllers\TransaksiController::class, 'pdfKeluar'])->name('pdf');
             Route::patch('/{id}/update-status', [\App\Http\Controllers\TransaksiController::class, 'updateStatusKeluar'])->name('update-status');
         });
         

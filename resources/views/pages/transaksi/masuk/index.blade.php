@@ -228,7 +228,7 @@
                         </td>
                         <td class="py-4 col-actions" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-center">
-                                <button class="btn-actions-menu relative" data-transaksi-id="{{ $item->id }}" data-transaksi-invoice="{{ $item->invoice }}" data-transaksi-edit="{{ route('transaksi.masuk.edit', $item) }}" data-transaksi-print="{{ route('transaksi.masuk.print', $item) }}" data-transaksi-destroy="{{ route('transaksi.masuk.destroy', $item) }}">
+                                <button class="btn-actions-menu relative" data-transaksi-id="{{ $item->id }}" data-transaksi-invoice="{{ $item->invoice }}" data-transaksi-edit="{{ route('transaksi.masuk.edit', $item) }}" data-transaksi-print="{{ route('transaksi.masuk.print', $item) }}" data-transaksi-pdf="{{ route('transaksi.masuk.pdf', $item) }}" data-transaksi-destroy="{{ route('transaksi.masuk.destroy', $item) }}">
                                     <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
@@ -327,6 +327,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
         </svg>
         <span>Cetak</span>
+    </button>
+    <button id="pdfMenuItem" class="actions-dropdown-item print">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span>Download PDF</span>
     </button>
     <button id="deleteMenuItem" class="actions-dropdown-item delete">
         <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
@@ -554,6 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const actionDropdown = document.getElementById('actionDropdown');
     const editMenuItem = document.getElementById('editMenuItem');
     const printMenuItem = document.getElementById('printMenuItem');
+    const pdfMenuItem = document.getElementById('pdfMenuItem');
     const deleteMenuItem = document.getElementById('deleteMenuItem');
 
     // Handle action button click
@@ -600,6 +607,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const printUrl = currentButton.getAttribute('data-transaksi-print');
             if (printUrl) {
                 window.open(printUrl, '_blank');
+            }
+        }
+        
+        actionDropdown.classList.remove('show');
+    });
+
+    // Handle PDF download menu item click
+    pdfMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (currentButton) {
+            const pdfUrl = currentButton.getAttribute('data-transaksi-pdf');
+            if (pdfUrl) {
+                window.open(pdfUrl, '_blank');
             }
         }
         

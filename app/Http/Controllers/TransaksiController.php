@@ -18,6 +18,7 @@ use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\IncomingTransactionExport;
 use App\Exports\OutgoingTransactionExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TransaksiController extends Controller
 {
@@ -827,6 +828,25 @@ class TransaksiController extends Controller
         return view('pages.transaksi.masuk.print', compact('transaksi'));
     }
 
+    public function pdfMasuk($id)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 1)
+            ->with(['items.produk.merk', 'items.produk.warna', 'items.produk.penyimpanan', 'items.produk.ram', 'items.service', 'toko', 'pelanggan'])
+            ->findOrFail($id);
+
+        $pic = $user->name ?? '-';
+
+        $pdf = Pdf::loadView('pages.transaksi.invoice-pdf', compact('transaksi', 'pic'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'Invoice-' . $transaksi->invoice . '.pdf';
+        return $pdf->download($filename);
+    }
+
     public function editMasuk($id)
     {
         // Check permission to update
@@ -1479,6 +1499,25 @@ class TransaksiController extends Controller
             ->findOrFail($id);
 
         return view('pages.transaksi.keluar.print', compact('transaksi'));
+    }
+
+    public function pdfKeluar($id)
+    {
+        $user = Auth::user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('is_transaksi_masuk', 0)
+            ->with(['items.produk.merk', 'items.produk.warna', 'items.produk.penyimpanan', 'items.produk.ram', 'items.service', 'toko', 'supplier'])
+            ->findOrFail($id);
+
+        $pic = $user->name ?? '-';
+
+        $pdf = Pdf::loadView('pages.transaksi.invoice-pdf', compact('transaksi', 'pic'));
+        $pdf->setPaper('A4', 'portrait');
+
+        $filename = 'Invoice-' . $transaksi->invoice . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function editKeluar($id)
