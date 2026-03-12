@@ -352,12 +352,42 @@ class TukarTambahController extends Controller
         $tokos = PosToko::where('owner_id', $ownerId)->get();
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
         $produks = PosProduk::where('owner_id', $ownerId)->get();
-        $merks = PosProdukMerk::where('owner_id', $ownerId)->get();
-        
-        // Load transaksi terkait
-        $tukarTambah->load(['transaksiPenjualan.items', 'transaksiPembelian.items']);
 
-        return view('pages.tukar-tambah.edit', compact('tukarTambah', 'tokos', 'pelanggans', 'produks', 'merks'));
+        $merks = PosProdukMerk::where('owner_id', $ownerId)
+            ->orWhereNull('owner_id')
+            ->orderBy('merk')
+            ->orderBy('nama')
+            ->get();
+
+        $warnas = \App\Models\PosWarna::where('id_owner', $ownerId)
+            ->orWhereNull('id_owner')
+            ->orderBy('warna')
+            ->get();
+
+        $rams = \App\Models\PosRam::where('id_owner', $ownerId)
+            ->orWhereNull('id_owner')
+            ->orderBy('kapasitas')
+            ->get();
+
+        $penyimpanans = \App\Models\PosPenyimpanan::where('id_owner', $ownerId)
+            ->orWhereNull('id_owner')
+            ->orderBy('kapasitas')
+            ->get();
+
+        // Load transaksi & incoming product relations
+        $tukarTambah->load([
+            'transaksiPenjualan.items',
+            'transaksiPembelian.items',
+            'produkMasuk.merk',
+            'produkMasuk.warna',
+            'produkMasuk.ram',
+            'produkMasuk.penyimpanan',
+        ]);
+
+        return view('pages.tukar-tambah.edit', compact(
+            'tukarTambah', 'tokos', 'pelanggans', 'produks',
+            'merks', 'warnas', 'rams', 'penyimpanans'
+        ));
     }
 
     public function update(Request $request, PosTukarTambah $tukarTambah)
@@ -375,8 +405,21 @@ class TukarTambahController extends Controller
             'harga_jual_keluar' => 'required|numeric|min:0',
             'diskon_keluar' => 'nullable|numeric|min:0',
             'harga_beli_masuk' => 'required|numeric|min:0',
+            'harga_jual_masuk' => 'nullable|numeric|min:0',
             'metode_pembayaran' => 'required|string|max:45',
             'keterangan' => 'nullable|string|max:255',
+            // Incoming product detail fields
+            'pos_produk_merk_id' => 'nullable|exists:pos_produk_merk,id',
+            'produk_nama_baru' => 'nullable|string|max:255',
+            'pos_warna_id' => 'nullable|exists:pos_warna,id',
+            'pos_ram_id' => 'nullable|exists:pos_ram,id',
+            'pos_penyimpanan_id' => 'nullable|exists:pos_penyimpanan,id',
+            'battery_health' => 'nullable|string|max:255',
+            'imei' => 'nullable|string|max:255',
+            'biaya_tambahan_nama' => 'nullable|array',
+            'biaya_tambahan_nama.*' => 'nullable|string|max:255',
+            'biaya_tambahan_nilai' => 'nullable|array',
+            'biaya_tambahan_nilai.*' => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -413,6 +456,36 @@ class TukarTambahController extends Controller
                 'pos_produk_masuk_id' => $validated['pos_produk_masuk_id'],
                 'pos_produk_keluar_id' => $validated['pos_produk_keluar_id'],
             ]);
+
+            // Update incoming product (HP masuk) fields
+            $produkMasuk = PosProduk::find($validated['pos_produk_masuk_id']);
+            if ($produkMasuk) {
+                $biayaTambahan = [];
+                if (!empty($request->biaya_tambahan_nama)) {
+                    foreach ($request->biaya_tambahan_nama as $index => $nama) {
+                        if (!empty($nama) && isset($request->biaya_tambahan_nilai[$index])) {
+                            $biayaTambahan[] = [
+                                'nama' => $nama,
+                                'nilai' => (float) $request->biaya_tambahan_nilai[$index],
+                            ];
+                        }
+                    }
+                }
+                $produkMasuk->update([
+                    'pos_toko_id'        => $validated['pos_toko_id'],
+                    'pos_produk_merk_id' => $validated['pos_produk_merk_id'] ?? $produkMasuk->pos_produk_merk_id,
+                    'nama'               => !empty($validated['produk_nama_baru']) ? $validated['produk_nama_baru'] : $produkMasuk->nama,
+                    'slug'               => !empty($validated['produk_nama_baru']) ? Str::slug($validated['produk_nama_baru']) : $produkMasuk->slug,
+                    'pos_warna_id'       => $validated['pos_warna_id'] ?? null,
+                    'pos_ram_id'         => $validated['pos_ram_id'] ?? null,
+                    'pos_penyimpanan_id' => $validated['pos_penyimpanan_id'] ?? null,
+                    'battery_health'     => $validated['battery_health'] ?? null,
+                    'imei'               => $validated['imei'] ?? null,
+                    'harga_beli'         => $validated['harga_beli_masuk'],
+                    'harga_jual'         => $validated['harga_jual_masuk'] ?? $validated['harga_beli_masuk'],
+                    'biaya_tambahan'     => !empty($biayaTambahan) ? $biayaTambahan : null,
+                ]);
+            }
 
             // Update or create transactions
             $diskonKeluar = $validated['diskon_keluar'] ?? 0;
