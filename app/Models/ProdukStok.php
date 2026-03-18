@@ -51,4 +51,37 @@ class ProdukStok extends Model
     {
         return $this->belongsTo(PosProduk::class, 'pos_produk_id');
     }
+
+    /**
+     * Get grouped product name (brand + type) from master merk.
+     * Fallback to snapshot merk_name or representative product display name.
+     */
+    public function getGroupedNameAttribute()
+    {
+        $brand = null;
+        $type = null;
+
+        if ($this->produk && $this->produk->merk) {
+            $brand = trim((string) ($this->produk->merk->merk ?? ''));
+            $type = trim((string) ($this->produk->merk->nama ?? ''));
+        }
+
+        $parts = array_values(array_filter([$brand, $type], function ($value) {
+            return $value !== '';
+        }));
+
+        if (!empty($parts)) {
+            if (count($parts) === 2 && strtolower($parts[0]) === strtolower($parts[1])) {
+                return $parts[0];
+            }
+
+            return implode(' ', $parts);
+        }
+
+        if (!empty($this->merk_name)) {
+            return $this->merk_name;
+        }
+
+        return $this->produk ? $this->produk->display_name : 'Unknown Product';
+    }
 }
