@@ -206,6 +206,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         Route::get('/email/verify/{token}', [\App\Http\Controllers\SettingsController::class, 'verifyNewEmail'])->name('email.verify');
         
         // Trade-In (pos_tukar_tambah) - OWNER ONLY
+        Route::get('tukar-tambah/{id}/print', [\App\Http\Controllers\TukarTambahController::class, 'print'])->name('tukar-tambah.print');
         Route::resource('tukar-tambah', \App\Http\Controllers\TukarTambahController::class);
         
         // POS Roles (pos_role) - Custom bulk delete must come before resource
