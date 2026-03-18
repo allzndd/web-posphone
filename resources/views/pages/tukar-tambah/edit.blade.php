@@ -171,16 +171,18 @@ input[type="number"] { -moz-appearance: textfield; }
                         <label for="pos_produk_keluar_id" class="mb-2 block text-sm font-bold text-navy-700 dark:text-white">
                             Select Product <span class="text-red-500">*</span>
                         </label>
-                        <select id="pos_produk_keluar_id" name="pos_produk_keluar_id" required
-                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
-                            <option value="">Select Product</option>
-                            @foreach($produks as $produk)
-                                <option value="{{ $produk->id }}" data-harga="{{ $produk->harga_jual }}" 
-                                    {{ old('pos_produk_keluar_id', $tukarTambah->pos_produk_keluar_id) == $produk->id ? 'selected' : '' }}>
-                                    {{ $produk->nama }} - Rp {{ number_format($produk->harga_jual, 0, ',', '.') }}
+                        <input type="hidden" id="pos_produk_keluar_id_hidden" name="pos_produk_keluar_id" value="{{ $tukarTambah->pos_produk_keluar_id }}">
+                        <select id="pos_produk_keluar_id" disabled
+                            class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-navy-700 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none cursor-not-allowed">
+                            @if($tukarTambah->produkKeluar)
+                                <option value="{{ $tukarTambah->produkKeluar->id }}" data-harga="{{ $tukarTambah->produkKeluar->harga_jual }}" selected>
+                                    {{ $tukarTambah->produkKeluar->nama }} - Rp {{ number_format($tukarTambah->produkKeluar->harga_jual, 0, ',', '.') }}
                                 </option>
-                            @endforeach
+                            @else
+                                <option value="" selected>Produk keluar tidak ditemukan</option>
+                            @endif
                         </select>
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Produk OUT dikunci setelah trade-in dibuat untuk mencegah tabrakan stok.</p>
                     </div>
 
                     <div>
@@ -220,7 +222,7 @@ input[type="number"] { -moz-appearance: textfield; }
                     </svg>
                     Product IN (Purchase from Customer)
                 </h5>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 ml-4">Update details of the incoming phone from the customer</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4 ml-4">Referensi produk IN/OUT tidak dapat diganti setelah create, namun detail produk masuk masih bisa diupdate.</p>
 
                 {{-- Keep the existing product ID --}}
                 <input type="hidden" id="pos_produk_masuk_id" name="pos_produk_masuk_id" value="{{ $tukarTambah->pos_produk_masuk_id }}">
