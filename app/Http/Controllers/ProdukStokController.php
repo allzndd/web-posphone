@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProdukStok;
 use App\Models\PosProduk;
 use App\Models\PosToko;
+use App\Services\InventoryAvailabilityService;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
@@ -123,7 +124,7 @@ class ProdukStokController extends Controller
                     'success' => true,
                     'data' => [
                         'produk_stok_id' => $produkStok->id,
-                        'merk_nama' => $produkStok->merk_name ?? 'Unknown',
+                        'merk_nama' => $produkStok->grouped_name ?? $produkStok->merk_name ?? 'Unknown',
                         'toko_nama' => $produkStok->toko->nama ?? '-',
                         'total_stok' => $produkStok->stok,
                         'produk_list' => [],
@@ -131,15 +132,10 @@ class ProdukStokController extends Controller
                 ]);
             }
             
-            $terkaitProduk = PosProduk::where('owner_id', $produkStok->owner_id)
-                ->where('pos_produk_merk_id', $primaryProduk->pos_produk_merk_id)
-                ->where(function($query) use ($produkStok) {
-                    $query->where('pos_toko_id', $produkStok->pos_toko_id)
-                          ->orWhereNull('pos_toko_id');
-                })
-                ->with(['merk', 'warna', 'ram', 'penyimpanan'])
-                ->orderBy('id', 'asc')
-                ->get()
+            $terkaitProduk = InventoryAvailabilityService::getAvailableProductsForStockEntry(
+                    $produkStok,
+                    ['merk', 'warna', 'ram', 'penyimpanan']
+                )
                 ->map(function($produk) {
                     // Use same logic as halaman produk (produk index)
                     // RAM: kapasitas (not nama)
@@ -168,7 +164,7 @@ class ProdukStokController extends Controller
                 'success' => true,
                 'data' => [
                     'produk_stok_id' => $produkStok->id,
-                    'merk_nama' => $primaryProduk->merk->nama ?? $produkStok->merk_name ?? 'Unknown',
+                    'merk_nama' => $produkStok->grouped_name,
                     'toko_nama' => $produkStok->toko->nama ?? '-',
                     'total_stok' => $produkStok->stok,
                     'produk_list' => $terkaitProduk,
