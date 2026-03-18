@@ -184,7 +184,11 @@
                             class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/100 dark:bg-navy-900/100 px-4 py-3 text-sm text-navy-700 dark:text-white outline-none focus:border-brand-500">
                             <option value="">Select Product</option>
                             @foreach($produks as $produk)
-                                <option value="{{ $produk->id }}" data-harga="{{ $produk->harga_jual }}" {{ old('pos_produk_keluar_id') == $produk->id ? 'selected' : '' }}>
+                                <option value="{{ $produk->id }}"
+                                        data-harga="{{ $produk->harga_jual }}"
+                                        data-pos-toko-id="{{ $produk->pos_toko_id }}"
+                                        data-stok='@json($produk->stok_per_toko ?? [])'
+                                        {{ old('pos_produk_keluar_id') == $produk->id ? 'selected' : '' }}>
                                     {{ $produk->nama }} - {{ get_currency_symbol() }} {{ number_format($produk->harga_jual, 0, ',', '.') }}
                                 </option>
                             @endforeach
@@ -504,6 +508,9 @@ const allMerks = @json($merks);
 const colorItems = @json($warnas);
 const ramItems = @json($rams);
 const storageItems = @json($penyimpanans);
+const productOutSelect = document.getElementById('pos_produk_keluar_id');
+const storeSelect = document.getElementById('pos_toko_id');
+const productOutBaseOptions = Array.from(productOutSelect.querySelectorAll('option')).map(option => option.cloneNode(true));
 
 // State
 let currentBrandItems = [];
@@ -540,6 +547,72 @@ function formatCurrencyInput(input) {
         value = parseInt(value).toLocaleString('id-ID');
     }
     input.value = value;
+}
+
+// ============= PRODUCT OUT STOCK FILTER =============
+function parseStockMap(option) {
+    try {
+        return JSON.parse(option.getAttribute('data-stok') || '{}');
+    } catch (e) {
+        return {};
+    }
+}
+
+function filterProductOutByStore() {
+    const selectedStoreId = String(storeSelect.value || '');
+    const currentValue = productOutSelect.value;
+
+    productOutSelect.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = selectedStoreId ? 'Select Product' : 'Select Store First';
+    productOutSelect.appendChild(defaultOption);
+
+    if (!selectedStoreId) {
+        productOutSelect.disabled = true;
+        productOutSelect.value = '';
+        document.getElementById('harga_jual_keluar').value = '';
+        calculateNet();
+        return;
+    }
+
+    productOutSelect.disabled = false;
+    let hasAvailableProduct = false;
+
+    productOutBaseOptions.forEach((baseOption, index) => {
+        if (index === 0 || !baseOption.value) {
+            return;
+        }
+
+        const stockMap = parseStockMap(baseOption);
+        const stockInSelectedStore = parseInt(stockMap[selectedStoreId] || 0, 10);
+        const productStoreId = String(baseOption.getAttribute('data-pos-toko-id') || '');
+        const belongsToStore = !productStoreId || productStoreId === selectedStoreId;
+
+        if (belongsToStore && stockInSelectedStore > 0) {
+            const option = baseOption.cloneNode(true);
+            productOutSelect.appendChild(option);
+            hasAvailableProduct = true;
+        }
+    });
+
+    if (!hasAvailableProduct) {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.disabled = true;
+        emptyOption.textContent = 'No product available (stock is 0) in selected store';
+        productOutSelect.appendChild(emptyOption);
+    }
+
+    const isCurrentValueStillAvailable = Array.from(productOutSelect.options).some(option => option.value === currentValue);
+    if (isCurrentValueStillAvailable) {
+        productOutSelect.value = currentValue;
+    } else {
+        productOutSelect.value = '';
+        document.getElementById('harga_jual_keluar').value = '';
+        calculateNet();
+    }
 }
 
 // ============= BRAND & TYPE DROPDOWNS =============
@@ -841,9 +914,13 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeColorDropdown();
     initializeRamDropdown();
     initializeStorageDropdown();
+
+    // Product OUT should follow selected store and stock > 0
+    storeSelect.addEventListener('change', filterProductOutByStore);
+    filterProductOutByStore();
     
     // Product OUT handlers
-    document.getElementById('pos_produk_keluar_id').addEventListener('change', function() {
+    productOutSelect.addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         const harga = selected.getAttribute('data-harga');
         if (harga) {
