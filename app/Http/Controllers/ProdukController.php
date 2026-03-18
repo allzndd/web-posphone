@@ -6,6 +6,7 @@ use App\Models\PosProduk;
 use App\Models\PosProdukBiayaTambahan;
 use App\Models\PosProdukMerk;
 use App\Models\PosService;
+use App\Services\InventoryAvailabilityService;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,22 +29,15 @@ class ProdukController extends Controller
 
         $searchQuery = $request->input('search') ?? $request->input('nama');
 
-        // Get merk IDs that have stock > 0 (stock is grouped by merk)
-        // First get the representative product IDs with stock, then get their merk IDs
-        $merkIdsWithStock = \App\Models\ProdukStok::where('owner_id', $ownerId)
-            ->where('stok', '>', 0)
-            ->with('produk')
-            ->get()
-            ->map(function($stok) {
-                return $stok->produk ? $stok->produk->pos_produk_merk_id : null;
-            })
-            ->filter()
-            ->unique();
+        $availableProductIds = InventoryAvailabilityService::getAvailableProductIds($ownerId);
         
-        // Get ALL products whose merk has stock (stock is grouped by merk)
         $produk = PosProduk::where('owner_id', $ownerId)
             ->with(['merk', 'stok', 'ram', 'penyimpanan', 'warna'])
-            ->whereIn('pos_produk_merk_id', $merkIdsWithStock)
+            ->when(!empty($availableProductIds), function ($query) use ($availableProductIds) {
+                return $query->whereIn('id', $availableProductIds);
+            }, function ($query) {
+                return $query->whereRaw('1 = 0');
+            })
             ->when($searchQuery, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('nama', 'like', '%' . $search . '%')
