@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Models\ProdukStok;
 use App\Models\LogStok;
 use App\Models\PosProduk;
+use Illuminate\Support\Facades\Log;
 
 trait UpdatesStock
 {
@@ -26,19 +27,33 @@ trait UpdatesStock
         // Get the product and its merk_id
         $product = PosProduk::find($produkId);
         if (!$product) {
-            \Log::error('updateProductStock - Product not found:', ['produk_id' => $produkId]);
+            Log::error('updateProductStock - Product not found:', ['produk_id' => $produkId]);
             return false;
         }
 
         $merkId = $product->pos_produk_merk_id;
-        $merkName = $product->merk ? $product->merk->nama : null;
+        $merkBrand = $product->merk ? trim((string) ($product->merk->merk ?? '')) : '';
+        $merkType = $product->merk ? trim((string) ($product->merk->nama ?? '')) : '';
+
+        $merkParts = array_values(array_filter([$merkBrand, $merkType], function ($value) {
+            return $value !== '';
+        }));
+
+        if (count($merkParts) === 2 && strtolower($merkParts[0]) === strtolower($merkParts[1])) {
+            $merkName = $merkParts[0];
+        } else {
+            $merkName = !empty($merkParts) ? implode(' ', $merkParts) : null;
+        }
+
+        $legacyMerkName = $merkType !== '' ? $merkType : null;
 
         // Log input parameters
-        \Log::info('updateProductStock - Input parameters:', [
+        Log::info('updateProductStock - Input parameters:', [
             'owner_id' => $ownerId . ' (type: ' . gettype($ownerId) . ')',
             'toko_id' => $tokoId . ' (type: ' . gettype($tokoId) . ')',
             'produk_id' => $produkId . ' (type: ' . gettype($produkId) . ')',
             'merk_id' => $merkId,
+            'merk_name_snapshot' => $merkName,
             'quantity' => $quantity,
         ]);
 
@@ -53,16 +68,26 @@ trait UpdatesStock
 
         // Strategy 2: If not found via product relation (product may have been deleted when stock=0),
         // look for orphaned stock records with matching merk_name snapshot
-        if (!$existingStokByMerk && $merkName) {
+        if (!$existingStokByMerk && ($merkName || $legacyMerkName)) {
             $existingStokByMerk = ProdukStok::where('owner_id', $ownerId)
                 ->where('pos_toko_id', $tokoId)
-                ->where('merk_name', $merkName)
+                ->where(function($query) use ($merkName, $legacyMerkName) {
+                    if ($merkName) {
+                        $query->where('merk_name', $merkName);
+
+                        if ($legacyMerkName && $legacyMerkName !== $merkName) {
+                            $query->orWhere('merk_name', $legacyMerkName);
+                        }
+                    } elseif ($legacyMerkName) {
+                        $query->where('merk_name', $legacyMerkName);
+                    }
+                })
                 ->first();
 
             // Update the orphaned record to point to the current (existing) product
             if ($existingStokByMerk) {
                 $existingStokByMerk->update(['pos_produk_id' => $produkId]);
-                \Log::info('updateProductStock - Recovered orphaned stock record:', [
+                Log::info('updateProductStock - Recovered orphaned stock record:', [
                     'stok_id' => $existingStokByMerk->id,
                     'new_produk_id' => $produkId,
                     'merk_name' => $merkName,
@@ -70,7 +95,7 @@ trait UpdatesStock
             }
         }
 
-        \Log::info('updateProductStock - Checking existing record by MERK:', [
+        Log::info('updateProductStock - Checking existing record by MERK:', [
             'exists' => $existingStokByMerk ? 'YES - ID: ' . $existingStokByMerk->id : 'NO',
             'merk_id' => $merkId,
             'current_stock' => $existingStokByMerk ? $existingStokByMerk->stok : null,
@@ -81,7 +106,7 @@ trait UpdatesStock
         if ($existingStokByMerk) {
             $stok = $existingStokByMerk;
             // Ensure merk_name snapshot is always set for future orphan recovery
-            if (empty($stok->merk_name) && $merkName) {
+            if ($merkName && $stok->merk_name !== $merkName) {
                 $stok->update(['merk_name' => $merkName]);
             }
         } else {
@@ -90,11 +115,11 @@ trait UpdatesStock
                 'pos_toko_id' => $tokoId,
                 'pos_produk_id' => $produkId, // First product becomes representative
                 'stok' => 0,
-                'merk_name' => $merkName,
+                'merk_name' => $merkName ?? $legacyMerkName,
             ]);
         }
 
-        \Log::info('updateProductStock - Stock record (grouped by merk):', [
+        Log::info('updateProductStock - Stock record (grouped by merk):', [
             'id' => $stok->id,
             'was_existing' => $existingStokByMerk ? true : false,
             'representative_produk_id' => $stok->pos_produk_id,
