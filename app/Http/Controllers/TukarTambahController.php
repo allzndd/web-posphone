@@ -12,7 +12,9 @@ use App\Models\PosRam;
 use App\Models\PosPenyimpanan;
 use App\Models\PosTransaksi;
 use App\Models\PosTransaksiItem;
+use App\Models\ProdukStok;
 use App\Traits\UpdatesStock;
+use App\Services\InventoryAvailabilityService;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -88,7 +90,45 @@ class TukarTambahController extends Controller
 
         $tokos = PosToko::where('owner_id', $ownerId)->get();
         $pelanggans = PosPelanggan::where('owner_id', $ownerId)->get();
-        $produks = PosProduk::where('owner_id', $ownerId)->get();
+
+        // Stock is grouped by merk + store, not by individual product.
+        $stokByMerkAndStore = ProdukStok::where('owner_id', $ownerId)
+            ->with('produk')
+            ->get()
+            ->groupBy(function($stok) {
+                return ($stok->produk ? $stok->produk->pos_produk_merk_id : 0) . '_' . $stok->pos_toko_id;
+            });
+
+        $availableProductIds = InventoryAvailabilityService::getAvailableProductIds($ownerId);
+
+        $produks = PosProduk::where('owner_id', $ownerId)
+            ->when(!empty($availableProductIds), function ($query) use ($availableProductIds) {
+                return $query->whereIn('id', $availableProductIds);
+            }, function ($query) {
+                return $query->whereRaw('1 = 0');
+            })
+            ->with(['merk', 'warna', 'penyimpanan', 'ram'])
+            ->get()
+            ->map(function($produk) use ($stokByMerkAndStore) {
+                $stokPerToko = [];
+
+                foreach ($stokByMerkAndStore as $key => $stokEntries) {
+                    $parts = explode('_', $key);
+                    $merkId = (int) $parts[0];
+                    $tokoId = (int) $parts[1];
+
+                    if ($merkId === (int) $produk->pos_produk_merk_id) {
+                        $stokEntry = $stokEntries->first();
+                        if ($stokEntry) {
+                            $stokPerToko[$tokoId] = (int) $stokEntry->stok;
+                        }
+                    }
+                }
+
+                $produk->stok_per_toko = $stokPerToko;
+
+                return $produk;
+            });
         
         // Get merks with their product types (nama) for brand -> type dropdown
         $merks = PosProdukMerk::where('owner_id', $ownerId)
@@ -185,6 +225,81 @@ class TukarTambahController extends Controller
             $user = auth()->user();
             $ownerId = $user->owner ? $user->owner->id : null;
 
+            // Validate outgoing product stock (grouped by merk + selected store)
+            $produkKeluar = PosProduk::where('owner_id', $ownerId)
+                ->with('merk')
+                ->find($validated['pos_produk_keluar_id']);
+
+            if (!$produkKeluar) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'pos_produk_keluar_id' => 'Produk keluar tidak ditemukan untuk owner ini.'
+                ]);
+            }
+
+            if (!empty($produkKeluar->pos_toko_id) && (int) $produkKeluar->pos_toko_id !== (int) $validated['pos_toko_id']) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'pos_produk_keluar_id' => 'Produk keluar tidak tersedia di toko yang dipilih.'
+                ]);
+            }
+
+            if (!InventoryAvailabilityService::isProductAvailableForSale(
+                (int) $ownerId,
+                (int) $validated['pos_toko_id'],
+                (int) $validated['pos_produk_keluar_id']
+            )) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'pos_produk_keluar_id' => 'Produk keluar sudah terjual atau tidak tersedia untuk dijual di toko ini.'
+                ]);
+            }
+
+            $stokProdukKeluar = ProdukStok::where('owner_id', $ownerId)
+                ->where('pos_toko_id', $validated['pos_toko_id'])
+                ->whereHas('produk', function($query) use ($produkKeluar) {
+                    $query->where('pos_produk_merk_id', $produkKeluar->pos_produk_merk_id);
+                })
+                ->first();
+
+            // Fallback for orphaned stock rows (when representative product has changed/deleted)
+            if (!$stokProdukKeluar && $produkKeluar->merk) {
+                $merkBrand = trim((string) ($produkKeluar->merk->merk ?? ''));
+                $merkType = trim((string) ($produkKeluar->merk->nama ?? ''));
+
+                if ($merkBrand !== '' && $merkType !== '' && strtolower($merkBrand) === strtolower($merkType)) {
+                    $merkLabel = $merkBrand;
+                } else {
+                    $merkLabel = trim($merkBrand . ' ' . $merkType);
+                }
+
+                if ($merkLabel !== '' || $merkType !== '') {
+                    $stokProdukKeluar = ProdukStok::where('owner_id', $ownerId)
+                        ->where('pos_toko_id', $validated['pos_toko_id'])
+                        ->where(function($query) use ($merkLabel, $merkType) {
+                            if ($merkLabel !== '') {
+                                $query->where('merk_name', $merkLabel);
+
+                                if ($merkType !== '' && $merkType !== $merkLabel) {
+                                    $query->orWhere('merk_name', $merkType);
+                                }
+                            } else {
+                                $query->where('merk_name', $merkType);
+                            }
+                        })
+                        ->first();
+                }
+            }
+
+            $stokTersedia = $stokProdukKeluar ? (int) $stokProdukKeluar->stok : 0;
+
+            if ($stokTersedia < 1) {
+                DB::rollBack();
+                return back()->withInput()->withErrors([
+                    'pos_produk_keluar_id' => 'Stok produk keluar di toko terpilih habis (0). Silakan pilih produk lain.'
+                ]);
+            }
+
             // Handle new product incoming (if new)
             if ($validated['produk_masuk_type'] === 'new') {
                 // Handle new merk if needed
@@ -247,7 +362,6 @@ class TukarTambahController extends Controller
             $invoicePembelian = 'TT-IN-' . str_pad($tukarTambah->id, 6, '0', STR_PAD_LEFT);
 
             // 1. Create PENJUALAN transaction (produk keluar - income)
-            $produkKeluar = PosProduk::find($validated['pos_produk_keluar_id']);
             $diskonKeluar = $validated['diskon_keluar'] ?? 0;
             $subtotalKeluar = $validated['harga_jual_keluar'] - $diskonKeluar;
             
@@ -331,12 +445,46 @@ class TukarTambahController extends Controller
             );
 
             DB::commit();
-            return redirect()->route('tukar-tambah.index')->with('success', 'Trade-in berhasil ditambahkan dengan 2 transaksi terkait');
+            return redirect()->route('tukar-tambah.print', $tukarTambah->id)->with('success', 'Trade-in berhasil ditambahkan dengan 2 transaksi terkait');
             
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->withErrors(['error' => 'Gagal menyimpan trade-in: ' . $e->getMessage()]);
         }
+    }
+
+    public function print($id)
+    {
+        if (!PermissionService::check('tukar-tambah.read')) {
+            return redirect('/')->with('error', 'Anda tidak memiliki akses untuk melihat nota trade-in');
+        }
+
+        $user = auth()->user();
+        $ownerId = $user->owner ? $user->owner->id : null;
+
+        $tukarTambah = PosTukarTambah::where('owner_id', $ownerId)
+            ->with(['toko', 'pelanggan'])
+            ->findOrFail($id);
+
+        $transaksi = PosTransaksi::where('owner_id', $ownerId)
+            ->where('pos_tukar_tambah_id', $tukarTambah->id)
+            ->where('is_transaksi_masuk', 1)
+            ->with([
+                'items.produk.merk',
+                'items.produk.warna',
+                'items.produk.penyimpanan',
+                'items.produk.ram',
+                'items.service',
+                'toko',
+                'pelanggan',
+            ])
+            ->first();
+
+        if (!$transaksi) {
+            return redirect()->route('tukar-tambah.index')->with('error', 'Nota penjualan trade-in tidak ditemukan');
+        }
+
+        return view('pages.tukar-tambah.print', compact('tukarTambah', 'transaksi'));
     }
 
     public function edit(PosTukarTambah $tukarTambah)
@@ -421,6 +569,23 @@ class TukarTambahController extends Controller
             'biaya_tambahan_nilai' => 'nullable|array',
             'biaya_tambahan_nilai.*' => 'nullable|numeric|min:0',
         ]);
+
+        // Lock product references after creation to avoid stock collisions.
+        if ((int) $validated['pos_produk_keluar_id'] !== (int) $tukarTambah->pos_produk_keluar_id) {
+            return back()->withInput()->withErrors([
+                'pos_produk_keluar_id' => 'Produk keluar tidak dapat diubah setelah trade-in dibuat.'
+            ]);
+        }
+
+        if ((int) $validated['pos_produk_masuk_id'] !== (int) $tukarTambah->pos_produk_masuk_id) {
+            return back()->withInput()->withErrors([
+                'pos_produk_masuk_id' => 'Produk masuk tidak dapat diubah setelah trade-in dibuat.'
+            ]);
+        }
+
+        // Force immutable IDs (protect against request tampering).
+        $validated['pos_produk_keluar_id'] = $tukarTambah->pos_produk_keluar_id;
+        $validated['pos_produk_masuk_id'] = $tukarTambah->pos_produk_masuk_id;
 
         DB::beginTransaction();
         try {
