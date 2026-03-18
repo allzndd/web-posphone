@@ -18,7 +18,7 @@
             <div>
                 <h4 class="text-xl font-bold text-navy-700 dark:text-white">Product Stock</h4>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                    {{ $stok->total() }} products in stock
+                    {{ $stok->total() }} stock groups
                 </p>
             </div>
             
@@ -96,7 +96,7 @@
                         <!-- Product -->
                         <td class="py-4">
                             <div>
-                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->produk->display_name ?? $item->merk_name ?? 'Unknown Product' }}</p>
+                                <p class="text-sm font-bold text-navy-700 dark:text-white">{{ $item->grouped_name }}</p>
                             </div>
                         </td>
                         
