@@ -3,7 +3,8 @@
 @section('title', 'Trade-In')
 
 @push('style')
-<!-- Page-specific styles -->
+<!-- Load reusable table components CSS -->
+<link rel="stylesheet" href="{{ asset('css/table-components.css') }}">
 @endpush
 
 @section('main')
@@ -76,8 +77,8 @@
                         <th class="py-3 text-right">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Profit</p>
                         </th>
-                        <th class="py-3 text-center">
-                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Actions</p>
+                        <th class="py-3 text-center col-actions">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Aksi</p>
                         </th>
                     </tr>
                 </thead>
@@ -152,32 +153,18 @@
                                 Rp {{ number_format($profit, 0, ',', '.') }}
                             </p>
                         </td>
-                        <td class="py-4" onclick="event.stopPropagation()">
-                            <div class="flex items-center justify-center gap-2">
-                                <!-- Edit Button -->
-                                <a href="{{ route('tukar-tambah.edit', $tukarTambah->id) }}" 
-                                   class="flex h-9 w-9 items-center justify-center rounded-lg bg-lightPrimary text-brand-500 transition duration-200 hover:bg-gray-100 dark:bg-navy-700 dark:text-white dark:hover:bg-white/20"
-                                   title="Edit">
-                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                        <path fill="none" d="M0 0h24v24H0z"></path>
-                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"></path>
+                        <td class="py-4 col-actions" onclick="event.stopPropagation()">
+                            <div class="flex items-center justify-center">
+                                <button class="btn-actions-menu relative"
+                                        data-transaksi-id="{{ $tukarTambah->id }}"
+                                        data-transaksi-edit="{{ route('tukar-tambah.edit', $tukarTambah->id) }}"
+                                        data-transaksi-print="{{ route('tukar-tambah.print', $tukarTambah->id) }}"
+                                        data-transaksi-pdf=""
+                                        data-transaksi-destroy="{{ route('tukar-tambah.destroy', $tukarTambah->id) }}">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 8c1.1 0 2-0.9 2-2s-0.9-2-2-2-2 0.9-2 2 0.9 2 2 2zm0 2c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zm0 6c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"></path>
                                     </svg>
-                                </a>
-                                
-                                <!-- Delete Button -->
-                                <form action="{{ route('tukar-tambah.destroy', $tukarTambah->id) }}" method="POST" class="inline-block" 
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus trade-in ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-500 transition duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
-                                            title="Delete">
-                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill="none" d="M0 0h24v24H0z"></path>
-                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"></path>
-                                        </svg>
-                                    </button>
-                                </form>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -270,15 +257,205 @@
         </div>
     </div>
 </div>
+
+<!-- Action Dropdown - Inline -->
+<div id="actionDropdown" class="actions-dropdown">
+    <button id="editMenuItem" class="actions-dropdown-item edit">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        <span>Edit</span>
+    </button>
+    <button id="printMenuItem" class="actions-dropdown-item print">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+        </svg>
+        <span>Cetak</span>
+    </button>
+    <button id="pdfMenuItem" class="actions-dropdown-item print">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span>Download PDF</span>
+    </button>
+    <button id="deleteMenuItem" class="actions-dropdown-item delete">
+        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+        <span>Hapus</span>
+    </button>
+</div>
+
+<div id="deleteConfirmModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white dark:bg-navy-800 rounded-lg shadow-xl max-w-sm w-full mx-4">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Konfirmasi Hapus</h3>
+            <button type="button" id="modalCloseBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-600 dark:text-gray-400 mb-2">Apakah Anda yakin ingin menghapus item ini?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500">Tindakan ini tidak dapat dibatalkan.</p>
+        </div>
+        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-white/10">
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-700 transition">Batal</button>
+            <button type="button" id="modalConfirmBtn" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition font-semibold">Hapus</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+function closeDeleteModal() {
+    document.getElementById('deleteConfirmModal').classList.add('hidden');
+}
+
+function proceedBulkDelete() {
+    if (window.pendingDeleteUrl) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.pendingDeleteUrl;
+        form.style.display = 'none';
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_token';
+            input.value = csrfToken.content;
+            form.appendChild(input);
+        }
+
+        const methodInput = document.createElement('input');
+        methodInput.type = 'hidden';
+        methodInput.name = '_method';
+        methodInput.value = 'DELETE';
+        form.appendChild(methodInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        delete window.pendingDeleteUrl;
+        return;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Make table rows clickable
+    document.getElementById('modalCloseBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeDeleteModal);
+    document.getElementById('modalConfirmBtn').addEventListener('click', proceedBulkDelete);
+
+    document.getElementById('deleteConfirmModal').addEventListener('click', function(e) {
+        if (e.target.id === 'deleteConfirmModal') {
+            closeDeleteModal();
+        }
+    });
+
+    let currentButton = null;
+    const actionDropdown = document.getElementById('actionDropdown');
+    const editMenuItem = document.getElementById('editMenuItem');
+    const printMenuItem = document.getElementById('printMenuItem');
+    const pdfMenuItem = document.getElementById('pdfMenuItem');
+    const deleteMenuItem = document.getElementById('deleteMenuItem');
+
+    document.querySelectorAll('.btn-actions-menu').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentButton = btn;
+
+            const rect = btn.getBoundingClientRect();
+            const zoomFactor = 0.9;
+            const dropdownWidth = 140;
+            actionDropdown.style.position = 'fixed';
+            actionDropdown.style.top = (rect.top / zoomFactor) + 'px';
+            actionDropdown.style.left = ((rect.left - dropdownWidth) / zoomFactor) + 'px';
+            actionDropdown.style.zIndex = '1001';
+
+            actionDropdown.classList.add('show');
+        });
+    });
+
+    editMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (currentButton) {
+            const editUrl = currentButton.getAttribute('data-transaksi-edit');
+            if (editUrl) {
+                window.location.href = editUrl;
+            }
+        }
+
+        actionDropdown.classList.remove('show');
+    });
+
+    printMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (currentButton) {
+            const printUrl = currentButton.getAttribute('data-transaksi-print');
+            if (printUrl) {
+                window.open(printUrl, '_blank');
+            }
+        }
+
+        actionDropdown.classList.remove('show');
+    });
+
+    pdfMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (currentButton) {
+            const pdfUrl = currentButton.getAttribute('data-transaksi-pdf');
+            if (pdfUrl) {
+                window.open(pdfUrl, '_blank');
+            }
+        }
+
+        actionDropdown.classList.remove('show');
+    });
+
+    deleteMenuItem.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (currentButton) {
+            const destroyUrl = currentButton.getAttribute('data-transaksi-destroy');
+            if (destroyUrl) {
+                const modal = document.getElementById('deleteConfirmModal');
+                const messageEl = modal.querySelector('p.text-gray-600');
+                messageEl.innerHTML = 'Apakah Anda yakin ingin menghapus trade-in ini?';
+                modal.classList.remove('hidden');
+                window.pendingDeleteUrl = destroyUrl;
+            }
+        }
+
+        actionDropdown.classList.remove('show');
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-actions-menu') && !e.target.closest('#actionDropdown')) {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            actionDropdown.classList.remove('show');
+        }
+    });
+
     document.querySelectorAll('tr[data-href]').forEach(function(row) {
-        row.addEventListener('click', function() {
-            window.location.href = this.dataset.href;
+        row.addEventListener('click', function(e) {
+            if (!e.target.closest('.btn-actions-menu')) {
+                window.location.href = this.dataset.href;
+            }
         });
     });
 });
