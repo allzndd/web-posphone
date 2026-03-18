@@ -9,6 +9,7 @@ use App\Models\PosPelanggan;
 use App\Models\PosSupplier;
 use App\Models\PosProduk;
 use App\Models\PosService;
+use App\Services\InventoryAvailabilityService;
 use App\Services\PermissionService;
 use App\Traits\UpdatesStock;
 use Illuminate\Http\Request;
@@ -525,9 +526,16 @@ class TransaksiController extends Controller
                 // Group by merk_id + store_id
                 return ($stok->produk ? $stok->produk->pos_produk_merk_id : 0) . '_' . $stok->pos_toko_id;
             });
+
+        $availableProductIds = InventoryAvailabilityService::getAvailableProductIds($ownerId);
         
         // Load products with all identifying information
         $produks = PosProduk::where('owner_id', $ownerId)
+            ->when(!empty($availableProductIds), function ($query) use ($availableProductIds) {
+                return $query->whereIn('id', $availableProductIds);
+            }, function ($query) {
+                return $query->whereRaw('1 = 0');
+            })
             ->with([
                 'merk',
                 'warna',
@@ -645,6 +653,19 @@ class TransaksiController extends Controller
                         return response()->json([
                             'success' => false,
                             'message' => "Product not found: ID {$pos_produk_id}"
+                        ], 422);
+                    }
+
+                    if (!InventoryAvailabilityService::isProductAvailableForSale(
+                        (int) $ownerId,
+                        (int) $request->pos_toko_id,
+                        (int) $pos_produk_id
+                    )) {
+                        $productName = $produk->nama ?? 'Product ID ' . $pos_produk_id;
+
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Product {$productName} is already sold or not available in selected store."
                         ], 422);
                     }
                     
