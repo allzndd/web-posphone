@@ -492,10 +492,9 @@
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-white/10">
-                            <th class="pb-3 text-left text-xs font-bold text-gray-600 dark:text-gray-400">Invoice</th>
                             <th class="pb-3 text-left text-xs font-bold text-gray-600 dark:text-gray-400">Produk</th>
                             <th class="pb-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">Type</th>
-                            <th class="pb-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">Qty</th>
+                            <th class="pb-3 text-center text-xs font-bold text-gray-600 dark:text-gray-400">Qty </th>
                             <th class="pb-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">Revenue</th>
                             <th class="pb-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">HPP</th>
                             <th class="pb-3 text-right text-xs font-bold text-gray-600 dark:text-gray-400">Gross Profit</th>
@@ -505,7 +504,6 @@
                     <tbody>
                         @forelse($itemDetails as $item)
                         <tr class="border-b border-gray-200 dark:border-white/10">
-                            <td class="py-3 text-xs text-navy-700 dark:text-white">{{ $item['invoice'] }}</td>
                             <td class="py-3 text-xs text-navy-700 dark:text-white">{{ $item['product_name'] }}</td>
                             <td class="py-3 text-center">
                                 <span class="px-2 py-1 text-xs rounded-full 
@@ -515,7 +513,7 @@
                                     {{ ucfirst($item['product_type']) }}
                                 </span>
                             </td>
-                            <td class="py-3 text-center text-xs text-navy-700 dark:text-white">{{ $item['quantity'] }}</td>
+                            <td class="py-3 text-center text-xs font-semibold text-navy-700 dark:text-white">{{ $item['quantity'] }}</td>
                             <td class="py-3 text-right text-xs text-navy-700 dark:text-white">Rp {{ number_format($item['revenue'], 0, ',', '.') }}</td>
                             <td class="py-3 text-right text-xs text-orange-600 dark:text-orange-400">Rp {{ number_format($item['hpp'], 0, ',', '.') }}</td>
                             <td class="py-3 text-right text-xs font-semibold {{ $item['gross_profit'] >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
@@ -527,7 +525,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="py-4 text-center text-gray-500">Tidak ada data transaksi</td>
+                            <td colspan="7" class="py-4 text-center text-gray-500">Tidak ada data transaksi</td>
                         </tr>
                         @endforelse
                     </tbody>

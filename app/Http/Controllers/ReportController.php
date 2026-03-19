@@ -124,8 +124,9 @@ class ReportController extends Controller
         $totalSalesCount = $salesTransactions->count();
         $totalRevenue = 0;
         $totalHPP = 0;
-        $itemDetails = [];
+        $productGroups = [];  // Group by product name and type
 
+        // Group items by product_name and product_type
         foreach ($salesTransactions as $transaction) {
             foreach ($transaction->items as $item) {
                 // Skip if merk filter is applied and doesn't match
@@ -135,27 +136,37 @@ class ReportController extends Controller
 
                 $quantity = $item->quantity ?? 0;
                 $hargaJual = $item->harga_satuan ?? ($item->produk ? $item->produk->harga_jual : 0);
-
                 $itemRevenue = $hargaJual * $quantity;
-
-                $totalRevenue += $itemRevenue;
 
                 // Use snapshot fields first, then fall back to product relation
                 $productName = $item->product_name ?? ($item->produk ? $item->produk->nama : null) ?? 'Unknown';
                 $productType = $item->product_type ?? ($item->produk ? $item->produk->product_type : null) ?? 'electronic';
 
-                $itemDetails[] = [
-                    'invoice' => $transaction->invoice,
-                    'product_name' => $productName,
-                    'product_type' => $productType,
-                    'quantity' => $quantity,
-                    'revenue' => $itemRevenue,
-                    'hpp' => 0,
-                    'gross_profit' => 0,
-                    'gross_margin' => 0,
-                ];
+                // Create unique key for grouping
+                $groupKey = $productName . '|' . $productType;
+
+                // Initialize if not exists
+                if (!isset($productGroups[$groupKey])) {
+                    $productGroups[$groupKey] = [
+                        'product_name' => $productName,
+                        'product_type' => $productType,
+                        'quantity' => 0,
+                        'revenue' => 0,
+                        'hpp' => 0,
+                        'gross_profit' => 0,
+                        'gross_margin' => 0,
+                    ];
+                }
+
+                // Accumulate quantity and revenue
+                $productGroups[$groupKey]['quantity'] += $quantity;
+                $productGroups[$groupKey]['revenue'] += $itemRevenue;
+                $totalRevenue += $itemRevenue;
             }
         }
+
+        // Convert to indexed array
+        $itemDetails = array_values($productGroups);
 
         // Calculate HPP from completed purchases only
         $purchaseQuery = PosTransaksi::where('owner_id', $ownerId)
@@ -174,9 +185,11 @@ class ReportController extends Controller
         $grossProfit = $totalRevenue - $totalHPP;
         $grossMargin = $totalRevenue > 0 ? ($grossProfit / $totalRevenue) * 100 : 0;
         
-        // Recalculate itemDetails with correct HPP
+        // Distribute HPP proportionally to each product based on revenue
         foreach ($itemDetails as &$item) {
-            $item['hpp'] = $totalRevenue > 0 ? ($totalHPP / count(array_filter($itemDetails))) : 0;
+            if ($totalRevenue > 0) {
+                $item['hpp'] = ($item['revenue'] / $totalRevenue) * $totalHPP;
+            }
             $item['gross_profit'] = $item['revenue'] - $item['hpp'];
             $item['gross_margin'] = $item['revenue'] > 0 ? ($item['gross_profit'] / $item['revenue']) * 100 : 0;
         }
