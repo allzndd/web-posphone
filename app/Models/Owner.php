@@ -71,4 +71,12 @@ class Owner extends Model
     {
         return $this->hasMany(Langganan::class, 'owner_id');
     }
+
+    /**
+     * Get the payments for the owner.
+     */
+    public function pembayaran()
+    {
+        return $this->hasMany(Pembayaran::class, 'owner_id');
+    }
 }

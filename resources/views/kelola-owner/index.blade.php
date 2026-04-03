@@ -45,6 +45,9 @@
                         <th class="py-3 text-left">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Subscription</p>
                         </th>
+                        <th class="py-3 text-left">
+                            <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Payment Status</p>
+                        </th>
                         <th class="py-3 text-center">
                             <p class="text-sm font-bold text-gray-600 dark:text-white uppercase">Action</p>
                         </th>
@@ -57,6 +60,9 @@
                         $isExpired = $subscription && $subscription->end_date < now();
                         $isInactive = $subscription && !$subscription->is_active;
                         $isTrial = $subscription && $subscription->is_trial;
+                        
+                        // Get pending payment from eager loaded relationship
+                        $pendingPayment = $owner->owner && $owner->owner->pembayaran ? $owner->owner->pembayaran->first() : null;
                     @endphp
                     <tr class="border-b border-gray-100 dark:border-white/10 hover:bg-lightPrimary dark:hover:bg-navy-700 transition-colors">
                         <td class="py-4">
@@ -111,6 +117,30 @@
                             @endif
                         </td>
                         <td class="py-4">
+                            @if($pendingPayment)
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-medium text-amber-800 dark:text-amber-300">
+                                        <svg class="mr-1 h-2 w-2 fill-current" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3"/></svg>
+                                        On Check
+                                    </span>
+                                    @if($pendingPayment->bukti_transfer)
+                                    <button onclick="showProofModal('{{ $pendingPayment->id }}', '{{ url('storage/' . $pendingPayment->bukti_transfer) }}')"
+                                            class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
+                                            title="View Proof">
+                                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path>
+                                        </svg>
+                                    </button>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                    Sent: {{ $pendingPayment->created_at ? \Carbon\Carbon::parse($pendingPayment->created_at)->format('d M Y H:i') : '-' }}
+                                </p>
+                            @else
+                                <span class="text-xs text-gray-500 dark:text-gray-500">-</span>
+                            @endif
+                        </td>
+                        <td class="py-4">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('kelola-owner.show', $owner->id) }}"
                                    class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
@@ -140,7 +170,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="py-8 text-center">
+                        <td colspan="6" class="py-8 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -155,6 +185,33 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Proof Modal -->
+<div id="proofModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+    <div class="mx-4 w-full max-w-2xl rounded-2xl bg-white dark:bg-navy-800 shadow-2xl overflow-hidden">
+        <div class="flex items-center justify-between border-b border-gray-200 dark:border-white/10 p-6">
+            <h3 class="text-lg font-bold text-navy-700 dark:text-white">Bukti Pembayaran</h3>
+            <button onclick="closeProofModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <div id="proofContent" class="max-h-96 overflow-auto">
+                <!-- Proof content will be loaded here -->
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 border-t border-gray-200 dark:border-white/10 p-6">
+            <a id="downloadBtn" href="#" download class="rounded-xl bg-brand-500 px-6 py-2.5 text-sm font-bold text-white hover:bg-brand-600 transition">
+                Download
+            </a>
+            <button onclick="closeProofModal()" class="rounded-xl border border-gray-200 dark:border-white/10 px-6 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-700 transition">
+                Close
+            </button>
         </div>
     </div>
 </div>
@@ -182,5 +239,53 @@ function confirmDelete(url) {
         form.submit();
     }
 }
+
+function showProofModal(paymentId, proofPath) {
+    const modal = document.getElementById('proofModal');
+    const content = document.getElementById('proofContent');
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    // Determine file type
+    const fileExt = proofPath.split('.').pop().toLowerCase();
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+        // Image file - with error handling
+        content.innerHTML = `
+            <div class="flex flex-col items-center justify-center">
+                <img id="previewImage" src="${proofPath}" alt="Proof" class="max-w-full h-auto rounded-lg" 
+                     onerror="this.parentElement.innerHTML = '<p class=\"text-red-500 text-center\'>Gambar tidak bisa ditampilkan. Silakan download untuk melihat.</p>'">
+                <p class="text-xs text-gray-500 mt-2">Loading preview...</p>
+            </div>
+        `;
+    } else if (fileExt === 'pdf') {
+        // PDF file - embed with iframe
+        content.innerHTML = `
+            <div class="flex flex-col items-center">
+                <iframe src="${proofPath}" class="w-full rounded-lg" style="min-height: 500px;"></iframe>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `<p class="text-center text-gray-600 py-8">Format file tidak didukung untuk preview. Silakan download untuk melihat.</p>`;
+    }
+    
+    // Set download link
+    downloadBtn.href = proofPath;
+    downloadBtn.download = 'bukti_pembayaran_' + paymentId;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+function closeProofModal() {
+    const modal = document.getElementById('proofModal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+}
+
+// Close modal on outside click
+document.getElementById('proofModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeProofModal();
+});
 </script>
 @endsection

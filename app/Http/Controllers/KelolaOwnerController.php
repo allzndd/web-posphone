@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Owner;
 use App\Models\TipeLayanan;
 use App\Models\Langganan;
+use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -20,7 +21,12 @@ class KelolaOwnerController extends Controller
     {
         // Get all users with role_id = 2 (Owner) with owner and langganan relationship
         $owners = User::where('role_id', 2)
-            ->with(['owner'])
+            ->with([
+                'owner.langganan.tipeLayanan',
+                'owner.pembayaran' => function ($query) {
+                    $query->where('status', 'Pending')->orderBy('created_at', 'desc');
+                }
+            ])
             ->orderBy('created_at', 'desc')
             ->get();
         
