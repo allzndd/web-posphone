@@ -124,7 +124,7 @@
                                         On Check
                                     </span>
                                     @if($pendingPayment->bukti_transfer)
-                                    <button onclick="showProofModal('{{ $pendingPayment->id }}', '{{ url('storage/' . $pendingPayment->bukti_transfer) }}')"
+                                        <button onclick="showProofModal('{{ $pendingPayment->id }}', '{{ $pendingPayment->bukti_transfer_url }}')"
                                             class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
                                             title="View Proof">
                                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
