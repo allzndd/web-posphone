@@ -32,6 +32,7 @@ class Pembayaran extends Model
         'target_tipe_layanan_id',
         'nominal',
         'metode_pembayaran',
+        'bukti_transfer',
         'status',
         'midtrans_order_id',
         'snap_token',
