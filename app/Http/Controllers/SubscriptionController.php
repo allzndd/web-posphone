@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bank;
 use App\Models\TipeLayanan;
 use App\Models\Langganan;
 use App\Models\Pembayaran;
@@ -22,6 +23,8 @@ class SubscriptionController extends Controller
     {
         $user = Auth::user();
         $owner = $user->owner;
+        $useMidtrans = (bool) config('services.midtrans.enabled', false);
+        $paymentMode = $useMidtrans ? 'midtrans' : 'manual';
 
         if (!$owner) {
             return redirect()->route('dashboard')->with('error', 'Owner account not found.');
@@ -40,16 +43,22 @@ class SubscriptionController extends Controller
         // Get pending payments (if any)
         $pendingPayment = Pembayaran::where('owner_id', $owner->id)
             ->where('status', 'Pending')
-            ->whereNotNull('snap_token')
-            ->where('expired_at', '>', Carbon::now())
+            ->when($useMidtrans, function ($query) {
+                $query->whereNotNull('snap_token')
+                    ->where('expired_at', '>', Carbon::now());
+            })
             ->orderBy('created_at', 'desc')
             ->first();
+
+        $banks = Bank::orderBy('nama_bank', 'asc')->get();
 
         return view('subscription.packages', compact(
             'currentSubscription',
             'packages',
             'pendingPayment',
-            'owner'
+            'owner',
+            'banks',
+            'paymentMode'
         ));
     }
 
@@ -58,6 +67,12 @@ class SubscriptionController extends Controller
      */
     public function checkout(Request $request)
     {
+        $useMidtrans = (bool) config('services.midtrans.enabled', false);
+
+        if (!$useMidtrans) {
+            return $this->checkoutManualTransfer($request);
+        }
+
         $request->validate([
             'package_id' => 'required|exists:tipe_layanan,id',
         ]);
@@ -159,11 +174,91 @@ class SubscriptionController extends Controller
         }
     }
 
+    private function checkoutManualTransfer(Request $request)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:tipe_layanan,id',
+            'bank_id' => 'required|exists:bank,id',
+            'bukti_transfer' => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
+        ]);
+
+        $user = Auth::user();
+        $owner = $user->owner;
+
+        if (!$owner) {
+            return redirect()->route('dashboard')->with('error', 'Owner account not found.');
+        }
+
+        $package = TipeLayanan::findOrFail($request->package_id);
+        if ($package->harga <= 0) {
+            return redirect()->back()->with('error', 'Invalid package selection.');
+        }
+
+        $bank = Bank::findOrFail($request->bank_id);
+
+        DB::beginTransaction();
+        try {
+            $langganan = Langganan::where('owner_id', $owner->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if (!$langganan) {
+                $langganan = Langganan::create([
+                    'owner_id' => $owner->id,
+                    'tipe_layanan_id' => $package->id,
+                    'is_active' => 0,
+                    'is_trial' => 0,
+                    'started_date' => Carbon::now(),
+                    'end_date' => Carbon::now(),
+                ]);
+            }
+
+            $proofPath = $request->file('bukti_transfer')->store('bukti-transfer', 'public');
+
+            Pembayaran::create([
+                'owner_id' => $owner->id,
+                'langganan_id' => $langganan->id,
+                'target_tipe_layanan_id' => $package->id,
+                'nominal' => $package->harga,
+                'metode_pembayaran' => 'transfer_bank',
+                'bukti_transfer' => $proofPath,
+                'midtrans_response' => json_encode([
+                    'manual_transfer' => true,
+                    'bank_id' => $bank->id,
+                    'nama_bank' => $bank->nama_bank,
+                    'nama_rekening' => $bank->nama_rekening,
+                    'nomor_rekening' => $bank->nomor_rekening,
+                ]),
+                'status' => 'Pending',
+                'created_at' => Carbon::now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('settings.index', ['tab' => 'subscription'])
+                ->with('success', 'Bukti transfer berhasil dikirim. Tim admin akan memverifikasi pembayaran Anda.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Manual transfer checkout failed: ' . $e->getMessage(), [
+                'owner_id' => $owner->id,
+                'package_id' => $request->package_id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->back()->withInput()->with('error', 'Gagal mengirim bukti transfer. Coba lagi.');
+        }
+    }
+
     /**
      * Continue payment with existing snap token  
      */
     public function continuePayment(Request $request)
     {
+        $useMidtrans = (bool) config('services.midtrans.enabled', false);
+        if (!$useMidtrans) {
+            return response()->json(['error' => 'Continue payment is unavailable in manual transfer mode.'], 422);
+        }
+
         $request->validate([
             'payment_id' => 'required|exists:pembayaran,id',
         ]);
@@ -194,6 +289,11 @@ class SubscriptionController extends Controller
      */
     public function handleWebhook(Request $request)
     {
+        $useMidtrans = (bool) config('services.midtrans.enabled', false);
+        if (!$useMidtrans) {
+            return response()->json(['status' => 'error', 'message' => 'Midtrans is disabled.'], 422);
+        }
+
         $midtransService = new MidtransService();
         $result = $midtransService->handleNotification();
 
@@ -254,8 +354,8 @@ class SubscriptionController extends Controller
             'package_name' => $subscription->tipeLayanan->nama ?? 'Unknown',
             'is_active' => $subscription->is_active,
             'is_trial' => $subscription->is_trial,
-            'start_date' => $subscription->started_date?->format('d M Y'),
-            'end_date' => $subscription->end_date?->format('d M Y'),
+            'start_date' => $subscription->started_date ? $subscription->started_date->format('d M Y') : null,
+            'end_date' => $subscription->end_date ? $subscription->end_date->format('d M Y') : null,
             'days_left' => $daysLeft,
             'is_expired' => $daysLeft !== null && $daysLeft <= 0,
         ]);
