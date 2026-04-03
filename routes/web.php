@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ManageProfilController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -52,6 +53,71 @@ Route::get('/clear-cache', function () {
         'message' => "Cache cleared! Deleted {$deleted} compiled view(s). Config, route, and app cache also cleared.",
     ]);
 })->middleware(['auth', 'role:SUPERADMIN'])->name('cache.clear');
+
+Route::get('/temporary-clear-cache/{token}', function (string $token) {
+    $expectedToken = (string) env('TEMP_CACHE_CLEAR_TOKEN', '');
+
+    if ($expectedToken === '' || !hash_equals($expectedToken, $token)) {
+        abort(403);
+    }
+
+    try {
+        Artisan::call('optimize:clear');
+    } catch (\Throwable $e) {
+    }
+
+    if (function_exists('opcache_reset')) {
+        @opcache_reset();
+    }
+
+    $viewPath = storage_path('framework/views');
+    $files = glob($viewPath . '/*.php') ?: [];
+    $deleted = 0;
+    foreach ($files as $file) {
+        if (is_file($file)) {
+            @unlink($file);
+            $deleted++;
+        }
+    }
+
+    @unlink(base_path('bootstrap/cache/config.php'));
+    @unlink(base_path('bootstrap/cache/routes-v7.php'));
+    @unlink(base_path('bootstrap/cache/packages.php'));
+    @unlink(base_path('bootstrap/cache/services.php'));
+
+    $cachePath = storage_path('framework/cache/data');
+    if (is_dir($cachePath)) {
+        $cacheFiles = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($cachePath, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($cacheFiles as $cacheFile) {
+            if ($cacheFile->isFile()) {
+                @unlink($cacheFile->getRealPath());
+            }
+        }
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'message' => "Temporary clear cache executed. Deleted {$deleted} compiled view(s).",
+    ]);
+})->name('temporary.cache.clear');
+
+Route::get('/bukti-transfer/{path}', function (string $path) {
+    $path = ltrim($path, '/');
+
+    if (str_contains($path, '..')) {
+        abort(404);
+    }
+
+    $fullPath = base_path('public/bukti-transfer/' . $path);
+    if (!is_file($fullPath)) {
+        abort(404);
+    }
+
+    return response()->file($fullPath);
+})->where('path', '.*')->name('bukti-transfer.file');
 
 // Landing Page
 Route::get('/', function () {
