@@ -103,4 +103,21 @@ class Pembayaran extends Model
     {
         return $this->status === 'Pending';
     }
+
+    public function getBuktiTransferUrlAttribute()
+    {
+        if (!$this->bukti_transfer) {
+            return null;
+        }
+
+        if (filter_var($this->bukti_transfer, FILTER_VALIDATE_URL)) {
+            return $this->bukti_transfer;
+        }
+
+        if (str_starts_with($this->bukti_transfer, 'storage/') || str_starts_with($this->bukti_transfer, 'bukti-transfer/')) {
+            return url($this->bukti_transfer);
+        }
+
+        return url('storage/' . ltrim($this->bukti_transfer, '/'));
+    }
 }
