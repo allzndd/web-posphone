@@ -270,13 +270,6 @@ class SubscriptionController extends Controller
 
     private function storeTransferProof(UploadedFile $file): string
     {
-        $storageSymlinkPath = public_path('storage');
-
-        if (is_link($storageSymlinkPath) || is_dir($storageSymlinkPath)) {
-            $storedPath = $file->store('bukti-transfer', 'public');
-            return 'storage/' . ltrim($storedPath, '/');
-        }
-
         $targetDir = public_path('bukti-transfer');
         if (!is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
@@ -284,7 +277,12 @@ class SubscriptionController extends Controller
 
         $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $filename = 'proof_' . uniqid('', true) . '.' . $extension;
+
         $file->move($targetDir, $filename);
+
+        if (!is_file($targetDir . DIRECTORY_SEPARATOR . $filename)) {
+            throw new \RuntimeException('Failed to store transfer proof in public directory.');
+        }
 
         return 'bukti-transfer/' . $filename;
     }
