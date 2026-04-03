@@ -52,12 +52,12 @@
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Registration Date</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $owner->tanggal_daftar->format('d F Y') }}</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $owner->tanggal_daftar ? \Carbon\Carbon::parse($owner->tanggal_daftar)->format('d F Y') : '-' }}</p>
             </div>
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Expiration Date</p>
-                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $owner->tanggal_expired->format('d F Y') }}</p>
+                <p class="mt-1 text-base font-bold text-navy-700 dark:text-white">{{ $owner->tanggal_expired ? \Carbon\Carbon::parse($owner->tanggal_expired)->format('d F Y') : '-' }}</p>
             </div>
             
             <div>
@@ -79,12 +79,12 @@
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Created At</p>
-                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $owner->created_at->format('d F Y H:i') }}</p>
+                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $owner->created_at ? \Carbon\Carbon::parse($owner->created_at)->format('d F Y H:i') : '-' }}</p>
             </div>
             
             <div>
                 <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Last Updated</p>
-                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $owner->updated_at->format('d F Y H:i') }}</p>
+                <p class="mt-1 text-base text-navy-700 dark:text-white">{{ $owner->updated_at ? \Carbon\Carbon::parse($owner->updated_at)->format('d F Y H:i') : '-' }}</p>
             </div>
         </div>
     </div>
