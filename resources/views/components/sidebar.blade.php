@@ -70,6 +70,23 @@
                 <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
             @endif
         </li>
+
+        <!-- Rekening (Bank) -->
+        <li class="relative mb-3 flex hover:cursor-pointer">
+            <a href="{{ route('bank.index') }}" class="w-full">
+                <div class="my-[3px] flex cursor-pointer items-center px-8">
+                    <span class="{{ Request::is('bank*') ? 'font-bold text-brand-500 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0z"></path><path d="M11.25 2C6.84 2 3 2.9 3 4v10c0 .55.45 1 1 1h2v3c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-3h2c.55 0 1-.45 1-1V4c0-1.1-3.84-2-8.25-2zm6.75 12h-2v3H6v-3H4V4c0-.9 2.7-1.5 6.25-1.5S17.5 3.1 17.5 4v10z"></path><path d="M8 6h8v2H8zM8 9h8v2H8z"></path></svg>
+                    </span>
+                    <p class="leading-1 ml-4 flex {{ Request::is('bank*') ? 'font-bold text-navy-700 dark:text-white' : 'font-medium text-gray-600 dark:text-gray-400' }}">
+                        Rekening
+                    </p>
+                </div>
+            </a>
+            @if(Request::is('bank*'))
+                <div class="absolute right-0 top-px h-9 w-1 rounded-lg bg-brand-500 dark:bg-brand-400"></div>
+            @endif
+        </li>
         @endif
 
         <!-- Chat Analisis -->

@@ -277,6 +277,9 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         // Menu Baru - Pembayaran
         Route::resource('pembayaran', \App\Http\Controllers\PembayaranController::class);
 
+        // Menu Baru - Rekening (Bank)
+        Route::resource('bank', \App\Http\Controllers\BankController::class);
+
         // Permissions Management
         Route::resource('permissions', \App\Http\Controllers\PermissionController::class);
         Route::delete('permissions/module/destroy', [\App\Http\Controllers\PermissionController::class, 'destroyModule'])->name('permissions.module.destroy');
