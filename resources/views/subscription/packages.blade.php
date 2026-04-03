@@ -82,12 +82,47 @@
                             <span class="font-bold">Pending Payment:</span> Rp {{ number_format($pendingPayment->nominal, 0, ',', '.') }}
                         </p>
                     </div>
-                    <button type="button" 
-                            onclick="continuePayment({{ $pendingPayment->id }})"
-                            class="rounded-xl bg-yellow-500 px-4 py-2 text-xs font-bold text-white hover:bg-yellow-600 transition">
-                        Continue Payment
-                    </button>
+                    @if(($paymentMode ?? 'manual') === 'midtrans')
+                        <button type="button" 
+                                onclick="continuePayment({{ $pendingPayment->id }})"
+                                class="rounded-xl bg-yellow-500 px-4 py-2 text-xs font-bold text-white hover:bg-yellow-600 transition">
+                            Continue Payment
+                        </button>
+                    @else
+                        <span class="rounded-xl bg-yellow-500 px-4 py-2 text-xs font-bold text-white">
+                            Waiting Admin Verification
+                        </span>
+                    @endif
                 </div>
+            </div>
+        @endif
+
+        @if(($paymentMode ?? 'manual') === 'manual')
+            <div class="mx-6 mt-4 rounded-xl bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800/50 p-4">
+                <p class="text-sm font-semibold text-sky-800 dark:text-sky-200">Manual Transfer Flow</p>
+                <p class="mt-1 text-sm text-sky-700 dark:text-sky-300">
+                    Pilih paket, pilih rekening tujuan, lalu upload bukti transfer. Status pembayaran akan menjadi <strong>Pending</strong> sampai diverifikasi admin.
+                </p>
+            </div>
+
+            <div class="mx-6 mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                @forelse($banks as $bank)
+                    <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 p-4">
+                        <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $bank->nama_bank }}</p>
+                        <p class="mt-1 text-sm font-bold text-navy-700 dark:text-white">{{ $bank->nama_rekening }}</p>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ $bank->nomor_rekening }}</p>
+                    </div>
+                @empty
+                    <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 md:col-span-2 lg:col-span-3">
+                        Data rekening tujuan belum tersedia. Hubungi admin terlebih dahulu.
+                    </div>
+                @endforelse
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mx-6 mt-4 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                {{ $errors->first() }}
             </div>
         @endif
 
@@ -164,7 +199,7 @@
 
                             <!-- CTA Button -->
                             <button type="button" 
-                                    onclick="selectPackage({{ $package->id }}, '{{ $package->nama }}', {{ (int)$package->harga }})"
+                                    onclick="{{ ($paymentMode ?? 'manual') === 'midtrans' ? 'selectPackage' : 'selectPackageManual' }}({{ $package->id }}, '{{ $package->nama }}', {{ (int)$package->harga }})"
                                     {{ $isCurrentPlan ? 'disabled' : '' }}
                                     class="w-full rounded-xl {{ $isCurrentPlan ? 'bg-gray-300 cursor-not-allowed' : ($isPopular ? 'bg-brand-500 hover:bg-brand-600 shadow-lg shadow-brand-500/30 hover:shadow-xl' : 'bg-navy-700 hover:bg-navy-800 dark:bg-brand-500 dark:hover:bg-brand-600') }} py-3 text-sm font-bold text-white transition-all duration-200">
                                 @if($isCurrentPlan)
@@ -202,22 +237,57 @@
                 Rp <span id="modalPackagePrice"></span>
             </p>
         </div>
-        <div class="mt-6 flex gap-3">
-            <button onclick="closeModal()" class="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-700 transition">
-                Cancel
-            </button>
-            <button id="confirmPayBtn" onclick="processPayment()" class="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 transition flex items-center justify-center gap-2">
-                <svg id="paySpinner" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                <span id="payBtnText">Pay Now</span>
-            </button>
-        </div>
+        @if(($paymentMode ?? 'manual') === 'midtrans')
+            <div class="mt-6 flex gap-3">
+                <button onclick="closeModal()" class="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-700 transition">
+                    Cancel
+                </button>
+                <button id="confirmPayBtn" onclick="processPayment()" class="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 transition flex items-center justify-center gap-2">
+                    <svg id="paySpinner" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span id="payBtnText">Pay Now</span>
+                </button>
+            </div>
+        @else
+            <form action="{{ route('subscription.checkout') }}" method="POST" enctype="multipart/form-data" class="mt-6 space-y-4">
+                @csrf
+                <input type="hidden" name="package_id" id="manualPackageId">
+
+                <div>
+                    <label for="bank_id" class="mb-1 block text-sm font-semibold text-navy-700 dark:text-white">Transfer To</label>
+                    <select name="bank_id" id="bank_id" required class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 p-3 text-sm text-navy-700 dark:text-white outline-none">
+                        <option value="">Select Bank Account</option>
+                        @foreach($banks as $bank)
+                            <option value="{{ $bank->id }}" {{ old('bank_id') == $bank->id ? 'selected' : '' }}>
+                                {{ $bank->nama_bank }} - {{ $bank->nama_rekening }} ({{ $bank->nomor_rekening }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="bukti_transfer" class="mb-1 block text-sm font-semibold text-navy-700 dark:text-white">Upload Proof</label>
+                    <input type="file" name="bukti_transfer" id="bukti_transfer" required accept=".jpg,.jpeg,.png,.pdf" class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-navy-900 p-3 text-sm text-navy-700 dark:text-white outline-none">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Allowed: JPG, PNG, PDF. Max size 10 MB.</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal()" class="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-3 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-navy-700 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 rounded-xl bg-brand-500 py-3 text-sm font-bold text-white hover:bg-brand-600 transition">
+                        Submit Transfer Proof
+                    </button>
+                </div>
+            </form>
+        @endif
     </div>
 </div>
 @endsection
 
 @push('scripts')
-<!-- Midtrans Snap JS -->
+@if(($paymentMode ?? 'manual') === 'midtrans')
 <script src="{{ \App\Services\MidtransService::getSnapUrl() }}" data-client-key="{{ \App\Services\MidtransService::getClientKey() }}"></script>
+@endif
 
 <script>
     let selectedPackageId = null;
@@ -234,12 +304,25 @@
         document.getElementById('paymentModal').style.display = 'flex';
     }
 
+    function selectPackageManual(id, name, price) {
+        selectedPackageId = id;
+        selectedPackageName = name;
+        selectedPackagePrice = price;
+
+        document.getElementById('modalPackageName').textContent = name;
+        document.getElementById('modalPackagePrice').textContent = new Intl.NumberFormat('id-ID').format(price);
+        const packageInput = document.getElementById('manualPackageId');
+        if (packageInput) packageInput.value = id;
+        document.getElementById('paymentModal').style.display = 'flex';
+    }
+
     function closeModal() {
         document.getElementById('paymentModal').style.display = 'none';
         selectedPackageId = null;
     }
 
     function processPayment() {
+        if ('{{ $paymentMode ?? 'manual' }}' !== 'midtrans') return;
         if (!selectedPackageId) return;
 
         const btn = document.getElementById('confirmPayBtn');
@@ -296,6 +379,7 @@
     }
 
     function continuePayment(paymentId) {
+        if ('{{ $paymentMode ?? 'manual' }}' !== 'midtrans') return;
         fetch('{{ route("subscription.continue-payment") }}', {
             method: 'POST',
             headers: {
