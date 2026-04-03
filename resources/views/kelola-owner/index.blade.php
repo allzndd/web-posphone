@@ -124,7 +124,10 @@
                                         On Check
                                     </span>
                                     @if($pendingPayment->bukti_transfer)
-                                        <button onclick="showProofModal('{{ $pendingPayment->id }}', '{{ $pendingPayment->bukti_transfer_url }}')"
+                                        <button
+                                            data-payment-id="{{ $pendingPayment->id }}"
+                                            data-proof-url="{{ $pendingPayment->bukti_transfer_url }}"
+                                            onclick="showProofModal(this.dataset.paymentId, this.dataset.proofUrl)"
                                             class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-500 transition duration-200 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400"
                                             title="View Proof">
                                         <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
@@ -254,19 +257,44 @@ function showProofModal(paymentId, proofPath) {
     const modal = document.getElementById('proofModal');
     const content = document.getElementById('proofContent');
     const downloadBtn = document.getElementById('downloadBtn');
+
+    if (!proofPath) {
+        content.innerHTML = '<p class="text-center text-gray-600 py-8">Bukti pembayaran tidak tersedia.</p>';
+        downloadBtn.removeAttribute('href');
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        return;
+    }
     
     // Determine file type
     const fileExt = proofPath.split('.').pop().toLowerCase();
     
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
-        // Image file - with error handling
-        content.innerHTML = `
-            <div class="flex flex-col items-center justify-center">
-                <img id="previewImage" src="${proofPath}" alt="Proof" class="max-w-full h-auto rounded-lg" 
-                     onerror="this.parentElement.innerHTML = '<p class=\"text-red-500 text-center\'>Gambar tidak bisa ditampilkan. Silakan download untuk melihat.</p>'">
-                <p class="text-xs text-gray-500 mt-2">Loading preview...</p>
-            </div>
-        `;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex flex-col items-center justify-center';
+
+        const image = document.createElement('img');
+        image.id = 'previewImage';
+        image.src = proofPath;
+        image.alt = 'Proof';
+        image.className = 'max-w-full h-auto rounded-lg';
+
+        const hint = document.createElement('p');
+        hint.className = 'text-xs text-gray-500 mt-2';
+        hint.textContent = 'Loading preview...';
+
+        image.onload = function() {
+            hint.textContent = 'Preview loaded';
+        };
+
+        image.onerror = function() {
+            wrapper.innerHTML = '<p class="text-red-500 text-center">Gambar tidak bisa ditampilkan. Silakan download untuk melihat.</p>';
+        };
+
+        wrapper.appendChild(image);
+        wrapper.appendChild(hint);
+        content.innerHTML = '';
+        content.appendChild(wrapper);
     } else if (fileExt === 'pdf') {
         // PDF file - embed with iframe
         content.innerHTML = `
