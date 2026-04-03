@@ -114,10 +114,39 @@ class Pembayaran extends Model
             return $this->bukti_transfer;
         }
 
-        if (str_starts_with($this->bukti_transfer, 'storage/') || str_starts_with($this->bukti_transfer, 'bukti-transfer/')) {
-            return url($this->bukti_transfer);
+        $path = ltrim($this->bukti_transfer, '/');
+
+        if (str_starts_with($path, 'storage/')) {
+            if (is_file(public_path($path))) {
+                return url($path);
+            }
+
+            $basename = basename($path);
+            $publicFallbackPath = 'bukti-transfer/' . $basename;
+            if (is_file(public_path($publicFallbackPath))) {
+                return route('bukti-transfer.file', ['path' => $basename]);
+            }
+
+            return url($path);
         }
 
-        return url('storage/' . ltrim($this->bukti_transfer, '/'));
+        if (str_starts_with($path, 'bukti-transfer/')) {
+            $relativePath = substr($path, strlen('bukti-transfer/'));
+            return route('bukti-transfer.file', ['path' => $relativePath]);
+
+        }
+
+        if (is_file(public_path('bukti-transfer/' . $path))) {
+            return route('bukti-transfer.file', ['path' => $path]);
+        }
+
+        if (str_contains($path, '/')) {
+            $basename = basename($path);
+            if (is_file(public_path('bukti-transfer/' . $basename))) {
+                return route('bukti-transfer.file', ['path' => $basename]);
+            }
+        }
+
+        return url('storage/' . $path);
     }
 }
