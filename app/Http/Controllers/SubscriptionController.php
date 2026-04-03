@@ -10,6 +10,7 @@ use App\Models\Owner;
 use App\Services\MidtransService;
 use App\Mail\PaymentProofSubmittedMail;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -215,7 +216,7 @@ class SubscriptionController extends Controller
                 ]);
             }
 
-            $proofPath = $request->file('bukti_transfer')->store('bukti-transfer', 'public');
+            $proofPath = $this->storeTransferProof($request->file('bukti_transfer'));
 
             $pembayaran = Pembayaran::create([
                 'owner_id' => $owner->id,
@@ -244,7 +245,7 @@ class SubscriptionController extends Controller
                     $user,
                     $package,
                     $bank,
-                    url('storage/' . $proofPath)
+                    $pembayaran->bukti_transfer_url
                 ));
             } else {
                 Log::warning('Admin email is not configured. Payment proof email was not sent.', [
@@ -265,6 +266,27 @@ class SubscriptionController extends Controller
 
             return redirect()->back()->withInput()->with('error', 'Gagal mengirim bukti transfer. Coba lagi.');
         }
+    }
+
+    private function storeTransferProof(UploadedFile $file): string
+    {
+        $storageSymlinkPath = public_path('storage');
+
+        if (is_link($storageSymlinkPath) || is_dir($storageSymlinkPath)) {
+            $storedPath = $file->store('bukti-transfer', 'public');
+            return 'storage/' . ltrim($storedPath, '/');
+        }
+
+        $targetDir = public_path('bukti-transfer');
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $filename = 'proof_' . uniqid('', true) . '.' . $extension;
+        $file->move($targetDir, $filename);
+
+        return 'bukti-transfer/' . $filename;
     }
 
     /**
