@@ -97,6 +97,23 @@ class KelolaOwnerController extends Controller
     public function show(string $id)
     {
         $owner = User::where('role_id', 2)->findOrFail($id);
+
+        if (empty($owner->tanggal_daftar)) {
+            $owner->tanggal_daftar = Carbon::now();
+        }
+
+        if (empty($owner->tanggal_expired)) {
+            $owner->tanggal_expired = Carbon::now();
+        }
+
+        if (empty($owner->created_at)) {
+            $owner->created_at = Carbon::now();
+        }
+
+        if (empty($owner->updated_at)) {
+            $owner->updated_at = Carbon::now();
+        }
+
         return view('kelola-owner.show', compact('owner'));
     }
 
