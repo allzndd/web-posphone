@@ -132,6 +132,16 @@
                                         </svg>
                                     </button>
                                     @endif
+                                    <form action="{{ route('kelola-owner.approve-payment', $pendingPayment->id) }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        <button type="submit" class="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100 text-green-500 transition duration-200 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400"
+                                                title="Approve Payment" onclick="return confirm('Approve pembayaran ini dan kirim notif ke owner?');">
+                                            <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" class="h-4 w-4" xmlns="http://www.w3.org/2000/svg">
+                                                <path fill="none" d="M0 0h24v24H0z"></path>
+                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
                                 </div>
                                 <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
                                     Sent: {{ $pendingPayment->created_at ? \Carbon\Carbon::parse($pendingPayment->created_at)->format('d M Y H:i') : '-' }}

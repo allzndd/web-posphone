@@ -267,6 +267,7 @@ Route::middleware(['auth', 'email.verified'])->group(function () {
         
         // Menu Baru - Kelola Owner
         Route::resource('kelola-owner', \App\Http\Controllers\KelolaOwnerController::class);
+        Route::post('kelola-owner/approve-payment/{pembayaranId}', [\App\Http\Controllers\KelolaOwnerController::class, 'approvePayment'])->name('kelola-owner.approve-payment');
         
         // Menu Baru - Layanan
         Route::resource('layanan', \App\Http\Controllers\LayananController::class);

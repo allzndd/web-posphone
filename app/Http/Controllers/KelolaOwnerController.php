@@ -7,8 +7,10 @@ use App\Models\Owner;
 use App\Models\TipeLayanan;
 use App\Models\Langganan;
 use App\Models\Pembayaran;
+use App\Mail\PaymentApprovedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -182,5 +184,47 @@ class KelolaOwnerController extends Controller
         $owner->delete();
 
         return redirect()->route('kelola-owner.index')->with('success', 'Owner berhasil dihapus');
+    }
+
+    /**
+     * Approve pending payment and activate subscription
+     */
+    public function approvePayment(Request $request, string $pembayaranId)
+    {
+        $pembayaran = Pembayaran::findOrFail($pembayaranId);
+        
+        if ($pembayaran->status !== 'Pending') {
+            return back()->with('error', 'Pembayaran ini tidak bisa diverifikasi.');
+        }
+
+        $owner = Owner::findOrFail($pembayaran->owner_id);
+        $user = User::findOrFail($owner->pengguna_id);
+        $package = TipeLayanan::findOrFail($pembayaran->target_tipe_layanan_id);
+
+        // Update payment status
+        $pembayaran->update([
+            'status' => 'Paid',
+            'paid_at' => now(),
+        ]);
+
+        // Get or create subscription
+        $langganan = Langganan::findOrFail($pembayaran->langganan_id);
+        
+        // Update subscription to active with correct package
+        $startDate = now();
+        $endDate = $startDate->copy()->addMonths($package->durasi);
+
+        $langganan->update([
+            'tipe_layanan_id' => $package->id,
+            'started_date' => $startDate,
+            'end_date' => $endDate,
+            'is_active' => 1,
+            'is_trial' => 0,
+        ]);
+
+        // Send approval email to owner
+        Mail::to($user->email)->send(new PaymentApprovedMail($pembayaran, $user, $package));
+
+        return back()->with('success', 'Pembayaran telah diverifikasi dan email notifikasi sudah dikirim ke owner.');
     }
 }

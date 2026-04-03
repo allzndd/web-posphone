@@ -8,11 +8,13 @@ use App\Models\Langganan;
 use App\Models\Pembayaran;
 use App\Models\Owner;
 use App\Services\MidtransService;
+use App\Mail\PaymentProofSubmittedMail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SubscriptionController extends Controller
 {
@@ -215,7 +217,7 @@ class SubscriptionController extends Controller
 
             $proofPath = $request->file('bukti_transfer')->store('bukti-transfer', 'public');
 
-            Pembayaran::create([
+            $pembayaran = Pembayaran::create([
                 'owner_id' => $owner->id,
                 'langganan_id' => $langganan->id,
                 'target_tipe_layanan_id' => $package->id,
@@ -234,6 +236,22 @@ class SubscriptionController extends Controller
             ]);
 
             DB::commit();
+
+            $adminEmail = env('ADMIN_EMAIL', config('mail.from.address'));
+            if (!empty($adminEmail)) {
+                Mail::to($adminEmail)->send(new PaymentProofSubmittedMail(
+                    $pembayaran,
+                    $user,
+                    $package,
+                    $bank,
+                    url('storage/' . $proofPath)
+                ));
+            } else {
+                Log::warning('Admin email is not configured. Payment proof email was not sent.', [
+                    'owner_id' => $owner->id,
+                    'pembayaran_id' => $pembayaran->id,
+                ]);
+            }
 
             return redirect()->route('settings.index', ['tab' => 'subscription'])
                 ->with('success', 'Bukti transfer berhasil dikirim. Tim admin akan memverifikasi pembayaran Anda.');
