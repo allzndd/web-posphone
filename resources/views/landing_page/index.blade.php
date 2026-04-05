@@ -421,12 +421,13 @@
             <div class="flex items-center justify-between h-20 px-8">
                 <!-- Logo -->
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/50">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
+                    <div class="w-12 h-12 rounded-xl overflow-hidden border border-white/30 bg-white/10 flex items-center justify-center shadow-lg shadow-black/30">
+                        <img src="{{ route('img.file', ['path' => 'logo_miphone.png']) }}" alt="MIPHONE Group" class="h-10 w-10 object-contain" loading="eager">
                     </div>
-                    <span class="text-2xl font-bold text-white">PosPhone</span>
+                    <div class="leading-tight">
+                        <p class="text-xs uppercase tracking-[0.25em] text-white/70">MIPHONE Group</p>
+                        <p class="text-xl font-bold text-white">PosPhone</p>
+                    </div>
                 </div>
 
                 <!-- Navigation Links - Centered -->
@@ -724,27 +725,15 @@
                 <!-- Right Image/Illustration -->
                 <div class="relative h-96 lg:h-full min-h-[500px] group">
                     <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent rounded-3xl group-hover:from-blue-500/30 group-hover:via-blue-600/20 transition-all duration-500"></div>
-                    
-                    <!-- Animated Shapes -->
-                    <div class="absolute inset-0 rounded-3xl overflow-hidden">
-                        <!-- Floating Cards Effect -->
-                        <div class="absolute top-10 left-10 w-40 h-32 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 shadow-2xl shadow-blue-500/30 transform -rotate-6 group-hover:rotate-0 transition-transform duration-500">
-                            <div class="text-white/80 text-sm mb-3">Penjualan Hari Ini</div>
-                            <div class="text-white font-bold text-2xl">Rp 5.2M</div>
-                        </div>
-
-                        <div class="absolute bottom-20 right-10 w-40 h-32 glass-effect bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl transform rotate-6 group-hover:rotate-0 transition-transform duration-500">
-                            <div class="text-white/80 text-sm mb-3">Stok Produk</div>
-                            <div class="text-white font-bold text-2xl">245 Unit</div>
-                        </div>
-
-                        <!-- Center Circle -->
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="w-32 h-32 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 rounded-full opacity-80 blur-xl group-hover:scale-105 transition-transform duration-500"></div>
-                            <svg class="absolute w-20 h-20 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                            </svg>
-                        </div>
+                    <div class="absolute -top-6 -left-6 w-28 h-28 rounded-2xl border border-white/20 bg-white/10 glass-effect p-3 shadow-2xl">
+                        <img src="{{ route('img.file', ['path' => 'logo_miphone.png']) }}" alt="MIPHONE Group" class="h-full w-full object-contain">
+                    </div>
+                    <div class="absolute inset-6 rounded-3xl overflow-hidden border border-white/20 bg-white/5 shadow-2xl shadow-black/30">
+                        <img src="{{ route('img.file', ['path' => 'ilustrasi1.png']) }}" alt="Ilustrasi PosPhone" class="h-full w-full object-contain lg:object-cover object-center scale-105 group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div class="absolute -bottom-6 right-4 rounded-2xl border border-blue-300/40 bg-blue-500/20 px-5 py-3 text-white backdrop-blur-md">
+                        <p class="text-xs uppercase tracking-wider text-blue-100">Trusted POS Solution</p>
+                        <p class="text-sm font-semibold">for Smartphone Retail</p>
                     </div>
                 </div>
             </div>
