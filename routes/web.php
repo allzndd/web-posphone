@@ -119,6 +119,21 @@ Route::get('/bukti-transfer/{path}', function (string $path) {
     return response()->file($fullPath);
 })->where('path', '.*')->name('bukti-transfer.file');
 
+Route::get('/img-file/{path}', function (string $path) {
+    $path = ltrim($path, '/');
+
+    if (str_contains($path, '..')) {
+        abort(404);
+    }
+
+    $fullPath = base_path('public/img/' . $path);
+    if (!is_file($fullPath)) {
+        abort(404);
+    }
+
+    return response()->file($fullPath);
+})->where('path', '.*')->name('img.file');
+
 // Landing Page
 Route::get('/', function () {
     if (auth()->check()) {
